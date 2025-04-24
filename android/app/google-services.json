@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "860882029296",
+    "project_id": "cross-platform-57b89",
+    "storage_bucket": "cross-platform-57b89.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:860882029296:android:b4c484bb6cb100df98d035",
+        "android_client_info": {
+          "package_name": "com.example.email_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGLGuJakCI8Xk_ZmFp01TKGikhBOmgcWw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
