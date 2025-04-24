@@ -7,116 +7,567 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyGmail(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class MyGmail extends StatefulWidget {
+  const MyGmail({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MyGmail> createState() => _GmailHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _GmailHomePageState extends State<MyGmail>
+    with SingleTickerProviderStateMixin {
+  bool isDrawerOpen = false;
+  late TabController _tabController;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      backgroundColor: Colors.grey[900],
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              // AppBar Search
+              Container(
+                padding: const EdgeInsets.only(
+                  top: 20,
+                  left: 16,
+                  right: 16,
+                  bottom: 8,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[850],
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: const Offset(0, 0),
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 0,
+                        blurRadius: 2,
+                        offset: const Offset(0, 0),
+                      ),
+                    ],
+                  ),
+                  height: 50,
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.menu, color: Colors.white),
+                        onPressed: () {
+                          setState(() {
+                            isDrawerOpen = true;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "Tìm trong thư",
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                      const Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: CircleAvatar(
+                          radius: 16,
+                          backgroundColor: Colors.teal,
+                          backgroundImage: NetworkImage(
+                            'https://picsum.photos/250?image=100',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Container(
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    "Hộp thư đến",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Email List
+              Expanded(
+                child: Container(
+                  color: Colors.grey[900],
+                  child: ListView(
+                    padding: const EdgeInsets.all(0),
+                    children: [
+                      _buildEmailTile(
+                        sender: "Google",
+                        subject: "Security alert",
+                        preview:
+                            "A new sign-in on Windows 522h0090@student.tdtu.edu.vn We noticed a new sign-in to your Google Account on a Windows device. If this was you, you don't need to do anything. If not, we'll help you secure your account.",
+                        date: "9 thg 3",
+                        index: 1,
+                      ),
+                      _buildEmailTile(
+                        sender: "Google",
+                        subject: "Security alert",
+                        preview:
+                            "A new sign-in on Windows 522h0090@student.tdtu.edu.vn We noticed a new sign-in to your Google Account on a Windows device. If this was you, you don't need to do anything. If not, we'll help you secure your account.",
+                        date: "9 thg 3",
+                        index: 2,
+                      ),
+                      _buildEmailTile(
+                        sender: "Google",
+                        subject: "Security alert",
+                        preview:
+                            "A new sign-in on Windows 522h0090@student.tdtu.edu.vn We noticed a new sign-in to your Google Account on a Windows device. If this was you, you don't need to do anything. If not, we'll help you secure your account.",
+                        date: "9 thg 3",
+                        index: 3,
+                      ),
+                      _buildEmailTile(
+                        sender: "Google",
+                        subject: "Security alert",
+                        preview:
+                            "A new sign-in on Windows 522h0090@student.tdtu.edu.vn We noticed a new sign-in to your Google Account on a Windows device. If this was you, you don't need to do anything. If not, we'll help you secure your account.",
+                        date: "9 thg 3",
+                        index: 4,
+                      ),
+                      _buildEmailTile(
+                        sender: "Google",
+                        subject: "Security alert",
+                        preview:
+                            "A new sign-in on Windows 522h0090@student.tdtu.edu.vn We noticed a new sign-in to your Google Account on a Windows device. If this was you, you don't need to do anything. If not, we'll help you secure your account.",
+                        date: "9 thg 3",
+                        index: 5,
+                      ),
+                      _buildEmailTile(
+                        sender: "Google",
+                        subject: "Security alert",
+                        preview:
+                            "A new sign-in on Windows 522h0090@student.tdtu.edu.vn We noticed a new sign-in to your Google Account on a Windows device. If this was you, you don't need to do anything. If not, we'll help you secure your account.",
+                        date: "9 thg 3",
+                        index: 6,
+                      ),
+                      _buildEmailTile(
+                        sender: "Google",
+                        subject: "Security alert",
+                        preview:
+                            "A new sign-in on Windows 522h0090@student.tdtu.edu.vn We noticed a new sign-in to your Google Account on a Windows device. If this was you, you don't need to do anything. If not, we'll help you secure your account.",
+                        date: "9 thg 3",
+                        index: 7,
+                      ),
+                      _buildEmailTile(
+                        sender: "Google",
+                        subject: "Security alert",
+                        preview:
+                            "A new sign-in on Windows 522h0090@student.tdtu.edu.vn We noticed a new sign-in to your Google Account on a Windows device. If this was you, you don't need to do anything. If not, we'll help you secure your account.",
+                        date: "9 thg 3",
+                        index: 8,
+                      ),
+                      _buildEmailTile(
+                        sender: "Google",
+                        subject: "Security alert",
+                        preview:
+                            "A new sign-in on Windows 522h0090@student.tdtu.edu.vn We noticed a new sign-in to your Google Account on a Windows device. If this was you, you don't need to do anything. If not, we'll help you secure your account.",
+                        date: "9 thg 3",
+                        index: 9,
+                      ),
+                      _buildEmailTile(
+                        sender: "Google",
+                        subject: "Security alert",
+                        preview:
+                            "A new sign-in on Windows 522h0090@student.tdtu.edu.vn We noticed a new sign-in to your Google Account on a Windows device. If this was you, you don't need to do anything. If not, we'll help you secure your account.",
+                        date: "9 thg 3",
+                        index: 10,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Navigation Drawer
+          if (isDrawerOpen)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  isDrawerOpen = false;
+                });
+              },
+              child: Container(color: Colors.black54),
             ),
-          ],
+          if (isDrawerOpen)
+            Container(
+              width: MediaQuery.of(context).size.width * 0.7,
+              color: Colors.grey[850],
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.only(
+                      top: 20,
+                      left: 16,
+                      right: 16,
+                      bottom: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Colors.grey[800]!,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Image.network(
+                          'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/1280px-Gmail_icon_%282020%29.svg.png',
+                          width: 30,
+                          height: 30,
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Gmail',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: [
+                        _buildDrawerItem(
+                          "Đang hoạt động",
+                          Icons.circle,
+                          color: Colors.greenAccent,
+                          trailing: Icon(
+                            Icons.keyboard_arrow_up_outlined,
+                            color: Colors.grey,
+                            size: 24,
+                          ),
+                        ),
+                        _buildDrawerItem(
+                          "Thêm trạng thái",
+                          Icons.edit_outlined,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Divider(
+                            color: Colors.grey[700],
+                            height: 1,
+                            thickness: 1,
+                            indent: 52,
+                            endIndent: 16,
+                          ),
+                        ),
+                        _buildDrawerItem("Tất cả hộp thư đến", Icons.all_inbox),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Divider(
+                            color: Colors.grey[700],
+                            height: 1,
+                            thickness: 1,
+                            indent: 52,
+                            endIndent: 16,
+                          ),
+                        ),
+                        _buildDrawerItem(
+                          "Hộp thư đến",
+                          Icons.inbox,
+                          isSelected: true,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Divider(
+                            color: Colors.grey[700],
+                            height: 1,
+                            thickness: 1,
+                            indent: 52,
+                            endIndent: 16,
+                          ),
+                        ),
+                        _buildDrawerItem("Có gắn dấu sao", Icons.star_border),
+                        _buildDrawerItem("Đã ẩn", Icons.access_time),
+                        _buildDrawerItem(
+                          "Quan trọng",
+                          Icons.label_important_outline,
+                        ),
+                        _buildDrawerItem("Đã gửi", Icons.send),
+                        _buildDrawerItem("Đã lên lịch", Icons.schedule),
+                        _buildDrawerItem("Hộp thư đi", Icons.outbox),
+                        _buildDrawerItem(
+                          "Thư nháp",
+                          Icons.insert_drive_file,
+                          count: 10,
+                        ),
+                        _buildDrawerItem("Tất cả thư", Icons.mail),
+                        _buildDrawerItem("Thư rác", Icons.report_gmailerrorred),
+                        _buildDrawerItem("Thùng rác", Icons.delete),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Divider(
+                            color: Colors.grey[700],
+                            height: 1,
+                            thickness: 1,
+                            indent: 52,
+                            endIndent: 16,
+                          ),
+                        ),
+                        _buildDrawerItem("Tạo mới", Icons.add),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Divider(
+                            color: Colors.grey[700],
+                            height: 1,
+                            thickness: 1,
+                            indent: 52,
+                            endIndent: 16,
+                          ),
+                        ),
+                        _buildDrawerItem("Cài đặt", Icons.settings),
+                        _buildDrawerItem(
+                          "Gửi ý kiến phản hồi",
+                          Icons.feedback_outlined,
+                        ),
+                        _buildDrawerItem("Trợ giúp", Icons.help_outline),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Bottom Navigation
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              color: Colors.grey[800],
+              height: 56,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.mail,
+                      color: Color.fromARGB(255, 196, 102, 110),
+                    ),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.chat_bubble_outline,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.videocam_outlined,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Button Soan Thu
+          Positioned(
+            bottom: 66,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 3,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.edit_outlined, color: Colors.red[200], size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Soạn thư",
+                    style: TextStyle(color: Colors.red[200], fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmailTile({
+    required String sender,
+    required String subject,
+    required String preview,
+    required String date,
+    required int index,
+    bool hasAvatar = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child:
+                hasAvatar
+                    ? CircleAvatar(
+                      radius: 20,
+                      backgroundImage: NetworkImage(
+                        'https://picsum.photos/250?image=$index',
+                      ),
+                    )
+                    : CircleAvatar(
+                      radius: 20,
+                      backgroundImage: NetworkImage(
+                        'https://picsum.photos/250?image=$index',
+                      ),
+                    ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(sender, style: const TextStyle(color: Colors.grey)),
+                    Text(
+                      date,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subject,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        preview,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.star_border, color: Colors.grey, size: 20),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(
+    String title,
+    IconData icon, {
+    Color? color,
+    bool isSelected = false,
+    int? count,
+    Widget? trailing,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 12, top: 2, bottom: 2),
+      child: Container(
+        decoration:
+            isSelected
+                ? BoxDecoration(
+                  color: Colors.red[200]!.withOpacity(0.2),
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
+                )
+                : null,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          leading: Icon(
+            icon,
+            color: color ?? (isSelected ? Colors.red[200] : Colors.grey),
+            size: 16,
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: isSelected ? Colors.red[200] : Colors.white,
+              fontSize: 14,
+            ),
+          ),
+          trailing:
+              trailing ??
+              (count != null
+                  ? Text(
+                    count.toString(),
+                    style: const TextStyle(color: Colors.grey),
+                  )
+                  : null),
+          selected: isSelected,
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
