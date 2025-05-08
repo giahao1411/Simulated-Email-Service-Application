@@ -9,6 +9,13 @@ class EmailService {
   EmailService() : userPhone = FirebaseAuth.instance.currentUser?.phoneNumber;
 
   Stream<List<Email>> getEmails(String category) {
+    // Kiểm tra nếu người dùng chưa đăng nhập
+    if (userPhone == null || FirebaseAuth.instance.currentUser == null) {
+      print('Không truy vấn email vì chưa đăng nhập');
+      return Stream.value([]);
+    }
+
+    print('Lấy email cho danh mục: $category');
     Query<Map<String, dynamic>> query = _firestore
         .collection('emails')
         .where('to', isEqualTo: userPhone)
@@ -37,6 +44,9 @@ class EmailService {
   }
 
   Future<void> sendEmail(String to, String subject, String body) async {
+    if (userPhone == null) {
+      throw Exception('Chưa đăng nhập để gửi email');
+    }
     await _firestore.collection('emails').add({
       'from': userPhone,
       'to': to,
@@ -50,8 +60,11 @@ class EmailService {
   }
 
   Future<void> saveDraft(String to, String subject, String body) async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      throw Exception('Chưa đăng nhập để lưu thư nháp');
+    }
     await _firestore.collection('drafts').add({
-      'userId': FirebaseAuth.instance.currentUser?.uid,
+      'userId': FirebaseAuth.instance.currentUser!.uid,
       'to': to,
       'subject': subject,
       'body': body,

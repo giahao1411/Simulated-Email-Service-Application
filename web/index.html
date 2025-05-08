@@ -1,38 +1,56 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
+  <head>
+    <base href="$FLUTTER_BASE_HREF" />
+    <meta charset="UTF-8" />
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+    <meta name="description" content="A new Flutter project." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="email_application" />
+    <link rel="apple-touch-icon" href="icons/Icon-192.png" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <title>email_application</title>
+    <link rel="manifest" href="manifest.json" />
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
+    <!-- Firebase scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+    <!-- Firebase config -->
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyBSiAPVlTvytlFKd7ao-eDNCuy_Cx8TbOw",
+        authDomain: "cross-platform-57b89.firebaseapp.com",
+        projectId: "cross-platform-57b89",
+        storageBucket: "cross-platform-57b89.appspot.com",
+        messagingSenderId: "860882029296",
+        appId: "1:860882029296:web:cbf7ff897675d7f998d035",
+        measurementId: "G-KT7GH5JBZ0",
+      };
+      firebase.initializeApp(firebaseConfig);
+    </script>
 
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
-
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="email_application">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>email_application</title>
-  <link rel="manifest" href="manifest.json">
-</head>
-<body>
-  <script src="flutter_bootstrap.js" async></script>
-</body>
+    <script>
+      var serviceWorkerVersion = null;
+    </script>
+    <script src="flutter.js" defer></script>
+  </head>
+  <body>
+    <script>
+      window.addEventListener("load", function (ev) {
+        _flutter.loader.loadEntrypoint({
+          serviceWorker: {
+            serviceWorkerVersion: serviceWorkerVersion,
+          },
+          onEntrypointLoaded: function (engineInitializer) {
+            engineInitializer.initializeEngine().then(function (appRunner) {
+              appRunner.runApp();
+            });
+          },
+        });
+      });
+    </script>
+  </body>
 </html>

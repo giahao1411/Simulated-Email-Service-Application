@@ -15,9 +15,10 @@ class ProfileService {
       }
       await _firestore.collection('users').doc(user.uid).set({
         'uid': user.uid,
-        'phoneNumber': user.phoneNumber,
+        'phoneNumber': user.phoneNumber ?? '',
         'displayName': displayName,
         'photoUrl': photoUrl,
+        'email': user.email ?? '',
       }, SetOptions(merge: true));
     }
   }
