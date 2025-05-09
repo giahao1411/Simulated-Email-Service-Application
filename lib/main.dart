@@ -19,8 +19,15 @@ class MyApp extends StatelessWidget {
       title: 'Simulated Email App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
       ),
-      darkTheme: ThemeData.dark(),
+      darkTheme: ThemeData.dark().copyWith(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
+      ),
       themeMode: ThemeMode.system,
       home: const LoginScreen(),
     );

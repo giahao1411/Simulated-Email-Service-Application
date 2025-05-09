@@ -1,14 +1,16 @@
 class UserProfile {
   final String uid;
   final String phoneNumber;
-  String? displayName;
-  String? photoUrl;
+  final String? displayName;
+  final String? photoUrl;
+  final String? email;
 
   UserProfile({
     required this.uid,
     required this.phoneNumber,
     this.displayName,
     this.photoUrl,
+    this.email,
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> data) {
@@ -17,6 +19,7 @@ class UserProfile {
       phoneNumber: data['phoneNumber'] ?? '',
       displayName: data['displayName'],
       photoUrl: data['photoUrl'],
+      email: data['email'],
     );
   }
 
@@ -26,6 +29,7 @@ class UserProfile {
       'phoneNumber': phoneNumber,
       'displayName': displayName,
       'photoUrl': photoUrl,
+      'email': email,
     };
   }
 }
