@@ -23,7 +23,9 @@ class AuthService {
     required String email,
     required String password,
     required String phoneNumber,
-    String? displayName,
+    String? firstName,
+    String? lastName,
+    DateTime? dateOfBirth,
   }) async {
     try {
       print('Bắt đầu đăng ký với email: $email, phone: $phoneNumber');
@@ -49,9 +51,12 @@ class AuthService {
         UserProfile userProfile = UserProfile(
           uid: user.uid,
           phoneNumber: formattedPhoneNumber,
-          displayName: displayName ?? '',
+          firstName: firstName,
+          lastName: lastName,
+          dateOfBirth: dateOfBirth,
           photoUrl: '',
           email: email,
+          twoStepEnabled: false,
         );
 
         // Lưu vào Firestore
@@ -79,6 +84,16 @@ class AuthService {
       }
       print('Không tạo được tài khoản');
       return null;
+    } on FirebaseAuthException catch (e) {
+      print('FirebaseAuthException: ${e.message}');
+      if (e.code == 'email-already-in-use') {
+        throw Exception('Email đã được sử dụng');
+      } else if (e.code == 'invalid-email') {
+        throw Exception('Email không hợp lệ');
+      } else if (e.code == 'weak-password') {
+        throw Exception('Mật khẩu quá yếu');
+      }
+      throw Exception('Đăng ký thất bại: ${e.message}');
     } catch (e) {
       print('Lỗi đăng ký: $e');
       rethrow;
@@ -126,14 +141,27 @@ class AuthService {
           return UserProfile(
             uid: user.uid,
             phoneNumber: '',
-            displayName: user.displayName ?? '',
+            firstName: '',
+            lastName: '',
+            dateOfBirth: null,
             photoUrl: user.photoURL ?? '',
             email: user.email ?? '',
+            twoStepEnabled: false,
           );
         }
       }
       print('Không đăng nhập được');
       return null;
+    } on FirebaseAuthException catch (e) {
+      print('FirebaseAuthException: ${e.message}');
+      if (e.code == 'user-not-found') {
+        throw Exception('Không tìm thấy người dùng');
+      } else if (e.code == 'wrong-password') {
+        throw Exception('Mật khẩu không đúng');
+      } else if (e.code == 'invalid-email') {
+        throw Exception('Email không hợp lệ');
+      }
+      throw Exception('Đăng nhập thất bại: ${e.message}');
     } catch (e) {
       print('Lỗi đăng nhập: $e');
       rethrow;
@@ -142,12 +170,25 @@ class AuthService {
 
   // Đổi mật khẩu
   Future<void> changePassword(String newPassword) async {
-    User? user = _auth.currentUser;
-    if (user != null) {
+    try {
+      User? user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('Không có người dùng đăng nhập');
+      }
+      if (newPassword.length < 6) {
+        throw Exception('Mật khẩu mới phải có ít nhất 6 ký tự');
+      }
       await user.updatePassword(newPassword);
       print('Đổi mật khẩu thành công');
-    } else {
-      throw Exception('Không có người dùng đăng nhập');
+    } on FirebaseAuthException catch (e) {
+      print('FirebaseAuthException: ${e.message}');
+      if (e.code == 'requires-recent-login') {
+        throw Exception('Vui lòng đăng nhập lại để đổi mật khẩu');
+      }
+      throw Exception('Đổi mật khẩu thất bại: ${e.message}');
+    } catch (e) {
+      print('Lỗi đổi mật khẩu: $e');
+      rethrow;
     }
   }
 
@@ -156,6 +197,14 @@ class AuthService {
     try {
       await _auth.sendPasswordResetEmail(email: email);
       print('Gửi email khôi phục mật khẩu thành công');
+    } on FirebaseAuthException catch (e) {
+      print('FirebaseAuthException: ${e.message}');
+      if (e.code == 'invalid-email') {
+        throw Exception('Email không hợp lệ');
+      } else if (e.code == 'user-not-found') {
+        throw Exception('Không tìm thấy người dùng với email này');
+      }
+      throw Exception('Khôi phục mật khẩu thất bại: ${e.message}');
     } catch (e) {
       print('Lỗi khôi phục mật khẩu: $e');
       rethrow;
@@ -164,36 +213,71 @@ class AuthService {
 
   // Bật/tắt xác minh hai bước
   Future<void> enableTwoStepVerification(bool enable) async {
-    User? user = _auth.currentUser;
-    if (user != null) {
+    try {
+      User? user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('Không có người dùng đăng nhập');
+      }
       await _firestore.collection('users').doc(user.uid).set({
         'twoStepEnabled': enable,
       }, SetOptions(merge: true));
       print('Cập nhật xác minh hai bước thành công: $enable');
-    } else {
-      throw Exception('Không có người dùng đăng nhập');
+    } catch (e) {
+      print('Lỗi cập nhật xác minh hai bước: $e');
+      rethrow;
     }
   }
 
   // Lấy người dùng hiện tại
-  UserProfile? get currentUser {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      print('Lấy thông tin người dùng hiện tại: ${user.uid}');
-      return UserProfile(
-        uid: user.uid,
-        phoneNumber: '',
-        displayName: user.displayName ?? '',
-        photoUrl: user.photoURL ?? '',
-        email: user.email ?? '',
-      );
+  Future<UserProfile?> get currentUser async {
+    try {
+      User? user = _auth.currentUser;
+      if (user != null) {
+        print('Lấy thông tin người dùng hiện tại: ${user.uid}');
+        // Lấy hồ sơ từ Firestore
+        DocumentSnapshot doc = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .get()
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                throw Exception('Hết thời gian chờ khi lấy hồ sơ từ Firestore');
+              },
+            );
+
+        if (doc.exists) {
+          print('Lấy hồ sơ từ Firestore thành công');
+          return UserProfile.fromMap(doc.data() as Map<String, dynamic>);
+        } else {
+          print('Không tìm thấy hồ sơ, tạo hồ sơ mặc định');
+          return UserProfile(
+            uid: user.uid,
+            phoneNumber: '',
+            firstName: '',
+            lastName: '',
+            dateOfBirth: null,
+            photoUrl: user.photoURL ?? '',
+            email: user.email ?? '',
+            twoStepEnabled: false,
+          );
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Lỗi lấy thông tin người dùng hiện tại: $e');
+      return null;
     }
-    return null;
   }
 
   // Đăng xuất
   Future<void> signOut() async {
-    await _auth.signOut();
-    print('Đăng xuất thành công');
+    try {
+      await _auth.signOut();
+      print('Đăng xuất thành công');
+    } catch (e) {
+      print('Lỗi đăng xuất: $e');
+      rethrow;
+    }
   }
 }
