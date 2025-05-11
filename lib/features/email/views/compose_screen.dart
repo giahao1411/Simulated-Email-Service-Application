@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../controllers/email_service.dart';
+import './widgets/compose_app_bar.dart';
+import './widgets/compose_body.dart';
 
 class ComposeScreen extends StatefulWidget {
   const ComposeScreen({super.key});
@@ -35,34 +37,14 @@ class _ComposeScreenState extends State<ComposeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Soạn thư"),
-        actions: [
-          IconButton(icon: const Icon(Icons.save), onPressed: handleSaveDraft),
-          IconButton(icon: const Icon(Icons.send), onPressed: handleSendEmail),
-        ],
+      appBar: ComposeAppBar(
+        onSaveDraft: handleSaveDraft,
+        onSendEmail: handleSendEmail,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: toController,
-              decoration: const InputDecoration(labelText: "Đến"),
-            ),
-            TextField(
-              controller: subjectController,
-              decoration: const InputDecoration(labelText: "Chủ đề"),
-            ),
-            Expanded(
-              child: TextField(
-                controller: bodyController,
-                decoration: const InputDecoration(labelText: "Nội dung"),
-                maxLines: null,
-              ),
-            ),
-          ],
-        ),
+      body: ComposeBody(
+        toController: toController,
+        subjectController: subjectController,
+        bodyController: bodyController,
       ),
     );
   }

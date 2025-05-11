@@ -22,17 +22,6 @@ class DefaultFirebaseOptions {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
-      case TargetPlatform.iOS:
-        return ios;
-      case TargetPlatform.macOS:
-        return macos;
-      case TargetPlatform.windows:
-        return windows;
-      case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
@@ -56,33 +45,5 @@ class DefaultFirebaseOptions {
     messagingSenderId: '860882029296',
     projectId: 'cross-platform-57b89',
     storageBucket: 'cross-platform-57b89.firebasestorage.app',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCMOB7nJe0db02uGcjPdDWjC2BaVETqUnE',
-    appId: '1:860882029296:ios:1272161ba459ef5c98d035',
-    messagingSenderId: '860882029296',
-    projectId: 'cross-platform-57b89',
-    storageBucket: 'cross-platform-57b89.firebasestorage.app',
-    iosBundleId: 'com.example.emailApplication',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCMOB7nJe0db02uGcjPdDWjC2BaVETqUnE',
-    appId: '1:860882029296:ios:1272161ba459ef5c98d035',
-    messagingSenderId: '860882029296',
-    projectId: 'cross-platform-57b89',
-    storageBucket: 'cross-platform-57b89.firebasestorage.app',
-    iosBundleId: 'com.example.emailApplication',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBSiAPVlTvytlFKd7ao-eDNCuy_Cx8TbOw',
-    appId: '1:860882029296:web:da7fca833a21300798d035',
-    messagingSenderId: '860882029296',
-    projectId: 'cross-platform-57b89',
-    authDomain: 'cross-platform-57b89.firebaseapp.com',
-    storageBucket: 'cross-platform-57b89.firebasestorage.app',
-    measurementId: 'G-RT6V2TN3ES',
   );
 }
