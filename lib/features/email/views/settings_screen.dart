@@ -180,8 +180,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ListTile(
                 title: const Text('Số điện thoại'),
                 subtitle: Text(
-                  user.phoneNumber?.isNotEmpty == true
-                      ? user.phoneNumber!
+                  user.phoneNumber.isNotEmpty == true
+                      ? user.phoneNumber
                       : 'Chưa có số điện thoại',
                 ),
               ),
