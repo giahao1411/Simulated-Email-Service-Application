@@ -1,11 +1,11 @@
+import 'package:email_application/core/constants/app_strings.dart';
+import 'package:email_application/features/email/controllers/email_service.dart';
+import 'package:email_application/features/email/views/compose_screen.dart';
+import 'package:email_application/features/email/views/widgets/compose_button.dart';
+import 'package:email_application/features/email/views/widgets/email_list.dart';
+import 'package:email_application/features/email/views/widgets/gmail_app_bar.dart';
+import 'package:email_application/features/email/views/widgets/gmail_drawer.dart';
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_strings.dart';
-import '../controllers/email_service.dart';
-import './widgets/gmail_app_bar.dart';
-import './widgets/email_list.dart';
-import './widgets/gmail_drawer.dart';
-import './widgets/compose_button.dart';
-import 'compose_screen.dart';
 
 class GmailScreen extends StatefulWidget {
   const GmailScreen({super.key});

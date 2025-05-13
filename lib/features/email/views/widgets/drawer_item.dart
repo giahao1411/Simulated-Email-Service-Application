@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
 
 class DrawerItem extends StatelessWidget {
+
+  const DrawerItem({
+    required this.title, required this.icon, required this.onTap, super.key,
+    this.isSelected = false,
+    this.count,
+  });
   final String title;
   final IconData icon;
   final bool isSelected;
   final int? count;
   final VoidCallback onTap;
-
-  const DrawerItem({
-    super.key,
-    required this.title,
-    required this.icon,
-    this.isSelected = false,
-    this.count,
-    required this.onTap,
-  });
 
   @override
   Widget build(BuildContext context) {

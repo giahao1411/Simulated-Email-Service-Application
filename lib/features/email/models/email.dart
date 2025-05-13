@@ -1,16 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Email {
-  final String id;
-  final String from;
-  final String to;
-  final String subject;
-  final String body;
-  final DateTime timestamp;
-  final bool read;
-  final bool starred;
-  final List<String> labels;
-
   Email({
     required this.id,
     required this.from,
@@ -26,16 +16,26 @@ class Email {
   factory Email.fromMap(String id, Map<String, dynamic> data) {
     return Email(
       id: id,
-      from: data['from'] ?? '',
-      to: data['to'] ?? '',
-      subject: data['subject'] ?? '',
-      body: data['body'] ?? '',
+      from: data['from'] as String? ?? '',
+      to: data['to'] as String? ?? '',
+      subject: data['subject'] as String? ?? '',
+      body: data['body'] as String? ?? '',
       timestamp: (data['timestamp'] as Timestamp).toDate(),
-      read: data['read'] ?? false,
-      starred: data['starred'] ?? false,
-      labels: List<String>.from(data['labels'] ?? []),
+      read: data['read'] as bool? ?? false,
+      starred: data['starred'] as bool? ?? false,
+      labels: (data['labels'] as List<dynamic>? ?? []).cast<String>(),
     );
   }
+
+  final String id;
+  final String from;
+  final String to;
+  final String subject;
+  final String body;
+  final DateTime timestamp;
+  final bool read;
+  final bool starred;
+  final List<String> labels;
 
   Map<String, dynamic> toMap() {
     return {
@@ -43,7 +43,7 @@ class Email {
       'to': to,
       'subject': subject,
       'body': body,
-      'timestamp': timestamp,
+      'timestamp': timestamp.toIso8601String(),
       'read': read,
       'starred': starred,
       'labels': labels,

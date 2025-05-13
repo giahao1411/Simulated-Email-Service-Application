@@ -1,10 +1,10 @@
+import 'package:email_application/core/constants/app_strings.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_strings.dart';
 
 class GmailAppBar extends StatelessWidget {
-  final VoidCallback onMenuPressed;
 
-  const GmailAppBar({super.key, required this.onMenuPressed});
+  const GmailAppBar({required this.onMenuPressed, super.key});
+  final VoidCallback onMenuPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +19,10 @@ class GmailAppBar extends StatelessWidget {
               color: Colors.black.withOpacity(0.3),
               spreadRadius: 2,
               blurRadius: 5,
-              offset: const Offset(0, 0),
             ),
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              spreadRadius: 0,
               blurRadius: 2,
-              offset: const Offset(0, 0),
             ),
           ],
         ),
@@ -43,8 +40,8 @@ class GmailAppBar extends StatelessWidget {
               style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const Spacer(),
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
+            const Padding(
+              padding: EdgeInsets.only(right: 12),
               child: CircleAvatar(
                 radius: 16,
                 backgroundColor: Colors.teal,

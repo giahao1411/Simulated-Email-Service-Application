@@ -1,7 +1,7 @@
+import 'package:email_application/core/config/firebase_options.dart';
+import 'package:email_application/features/email/views/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'core/config/firebase_options.dart';
-import 'features/email/views/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,7 +78,6 @@ class MyApp extends StatelessWidget {
           surface: Colors.grey[900],
           onSurface: Colors.white70,
         ),
-        useMaterial3: true,
         scaffoldBackgroundColor: Colors.grey[900],
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -118,7 +117,6 @@ class MyApp extends StatelessWidget {
           bodyMedium: TextStyle(color: Colors.white70),
         ),
       ),
-      themeMode: ThemeMode.system,
       home: const LoginScreen(),
     );
   }
