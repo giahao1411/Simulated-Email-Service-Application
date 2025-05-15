@@ -1,10 +1,10 @@
+import 'package:email_application/core/constants/app_strings.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_strings.dart';
 
 class ComposeButton extends StatelessWidget {
-  final VoidCallback onPressed;
 
-  const ComposeButton({super.key, required this.onPressed});
+  const ComposeButton({required this.onPressed, super.key});
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {

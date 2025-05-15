@@ -1,7 +1,7 @@
+import 'package:email_application/features/email/controllers/auth_service.dart';
+import 'package:email_application/features/email/views/gmail_screen.dart';
+import 'package:email_application/features/email/views/register_screen.dart';
 import 'package:flutter/material.dart';
-import '../controllers/auth_service.dart';
-import 'gmail_screen.dart';
-import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -116,7 +116,6 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
                 padding: const EdgeInsets.only(bottom: 48),

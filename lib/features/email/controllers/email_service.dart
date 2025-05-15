@@ -1,12 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:email_application/features/email/models/email.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/email.dart';
 
 class EmailService {
+  EmailService() : userPhone = FirebaseAuth.instance.currentUser?.phoneNumber;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String? userPhone;
-
-  EmailService() : userPhone = FirebaseAuth.instance.currentUser?.phoneNumber;
 
   Stream<List<Email>> getEmails(String category) {
     // Kiểm tra nếu người dùng chưa đăng nhập
@@ -16,19 +15,19 @@ class EmailService {
     }
 
     print('Lấy email cho danh mục: $category');
-    Query<Map<String, dynamic>> query = _firestore
+    var query = _firestore
         .collection('emails')
         .where('to', isEqualTo: userPhone)
         .orderBy('timestamp', descending: true);
 
-    if (category == "Có gắn dấu sao") {
+    if (category == 'Có gắn dấu sao') {
       query = query.where('starred', isEqualTo: true);
-    } else if (category == "Đã gửi") {
+    } else if (category == 'Đã gửi') {
       query = _firestore
           .collection('emails')
           .where('from', isEqualTo: userPhone)
           .orderBy('timestamp', descending: true);
-    } else if (category == "Thư nháp") {
+    } else if (category == 'Thư nháp') {
       query = _firestore
           .collection('drafts')
           .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)

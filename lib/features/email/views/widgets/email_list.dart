@@ -1,18 +1,16 @@
+import 'package:email_application/core/constants/app_strings.dart';
+import 'package:email_application/features/email/controllers/email_service.dart';
+import 'package:email_application/features/email/models/email.dart';
+import 'package:email_application/features/email/views/widgets/email_tile.dart';
 import 'package:flutter/material.dart';
-import '../../controllers/email_service.dart';
-import '../../models/email.dart';
-import './email_tile.dart';
-import '../../../../core/constants/app_strings.dart';
 
 class EmailList extends StatelessWidget {
-  final EmailService emailService;
-  final String currentCategory;
 
   const EmailList({
-    super.key,
-    required this.emailService,
-    required this.currentCategory,
+    required this.emailService, required this.currentCategory, super.key,
   });
+  final EmailService emailService;
+  final String currentCategory;
 
   @override
   Widget build(BuildContext context) {
@@ -32,12 +30,12 @@ class EmailList extends StatelessWidget {
               ),
             );
           }
-          var emails = snapshot.data!;
+          final emails = snapshot.data!;
           return ListView.builder(
             padding: const EdgeInsets.all(0),
             itemCount: emails.length,
             itemBuilder: (context, index) {
-              var email = emails[index];
+              final email = emails[index];
               return EmailTile(email: email, index: index);
             },
           );

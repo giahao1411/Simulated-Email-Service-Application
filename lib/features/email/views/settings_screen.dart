@@ -1,8 +1,8 @@
+import 'package:email_application/features/email/controllers/auth_service.dart';
+import 'package:email_application/features/email/controllers/profile_service.dart';
+import 'package:email_application/features/email/models/user_profile.dart';
+import 'package:email_application/features/email/views/login_screen.dart';
 import 'package:flutter/material.dart';
-import '../controllers/auth_service.dart';
-import '../controllers/profile_service.dart';
-import '../models/user_profile.dart';
-import 'login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -54,7 +54,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await profileService.updateProfile(
         firstName: firstNameController.text,
         lastName: lastNameController.text,
-        photoUrl: null,
       );
       _showSnackBar('Cập nhật hồ sơ thành công', true);
     } catch (e) {
@@ -170,7 +169,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
           body: ListView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             children: [
               // Thông tin hồ sơ
               ListTile(
@@ -186,21 +185,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: TextField(
                   controller: firstNameController,
                   decoration: const InputDecoration(labelText: 'Họ'),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: TextField(
                   controller: lastNameController,
                   decoration: const InputDecoration(labelText: 'Tên'),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: ElevatedButton(
                   onPressed: isLoading ? null : handleUpdateProfile,
                   child:
@@ -214,7 +213,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               // Đổi mật khẩu
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: TextField(
                   controller: passwordController,
                   decoration: const InputDecoration(labelText: 'Mật khẩu mới'),
@@ -222,7 +221,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: ElevatedButton(
                   onPressed: isLoading ? null : handleChangePassword,
                   child:
@@ -268,7 +267,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               // Nút đăng xuất
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: ElevatedButton(
                   onPressed: isLoading ? null : handleSignOut,
                   style: ElevatedButton.styleFrom(

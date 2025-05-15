@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/user_profile.dart';
+import 'package:email_application/features/email/models/user_profile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -31,7 +31,7 @@ class AuthService {
       print('Bắt đầu đăng ký với email: $email, phone: $phoneNumber');
 
       // Tạo người dùng với email và mật khẩu
-      UserCredential userCredential = await _auth
+      final userCredential = await _auth
           .createUserWithEmailAndPassword(email: email, password: password)
           .timeout(
             const Duration(seconds: 10),
@@ -39,16 +39,16 @@ class AuthService {
               throw Exception('Hết thời gian chờ khi tạo tài khoản');
             },
           );
-      User? user = userCredential.user;
+      final user = userCredential.user;
 
       if (user != null) {
         print('Tài khoản được tạo với UID: ${user.uid}');
 
         // Định dạng số điện thoại
-        String formattedPhoneNumber = _formatPhoneNumber(phoneNumber);
+        final formattedPhoneNumber = _formatPhoneNumber(phoneNumber);
 
         // Tạo hồ sơ người dùng
-        UserProfile userProfile = UserProfile(
+        final userProfile = UserProfile(
           uid: user.uid,
           phoneNumber: formattedPhoneNumber,
           firstName: firstName,
@@ -108,7 +108,7 @@ class AuthService {
     try {
       print('Bắt đầu đăng nhập với email: $email');
 
-      UserCredential userCredential = await _auth
+      final userCredential = await _auth
           .signInWithEmailAndPassword(email: email, password: password)
           .timeout(
             const Duration(seconds: 10),
@@ -116,13 +116,13 @@ class AuthService {
               throw Exception('Hết thời gian chờ khi đăng nhập');
             },
           );
-      User? user = userCredential.user;
+      final user = userCredential.user;
 
       if (user != null) {
         print('Đăng nhập thành công với UID: ${user.uid}');
 
         // Lấy hồ sơ từ Firestore
-        DocumentSnapshot doc = await _firestore
+        final DocumentSnapshot doc = await _firestore
             .collection('users')
             .doc(user.uid)
             .get()
@@ -135,7 +135,7 @@ class AuthService {
 
         if (doc.exists) {
           print('Lấy hồ sơ từ Firestore thành công');
-          return UserProfile.fromMap(doc.data() as Map<String, dynamic>);
+          return UserProfile.fromMap(doc.data()! as Map<String, dynamic>);
         } else {
           print('Không tìm thấy hồ sơ, tạo hồ sơ mặc định');
           return UserProfile(
@@ -143,7 +143,6 @@ class AuthService {
             phoneNumber: '',
             firstName: '',
             lastName: '',
-            dateOfBirth: null,
             photoUrl: user.photoURL ?? '',
             email: user.email ?? '',
             twoStepEnabled: false,
@@ -171,7 +170,7 @@ class AuthService {
   // Đổi mật khẩu
   Future<void> changePassword(String newPassword) async {
     try {
-      User? user = _auth.currentUser;
+      final user = _auth.currentUser;
       if (user == null) {
         throw Exception('Không có người dùng đăng nhập');
       }
@@ -214,7 +213,7 @@ class AuthService {
   // Bật/tắt xác minh hai bước
   Future<void> enableTwoStepVerification(bool enable) async {
     try {
-      User? user = _auth.currentUser;
+      final user = _auth.currentUser;
       if (user == null) {
         throw Exception('Không có người dùng đăng nhập');
       }
@@ -231,11 +230,11 @@ class AuthService {
   // Lấy người dùng hiện tại
   Future<UserProfile?> get currentUser async {
     try {
-      User? user = _auth.currentUser;
+      final user = _auth.currentUser;
       if (user != null) {
         print('Lấy thông tin người dùng hiện tại: ${user.uid}');
         // Lấy hồ sơ từ Firestore
-        DocumentSnapshot doc = await _firestore
+        final DocumentSnapshot doc = await _firestore
             .collection('users')
             .doc(user.uid)
             .get()
@@ -248,7 +247,7 @@ class AuthService {
 
         if (doc.exists) {
           print('Lấy hồ sơ từ Firestore thành công');
-          return UserProfile.fromMap(doc.data() as Map<String, dynamic>);
+          return UserProfile.fromMap(doc.data()! as Map<String, dynamic>);
         } else {
           print('Không tìm thấy hồ sơ, tạo hồ sơ mặc định');
           return UserProfile(
@@ -256,7 +255,6 @@ class AuthService {
             phoneNumber: '',
             firstName: '',
             lastName: '',
-            dateOfBirth: null,
             photoUrl: user.photoURL ?? '',
             email: user.email ?? '',
             twoStepEnabled: false,

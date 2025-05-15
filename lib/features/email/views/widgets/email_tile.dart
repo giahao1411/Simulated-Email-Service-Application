@@ -1,12 +1,12 @@
+import 'package:email_application/features/email/controllers/email_service.dart';
+import 'package:email_application/features/email/models/email.dart';
 import 'package:flutter/material.dart';
-import '../../controllers/email_service.dart';
-import '../../models/email.dart';
 
 class EmailTile extends StatelessWidget {
+
+  const EmailTile({required this.email, required this.index, super.key});
   final Email email;
   final int index;
-
-  const EmailTile({super.key, required this.email, required this.index});
 
   @override
   Widget build(BuildContext context) {

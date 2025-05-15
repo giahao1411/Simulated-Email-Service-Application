@@ -1,15 +1,13 @@
+import 'package:email_application/core/constants/app_strings.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_strings.dart';
 
 class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final VoidCallback onSaveDraft;
-  final VoidCallback onSendEmail;
 
   const ComposeAppBar({
-    super.key,
-    required this.onSaveDraft,
-    required this.onSendEmail,
+    required this.onSaveDraft, required this.onSendEmail, super.key,
   });
+  final VoidCallback onSaveDraft;
+  final VoidCallback onSendEmail;
 
   @override
   Widget build(BuildContext context) {

@@ -1,7 +1,7 @@
+import 'package:email_application/features/email/controllers/email_service.dart';
+import 'package:email_application/features/email/views/widgets/compose_app_bar.dart';
+import 'package:email_application/features/email/views/widgets/compose_body.dart';
 import 'package:flutter/material.dart';
-import '../controllers/email_service.dart';
-import './widgets/compose_app_bar.dart';
-import './widgets/compose_body.dart';
 
 class ComposeScreen extends StatefulWidget {
   const ComposeScreen({super.key});

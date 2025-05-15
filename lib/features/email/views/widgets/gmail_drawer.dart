@@ -1,17 +1,15 @@
+import 'package:email_application/core/constants/app_strings.dart';
+import 'package:email_application/features/email/views/settings_screen.dart';
+import 'package:email_application/features/email/views/widgets/drawer_item.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_strings.dart';
-import './drawer_item.dart';
-import '../../views/settings_screen.dart';
 
 class GmailDrawer extends StatelessWidget {
-  final String currentCategory;
-  final Function(String) onCategorySelected;
 
   const GmailDrawer({
-    super.key,
-    required this.currentCategory,
-    required this.onCategorySelected,
+    required this.currentCategory, required this.onCategorySelected, super.key,
   });
+  final String currentCategory;
+  final Function(String) onCategorySelected;
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +79,7 @@ class GmailDrawer extends StatelessWidget {
                   onTap: () => onCategorySelected(AppStrings.trash),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Divider(
                     color: Colors.grey[700],
                     height: 1,
