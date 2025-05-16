@@ -12,6 +12,7 @@ class ComposeScreen extends StatefulWidget {
 
 class _ComposeScreenState extends State<ComposeScreen> {
   final TextEditingController toController = TextEditingController();
+  final TextEditingController fromController = TextEditingController();
   final TextEditingController subjectController = TextEditingController();
   final TextEditingController bodyController = TextEditingController();
   final EmailService emailService = EmailService();
@@ -22,7 +23,9 @@ class _ComposeScreenState extends State<ComposeScreen> {
       subjectController.text,
       bodyController.text,
     );
-    Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   Future<void> handleSaveDraft() async {
@@ -31,7 +34,9 @@ class _ComposeScreenState extends State<ComposeScreen> {
       subjectController.text,
       bodyController.text,
     );
-    Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -43,9 +48,18 @@ class _ComposeScreenState extends State<ComposeScreen> {
       ),
       body: ComposeBody(
         toController: toController,
+        fromController: fromController,
         subjectController: subjectController,
         bodyController: bodyController,
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    toController.dispose();
+    subjectController.dispose();
+    bodyController.dispose();
+    super.dispose();
   }
 }

@@ -1,21 +1,36 @@
-import 'package:email_application/core/constants/app_strings.dart';
 import 'package:flutter/material.dart';
 
 class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
-
   const ComposeAppBar({
-    required this.onSaveDraft, required this.onSendEmail, super.key,
+    required this.onSaveDraft,
+    required this.onSendEmail,
+    super.key,
   });
+
   final VoidCallback onSaveDraft;
   final VoidCallback onSendEmail;
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: const Text(AppStrings.composeEmail),
+      leading: IconButton(
+        icon: const Icon(Icons.close, color: Colors.white70),
+        onPressed: () => Navigator.pop(context),
+      ),
+      backgroundColor: Colors.grey[900],
       actions: [
-        IconButton(icon: const Icon(Icons.save), onPressed: onSaveDraft),
-        IconButton(icon: const Icon(Icons.send), onPressed: onSendEmail),
+        IconButton(
+          icon: const Icon(Icons.attachment, color: Colors.white70),
+          onPressed: () {},
+        ),
+        IconButton(
+          icon: const Icon(Icons.send, size: 18, color: Colors.white70),
+          onPressed: onSendEmail,
+        ),
+        IconButton(
+          icon: const Icon(Icons.more_horiz, color: Colors.white70),
+          onPressed: () {},
+        ),
       ],
     );
   }

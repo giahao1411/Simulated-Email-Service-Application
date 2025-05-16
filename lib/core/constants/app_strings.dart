@@ -1,6 +1,7 @@
 class AppStrings {
   static const String composeEmail = 'Soạn thư';
   static const String to = 'Đến';
+  static const String from = 'Từ';
   static const String subject = 'Chủ đề';
   static const String body = 'Nội dung';
   static const String searchInMail = 'Tìm trong thư';
