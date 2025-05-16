@@ -117,6 +117,7 @@ class MyApp extends StatelessWidget {
           bodyMedium: TextStyle(color: Colors.white70),
         ),
       ),
+      themeMode: ThemeMode.dark,
       home: const LoginScreen(),
     );
   }
