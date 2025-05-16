@@ -71,12 +71,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         _showSnackBar('Đăng ký thành công! Vui lòng đăng nhập', true);
-        Navigator.pushReplacement(
+        await Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         errorMessage = 'Đăng ký thất bại: $e';
         isLoading = false;
@@ -129,7 +129,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(foregroundColor: Colors.red[700]),
-            ), dialogTheme: DialogThemeData(backgroundColor: theme.scaffoldBackgroundColor),
+            ),
+            dialogTheme: DialogThemeData(
+              backgroundColor: theme.scaffoldBackgroundColor,
+            ),
           ),
           child: child!,
         );

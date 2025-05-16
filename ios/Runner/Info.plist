@@ -29,6 +29,8 @@
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UISupportedInterfaceOrientations</key>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Ứng dụng cần truy cập thư viện ảnh để chọn avatar.</string>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
