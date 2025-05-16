@@ -1,3 +1,6 @@
+import 'package:email_application/features/email/controllers/auth_service.dart';
+import 'package:email_application/features/email/views/login_screen.dart';
+import 'package:email_application/features/email/views/otp_verification_screen.dart';
 import 'package:flutter/material.dart';
 import '../controllers/auth_service.dart';
 import 'login_screen.dart';
@@ -60,13 +63,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      await authService.register(
-        email: email,
-        password: password,
+      // Gửi OTP (Firebase tự động xử lý reCAPTCHA ngầm)
+      await authService.sendOtp(
         phoneNumber: phone,
-        firstName: firstName,
-        lastName: lastName,
-        dateOfBirth: selectedDate,
+        onCodeSent: (verificationId) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpVerificationScreen(
+                phoneNumber: phone,
+                verificationId: verificationId, // Truyền verificationId
+                onOtpVerified: (otp, verificationId) async {
+                  try {
+                    await authService.register(
+                      email: email,
+                      password: password,
+                      phoneNumber: phone,
+                      firstName: firstName,
+                      lastName: lastName,
+                      dateOfBirth: selectedDate,
+                      verificationId: verificationId,
+                      otp: otp,
+                    );
+                    if (mounted) {
+                      _showSnackBar('Đăng ký thành công! Vui lòng đăng nhập', true);
+                      await Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      );
+                    }
+                  } catch (e) {
+                    _showSnackBar('Đăng ký thất bại: $e', false);
+                  }
+                },
+              ),
+            ),
+          );
+        },
+        onError: (error) {
+          setState(() {
+            errorMessage = error;
+            isLoading = false;
+          });
+          _showSnackBar(error, false);
+        },
       );
 
       if (mounted) {
@@ -122,10 +162,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               primary: Colors.red[700],
               onPrimary: Colors.white,
               surface: theme.scaffoldBackgroundColor,
-              onSurface:
-                  theme.brightness == Brightness.dark
-                      ? Colors.white
-                      : Colors.black,
+              onSurface: theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
             ),
             dialogBackgroundColor: theme.scaffoldBackgroundColor,
             textButtonTheme: TextButtonThemeData(
@@ -174,10 +213,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Text(
                 'Đăng ký',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 30,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
               ),
               const SizedBox(height: 32),
               Row(
@@ -210,16 +249,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Trường ngày sinh
               GestureDetector(
                 onTap: () => selectDate(context),
                 child: AbsorbPointer(
                   child: TextField(
                     decoration: InputDecoration(
-                      hintText:
-                          selectedDate == null
-                              ? 'Chọn ngày sinh'
-                              : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+                      hintText: selectedDate == null
+                          ? 'Chọn ngày sinh'
+                          : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
                       prefixIcon: Icon(Icons.calendar_today, color: iconColor),
                       labelStyle: TextStyle(color: labelTextColor),
                       hintStyle: TextStyle(color: hintTextColor),
@@ -277,22 +314,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
               const SizedBox(height: 24),
-              // Nút đăng ký
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : handleRegister,
-                  child:
-                      isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                            'Đăng ký',
-                            style: TextStyle(fontSize: 16, color: Colors.white),
-                          ),
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Đăng ký',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),
-              // Chuyển sang đăng nhập
               TextButton(
                 onPressed: () {
                   Navigator.push(

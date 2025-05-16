@@ -1,3 +1,7 @@
+import 'package:email_application/features/email/controllers/auth_service.dart';
+import 'package:email_application/features/email/views/forgot_password_screen.dart';
+import 'package:email_application/features/email/views/gmail_screen.dart';
+import 'package:email_application/features/email/views/register_screen.dart';
 import 'package:flutter/material.dart';
 import '../controllers/auth_service.dart';
 import 'gmail_screen.dart';
@@ -54,27 +58,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> handlePasswordReset() async {
-    final email = emailController.text.trim();
-    if (email.isEmpty) {
-      setState(() {
-        errorMessage = 'Vui lòng nhập email để đặt lại mật khẩu';
-      });
-      _showSnackBar(errorMessage!, false);
-      return;
-    }
-
-    try {
-      await authService.resetPassword(email);
-      _showSnackBar('Email đặt lại mật khẩu đã được gửi', true);
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Đặt lại mật khẩu thất bại: $e';
-      });
-      _showSnackBar(errorMessage!, false);
-    }
-  }
-
   void _showSnackBar(String message, bool isSuccess) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -93,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: isSuccess ? Colors.green : Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 6),
       ),
     );
   }
@@ -103,13 +86,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle;
     final iconColor = labelStyle?.color ?? Colors.black54;
     final labelTextColor =
-        Theme.of(context).brightness == Brightness.dark
-            ? Colors.white
-            : Colors.grey[400]!;
+        Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.grey[400]!;
     final hintTextColor =
-        Theme.of(context).brightness == Brightness.dark
-            ? Colors.grey[400]!
-            : Colors.grey[400]!;
+        Theme.of(context).brightness == Brightness.dark ? Colors.grey[400]! : Colors.grey[400]!;
 
     return Scaffold(
       body: SafeArea(
@@ -129,10 +108,10 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 'Đăng nhập',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 30,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
               ),
               const SizedBox(height: 32),
               TextField(
@@ -143,6 +122,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: Icon(Icons.email, color: iconColor),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
+                  errorText: errorMessage,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -155,6 +138,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: Icon(Icons.lock, color: iconColor),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 obscureText: true,
               ),
@@ -163,18 +149,28 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : handleLogin,
-                  child:
-                      isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                            'Đăng nhập',
-                            style: TextStyle(fontSize: 16, color: Colors.white),
-                          ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Đăng nhập',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),
               TextButton(
-                onPressed: handlePasswordReset,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ForgotPasswordScreen(),
+                    ),
+                  );
+                },
                 child: const Text(
                   'Quên mật khẩu?',
                   style: TextStyle(color: Colors.red),

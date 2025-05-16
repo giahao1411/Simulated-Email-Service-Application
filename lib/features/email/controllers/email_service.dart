@@ -9,7 +9,6 @@ class EmailService {
   EmailService() : userPhone = FirebaseAuth.instance.currentUser?.phoneNumber;
 
   Stream<List<Email>> getEmails(String category) {
-    // Kiểm tra nếu người dùng chưa đăng nhập
     if (userPhone == null || FirebaseAuth.instance.currentUser == null) {
       print('Không truy vấn email vì chưa đăng nhập');
       return Stream.value([]);
