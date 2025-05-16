@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (context) => const GmailScreen()),
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         errorMessage = 'Đăng nhập thất bại: $e';
         isLoading = false;
@@ -67,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await authService.resetPassword(email);
       _showSnackBar('Email đặt lại mật khẩu đã được gửi', true);
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         errorMessage = 'Đặt lại mật khẩu thất bại: $e';
       });

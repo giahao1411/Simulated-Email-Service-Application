@@ -4,9 +4,10 @@ import 'package:email_application/features/email/views/widgets/drawer_item.dart'
 import 'package:flutter/material.dart';
 
 class GmailDrawer extends StatelessWidget {
-
   const GmailDrawer({
-    required this.currentCategory, required this.onCategorySelected, super.key,
+    required this.currentCategory,
+    required this.onCategorySelected,
+    super.key,
   });
   final String currentCategory;
   final Function(String) onCategorySelected;
@@ -70,7 +71,6 @@ class GmailDrawer extends StatelessWidget {
                 DrawerItem(
                   title: AppStrings.drafts,
                   icon: Icons.insert_drive_file,
-                  count: 10,
                   onTap: () => onCategorySelected(AppStrings.drafts),
                 ),
                 DrawerItem(
