@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         _showSnackBar('Đăng nhập thành công!', true);
-        Navigator.pushReplacement(
+        await Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const GmailScreen()),
         );

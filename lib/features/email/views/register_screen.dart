@@ -71,7 +71,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         _showSnackBar('Đăng ký thành công! Vui lòng đăng nhập', true);
-        Navigator.pushReplacement(
+        await Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
