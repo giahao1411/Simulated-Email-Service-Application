@@ -113,7 +113,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await authService.signOut();
       if (mounted) {
         _showSnackBar('Đăng xuất thành công', true);
-        Navigator.pushReplacement(
+        await Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
