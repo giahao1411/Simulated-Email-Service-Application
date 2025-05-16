@@ -2,8 +2,6 @@ import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/views/login_screen.dart';
 import 'package:email_application/features/email/views/otp_verification_screen.dart';
 import 'package:flutter/material.dart';
-import '../controllers/auth_service.dart';
-import 'login_screen.dart';
 import 'package:flutter/services.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -63,7 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      // Gửi OTP (Firebase tự động xử lý reCAPTCHA ngầm)
+      // Gửi OTP
       await authService.sendOtp(
         phoneNumber: phone,
         onCodeSent: (verificationId) {
@@ -72,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             MaterialPageRoute(
               builder: (context) => OtpVerificationScreen(
                 phoneNumber: phone,
-                verificationId: verificationId, // Truyền verificationId
+                verificationId: verificationId,
                 onOtpVerified: (otp, verificationId) async {
                   try {
                     await authService.register(
@@ -87,7 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     );
                     if (mounted) {
                       _showSnackBar('Đăng ký thành công! Vui lòng đăng nhập', true);
-                      await Navigator.pushReplacement(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (context) => const LoginScreen()),
                       );
@@ -99,6 +97,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
           );
+          setState(() {
+            isLoading = false;
+          });
         },
         onError: (error) {
           setState(() {
@@ -108,14 +109,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _showSnackBar(error, false);
         },
       );
-
-      if (mounted) {
-        _showSnackBar('Đăng ký thành công! Vui lòng đăng nhập', true);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
-      }
     } catch (e) {
       setState(() {
         errorMessage = 'Đăng ký thất bại: $e';
@@ -230,6 +223,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         prefixIcon: Icon(Icons.person, color: iconColor),
                         labelStyle: TextStyle(color: labelTextColor),
                         hintStyle: TextStyle(color: hintTextColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
@@ -243,6 +239,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         prefixIcon: Icon(Icons.person, color: iconColor),
                         labelStyle: TextStyle(color: labelTextColor),
                         hintStyle: TextStyle(color: hintTextColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
@@ -260,6 +259,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: Icon(Icons.calendar_today, color: iconColor),
                       labelStyle: TextStyle(color: labelTextColor),
                       hintStyle: TextStyle(color: hintTextColor),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),
@@ -273,6 +275,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icon(Icons.email, color: iconColor),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -285,6 +290,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icon(Icons.lock, color: iconColor),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 obscureText: true,
               ),
@@ -297,6 +305,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icon(Icons.lock, color: iconColor),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 obscureText: true,
               ),
@@ -309,6 +320,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icon(Icons.phone, color: iconColor),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -318,6 +332,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : handleRegister,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                   child: isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(

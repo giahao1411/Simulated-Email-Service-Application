@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String phoneNumber;
-  final String verificationId; // Thêm verificationId làm tham số
+  final String verificationId;
   final Function(String, String) onOtpVerified;
 
   const OtpVerificationScreen({
     super.key,
     required this.phoneNumber,
-    required this.verificationId, // Yêu cầu verificationId
+    required this.verificationId,
     required this.onOtpVerified,
   });
 
@@ -38,12 +38,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         return;
       }
 
-      // Gọi callback với OTP và verificationId chính xác
+      print('Gọi onOtpVerified với OTP: $otp, verificationId: ${widget.verificationId}');
       widget.onOtpVerified(otp, widget.verificationId);
       setState(() {
         isLoading = false;
       });
     } catch (e) {
+      print('Lỗi xác minh OTP trong OtpVerificationScreen: $e');
       setState(() {
         errorMessage = 'Xác minh OTP thất bại: $e';
         isLoading = false;

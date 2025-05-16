@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/user_profile.dart';
+import 'package:email_application/features/email/models/user_profile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -24,6 +24,11 @@ class AuthService {
     required String phoneNumber,
     required Function(String) onCodeSent,
     required Function(String) onError,
+    String? email,
+    String? password,
+    String? firstName,
+    String? lastName,
+    DateTime? dateOfBirth,
   }) async {
     try {
       final formattedPhoneNumber = _formatPhoneNumber(phoneNumber);
@@ -31,8 +36,27 @@ class AuthService {
 
       await _auth.verifyPhoneNumber(
         phoneNumber: formattedPhoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential) {
+        verificationCompleted: (PhoneAuthCredential credential) async {
           print('Xác minh tự động hoàn tất (chỉ trên Android)');
+          if (email != null && password != null) {
+            try {
+              await _auth.signInWithCredential(credential);
+              await register(
+                email: email,
+                password: password,
+                phoneNumber: phoneNumber,
+                firstName: firstName,
+                lastName: lastName,
+                dateOfBirth: dateOfBirth,
+                verificationId: credential.verificationId ?? '',
+                otp: credential.smsCode ?? '',
+              );
+              print('Đăng ký tự động thành công');
+            } catch (e) {
+              print('Lỗi đăng ký tự động: $e');
+              onError('Đăng ký tự động thất bại: $e');
+            }
+          }
         },
         verificationFailed: (FirebaseAuthException e) {
           print('Lỗi gửi OTP: ${e.code} - ${e.message}');
@@ -121,17 +145,8 @@ class AuthService {
     try {
       print('Bắt đầu đăng ký với email: $email, phone: $phoneNumber');
 
-      // Xác minh OTP trước khi tạo tài khoản
-      final otpVerified = await verifyOtp(
-        otp: otp,
-        verificationId: verificationId,
-      );
-      if (!otpVerified) {
-        throw Exception('Xác minh OTP không thành công');
-      }
-
-      // Tạo người dùng với email và mật khẩu
-      UserCredential userCredential = await _auth
+      // Tạo tài khoản email/mật khẩu
+      final userCredential = await _auth
           .createUserWithEmailAndPassword(email: email, password: password)
           .timeout(
             const Duration(seconds: 10),
@@ -139,16 +154,24 @@ class AuthService {
               throw Exception('Hết thời gian chờ khi tạo tài khoản');
             },
           );
-      User? user = userCredential.user;
+      final user = userCredential.user;
 
       if (user != null) {
         print('Tài khoản được tạo với UID: ${user.uid}');
 
+        // Liên kết số điện thoại
+        final credential = PhoneAuthProvider.credential(
+          verificationId: verificationId,
+          smsCode: otp,
+        );
+        await user.linkWithCredential(credential);
+        print('Liên kết số điện thoại thành công');
+
         // Định dạng số điện thoại
-        String formattedPhoneNumber = _formatPhoneNumber(phoneNumber);
+        final formattedPhoneNumber = _formatPhoneNumber(phoneNumber);
 
         // Tạo hồ sơ người dùng
-        UserProfile userProfile = UserProfile(
+        final userProfile = UserProfile(
           uid: user.uid,
           phoneNumber: formattedPhoneNumber,
           firstName: firstName,
@@ -208,7 +231,7 @@ class AuthService {
     try {
       print('Bắt đầu đăng nhập với email: $email');
 
-      UserCredential userCredential = await _auth
+      final userCredential = await _auth
           .signInWithEmailAndPassword(email: email, password: password)
           .timeout(
             const Duration(seconds: 10),
@@ -216,13 +239,13 @@ class AuthService {
               throw Exception('Hết thời gian chờ khi đăng nhập');
             },
           );
-      User? user = userCredential.user;
+      final user = userCredential.user;
 
       if (user != null) {
         print('Đăng nhập thành công với UID: ${user.uid}');
 
         // Lấy hồ sơ từ Firestore
-        DocumentSnapshot doc = await _firestore
+        final DocumentSnapshot doc = await _firestore
             .collection('users')
             .doc(user.uid)
             .get()
@@ -235,7 +258,7 @@ class AuthService {
 
         if (doc.exists) {
           print('Lấy hồ sơ từ Firestore thành công');
-          return UserProfile.fromMap(doc.data() as Map<String, dynamic>);
+          return UserProfile.fromMap(doc.data()! as Map<String, dynamic>);
         } else {
           print('Không tìm thấy hồ sơ, tạo hồ sơ mặc định');
           return UserProfile(
@@ -243,7 +266,6 @@ class AuthService {
             phoneNumber: '',
             firstName: '',
             lastName: '',
-            dateOfBirth: null,
             photoUrl: user.photoURL ?? '',
             email: user.email ?? '',
             twoStepEnabled: false,
@@ -271,7 +293,7 @@ class AuthService {
   // Đổi mật khẩu
   Future<void> changePassword(String newPassword) async {
     try {
-      User? user = _auth.currentUser;
+      final user = _auth.currentUser;
       if (user == null) {
         throw Exception('Không có người dùng đăng nhập');
       }
@@ -298,17 +320,21 @@ class AuthService {
     required String verificationId,
     required String otp,
     required String newPassword,
-    required String oldPassword,
   }) async {
     try {
       // Xác minh OTP
-      final otpVerified = await verifyOtp(
-        otp: otp,
+      final credential = PhoneAuthProvider.credential(
         verificationId: verificationId,
+        smsCode: otp,
       );
-      if (!otpVerified) {
-        throw Exception('Xác minh OTP không thành công');
+      final userCredential = await _auth.signInWithCredential(credential);
+      final phoneUser = userCredential.user;
+
+      if (phoneUser == null) {
+        throw Exception('Xác minh OTP thất bại, không có người dùng');
       }
+
+      print('Đăng nhập bằng OTP thành công, UID: ${phoneUser.uid}');
 
       // Kiểm tra định dạng số điện thoại
       final formattedPhoneNumber = _formatPhoneNumber(phoneNumber);
@@ -325,40 +351,64 @@ class AuthService {
         );
       }
 
+      if (userQuery.docs.length > 1) {
+        throw Exception(
+          'Có nhiều tài khoản liên kết với số điện thoại này, vui lòng liên hệ hỗ trợ',
+        );
+      }
+
       final userDoc = userQuery.docs.first;
       final userData = userDoc.data() as Map<String, dynamic>;
-      final String userEmail = (userData['email'] ?? '') as String;
+      final String userEmail = userData['email'] as String;
+      final String userUid = userData['uid'] as String;
 
-      if (userEmail.isEmpty) {
-        throw Exception('Không tìm thấy email liên kết với số điện thoại này');
+      print('Tìm thấy tài khoản với email: $userEmail, UID: $userUid');
+
+      // Kiểm tra xem tài khoản OTP có khớp với tài khoản Firestore không
+      if (phoneUser.uid != userUid) {
+        print('CẢNH BÁO: UID OTP (${phoneUser.uid}) không khớp với UID Firestore ($userUid)');
+        // Liên kết thông tin xác thực điện thoại với tài khoản email
+        try {
+          await _auth.signOut();
+          // Đăng nhập vào tài khoản email/mật khẩu bằng liên kết OTP
+          final emailUserCredential = await _auth.signInAnonymously();
+          final emailUser = emailUserCredential.user;
+          if (emailUser != null) {
+            await emailUser.linkWithCredential(credential);
+            await emailUser.updateEmail(userEmail);
+            print('Liên kết thông tin xác thực điện thoại với tài khoản email thành công');
+            // Gửi email đặt lại mật khẩu
+            await _auth.sendPasswordResetEmail(email: userEmail);
+            print('Đã gửi email đặt lại mật khẩu đến: $userEmail');
+          } else {
+            throw Exception('Không thể tạo tài khoản tạm thời để liên kết');
+          }
+        } catch (e) {
+          print('Không thể liên kết thông tin xác thực: $e');
+          // Gửi email đặt lại mật khẩu như phương án dự phòng
+          await _auth.sendPasswordResetEmail(email: userEmail);
+          print('Đã gửi email đặt lại mật khẩu đến: $userEmail');
+          throw Exception(
+            'Không thể liên kết tài khoản. Email đặt lại mật khẩu đã được gửi đến $userEmail. Vui lòng kiểm tra email để đặt lại mật khẩu.',
+          );
+        }
+      } else {
+        // Nếu UID khớp, gửi email đặt lại mật khẩu
+        await _auth.sendPasswordResetEmail(email: userEmail);
+        print('Đã gửi email đặt lại mật khẩu đến: $userEmail');
       }
 
-      // Đăng nhập với email/mật khẩu cũ
-      await _auth.signInWithEmailAndPassword(
-        email: userEmail,
-        password: oldPassword,
-      );
-
-      // Đổi mật khẩu
-      final user = _auth.currentUser;
-      if (user == null) {
-        throw Exception('Không có người dùng đăng nhập');
-      }
-      if (newPassword.length < 6) {
-        throw Exception('Mật khẩu mới phải có ít nhất 6 ký tự');
-      }
-      await user.updatePassword(newPassword);
-      print('Đổi mật khẩu thành công');
-
-      // Đăng xuất sau khi đổi mật khẩu
+      // Đăng xuất sau khi gửi email
       await _auth.signOut();
       print('Đăng xuất sau khi khôi phục mật khẩu');
     } on FirebaseAuthException catch (e) {
       print('FirebaseAuthException: ${e.message}');
-      if (e.code == 'wrong-password') {
-        throw Exception('Mật khẩu cũ không đúng');
-      } else if (e.code == 'user-not-found') {
-        throw Exception('Không tìm thấy người dùng với email này');
+      if (e.code == 'invalid-verification-code') {
+        throw Exception('Mã OTP không đúng');
+      } else if (e.code == 'session-expired') {
+        throw Exception('Phiên xác minh đã hết hạn, vui lòng gửi lại OTP');
+      } else if (e.code == 'requires-recent-login') {
+        throw Exception('Yêu cầu đăng nhập lại để đổi mật khẩu');
       }
       throw Exception('Khôi phục mật khẩu thất bại: ${e.message}');
     } catch (e) {
@@ -370,7 +420,7 @@ class AuthService {
   // Bật/tắt xác minh hai bước
   Future<void> enableTwoStepVerification(bool enable) async {
     try {
-      User? user = _auth.currentUser;
+      final user = _auth.currentUser;
       if (user == null) {
         throw Exception('Không có người dùng đăng nhập');
       }
@@ -387,10 +437,9 @@ class AuthService {
   // Lấy người dùng hiện tại
   Future<UserProfile?> get currentUser async {
     try {
-      User? user = _auth.currentUser;
+      final user = _auth.currentUser;
       if (user != null) {
         print('Lấy thông tin người dùng hiện tại: ${user.uid}');
-        // Lấy hồ sơ từ Firestore
         final DocumentSnapshot doc = await _firestore
             .collection('users')
             .doc(user.uid)
@@ -404,7 +453,7 @@ class AuthService {
 
         if (doc.exists) {
           print('Lấy hồ sơ từ Firestore thành công');
-          return UserProfile.fromMap(doc.data() as Map<String, dynamic>);
+          return UserProfile.fromMap(doc.data()! as Map<String, dynamic>);
         } else {
           print('Không tìm thấy hồ sơ, tạo hồ sơ mặc định');
           return UserProfile(
@@ -412,7 +461,6 @@ class AuthService {
             phoneNumber: '',
             firstName: '',
             lastName: '',
-            dateOfBirth: null,
             photoUrl: user.photoURL ?? '',
             email: user.email ?? '',
             twoStepEnabled: false,

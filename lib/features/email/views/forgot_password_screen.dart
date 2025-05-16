@@ -1,7 +1,7 @@
 import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/views/otp_verification_screen.dart';
 import 'package:email_application/features/email/views/login_screen.dart';
-import 'package:email_application/features/email/views/new_password_screen.dart';
+import 'package:email_application/features/email/views/new_password_screen.dart'; // Thêm import này
 import 'package:flutter/material.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
