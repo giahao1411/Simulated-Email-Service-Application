@@ -76,15 +76,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _pickImage() async {
     try {
       if (kIsWeb) {
-        final input = html.FileUploadInputElement()..accept = 'image/*';
-        input.click();
+        final input =
+            html.FileUploadInputElement()
+              ..accept = 'image/*'
+              ..click();
 
         await input.onChange.first;
         final files = input.files;
         if (files != null && files.isNotEmpty) {
           final file = files.first;
-          final reader = html.FileReader();
-          reader.readAsDataUrl(file);
+          final reader = html.FileReader()..readAsDataUrl(file);
           await reader.onLoad.first;
           final encoded = reader.result! as String;
           setState(() {
@@ -101,7 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           await _updateAvatar(_avatarImagePath!);
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _showSnackBar('Lỗi khi chọn ảnh: $e', false);
     }
   }
@@ -317,10 +318,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child:
                               _avatarImagePath == null
                                   ? Text(
-                                    userProfile?.firstName?.isNotEmpty == true
+                                    (userProfile?.firstName ?? '').isNotEmpty
                                         ? userProfile!.firstName![0]
-                                        : userProfile?.lastName?.isNotEmpty ==
-                                            true
+                                        : (userProfile?.lastName ?? '')
+                                            .isNotEmpty
                                         ? userProfile!.lastName![0]
                                         : '?',
                                     style: const TextStyle(
