@@ -3,16 +3,16 @@ import 'package:email_application/features/email/views/login_screen.dart';
 import 'package:flutter/material.dart';
 
 class NewPasswordScreen extends StatefulWidget {
-  final String phoneNumber;
-  final String verificationId;
-  final String otp;
-
   const NewPasswordScreen({
-    super.key,
     required this.phoneNumber,
     required this.verificationId,
     required this.otp,
+    super.key,
   });
+
+  final String phoneNumber;
+  final String verificationId;
+  final String otp;
 
   @override
   State<NewPasswordScreen> createState() => _NewPasswordScreenState();
@@ -20,7 +20,8 @@ class NewPasswordScreen extends StatefulWidget {
 
 class _NewPasswordScreenState extends State<NewPasswordScreen> {
   final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   final AuthService authService = AuthService();
   String? errorMessage;
   bool isLoading = false;
@@ -37,7 +38,8 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
 
       if (newPassword.isEmpty || confirmPassword.isEmpty) {
         setState(() {
-          errorMessage = 'Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu';
+          errorMessage =
+              'Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu';
           isLoading = false;
         });
         _showSnackBar(errorMessage!, false);
@@ -73,11 +75,11 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         'Một email đặt lại mật khẩu đã được gửi đến email của bạn. Vui lòng khôi phục email hao@123.com để tiếp tục.',
         true,
       );
-      Navigator.pushReplacement(
+      await Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         errorMessage = e.toString().replaceFirst('Exception: ', '');
         isLoading = false;
@@ -97,10 +99,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(color: Colors.white),
-              ),
+              child: Text(message, style: const TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -117,9 +116,13 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
     final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle;
     final iconColor = labelStyle?.color ?? Colors.black54;
     final labelTextColor =
-        Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.grey[400]!;
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Colors.grey[400]!;
     final hintTextColor =
-        Theme.of(context).brightness == Brightness.dark ? Colors.grey[400]! : Colors.grey[400]!;
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[400]!
+            : Colors.grey[400]!;
 
     return Scaffold(
       appBar: AppBar(
@@ -184,38 +187,40 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Gửi email đặt lại mật khẩu',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
+                  child:
+                      isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                            'Gửi email đặt lại mật khẩu',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
                 ),
               ),
               const SizedBox(height: 16),
               Center(
                 child: TextButton(
-                  onPressed: isLoading
-                      ? null
-                      : () async {
-                          try {
-                            await authService.resetPasswordWithOtp(
-                              phoneNumber: widget.phoneNumber,
-                              verificationId: widget.verificationId,
-                              otp: widget.otp,
-                              newPassword: newPasswordController.text.trim(),
-                            );
-                            _showSnackBar(
-                              'Đã gửi lại email đặt lại mật khẩu! Vui lòng khôi phục email hao@123.com.',
-                              true,
-                            );
-                          } catch (e) {
-                            _showSnackBar(
-                              e.toString().replaceFirst('Exception: ', ''),
-                              false,
-                            );
-                          }
-                        },
+                  onPressed:
+                      isLoading
+                          ? null
+                          : () async {
+                            try {
+                              await authService.resetPasswordWithOtp(
+                                phoneNumber: widget.phoneNumber,
+                                verificationId: widget.verificationId,
+                                otp: widget.otp,
+                                newPassword: newPasswordController.text.trim(),
+                              );
+                              _showSnackBar(
+                                'Đã gửi lại email đặt lại mật khẩu! Vui lòng khôi phục email hao@123.com.',
+                                true,
+                              );
+                            } on Exception catch (e) {
+                              _showSnackBar(
+                                e.toString().replaceFirst('Exception: ', ''),
+                                false,
+                              );
+                            }
+                          },
                   child: const Text(
                     'Gửi lại email',
                     style: TextStyle(color: Colors.blue),

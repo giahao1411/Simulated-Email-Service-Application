@@ -68,33 +68,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OtpVerificationScreen(
-                phoneNumber: phone,
-                verificationId: verificationId,
-                onOtpVerified: (otp, verificationId) async {
-                  try {
-                    await authService.register(
-                      email: email,
-                      password: password,
-                      phoneNumber: phone,
-                      firstName: firstName,
-                      lastName: lastName,
-                      dateOfBirth: selectedDate,
-                      verificationId: verificationId,
-                      otp: otp,
-                    );
-                    if (mounted) {
-                      _showSnackBar('Đăng ký thành công! Vui lòng đăng nhập', true);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
-                      );
-                    }
-                  } catch (e) {
-                    _showSnackBar('Đăng ký thất bại: $e', false);
-                  }
-                },
-              ),
+              builder:
+                  (context) => OtpVerificationScreen(
+                    phoneNumber: phone,
+                    verificationId: verificationId,
+                    onOtpVerified: (otp, verificationId) async {
+                      try {
+                        await authService.register(
+                          email: email,
+                          password: password,
+                          phoneNumber: phone,
+                          firstName: firstName,
+                          lastName: lastName,
+                          dateOfBirth: selectedDate,
+                          verificationId: verificationId,
+                          otp: otp,
+                        );
+                        if (mounted) {
+                          _showSnackBar(
+                            'Đăng ký thành công! Vui lòng đăng nhập',
+                            true,
+                          );
+                          await Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                        }
+                      } on Exception catch (e) {
+                        _showSnackBar('Đăng ký thất bại: $e', false);
+                      }
+                    },
+                  ),
             ),
           );
           setState(() {
@@ -109,7 +115,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _showSnackBar(error, false);
         },
       );
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         errorMessage = 'Đăng ký thất bại: $e';
         isLoading = false;
@@ -155,9 +161,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               primary: Colors.red[700],
               onPrimary: Colors.white,
               surface: theme.scaffoldBackgroundColor,
-              onSurface: theme.brightness == Brightness.dark
-                  ? Colors.white
-                  : Colors.black,
+              onSurface:
+                  theme.brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(foregroundColor: Colors.red[700]),
@@ -207,10 +214,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Text(
                 'Đăng ký',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 30,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 30,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 32),
               Row(
@@ -254,9 +261,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: AbsorbPointer(
                   child: TextField(
                     decoration: InputDecoration(
-                      hintText: selectedDate == null
-                          ? 'Chọn ngày sinh'
-                          : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+                      hintText:
+                          selectedDate == null
+                              ? 'Chọn ngày sinh'
+                              : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
                       prefixIcon: Icon(Icons.calendar_today, color: iconColor),
                       labelStyle: TextStyle(color: labelTextColor),
                       hintStyle: TextStyle(color: hintTextColor),
@@ -337,12 +345,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Đăng ký',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
+                  child:
+                      isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                            'Đăng ký',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
                 ),
               ),
               const SizedBox(height: 16),

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
-  final String phoneNumber;
-  final String verificationId;
-  final Function(String, String) onOtpVerified;
-
   const OtpVerificationScreen({
-    super.key,
     required this.phoneNumber,
     required this.verificationId,
     required this.onOtpVerified,
+    super.key,
   });
+
+  final String phoneNumber;
+  final String verificationId;
+  final Function(String, String) onOtpVerified;
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -38,12 +38,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         return;
       }
 
-      print('Gọi onOtpVerified với OTP: $otp, verificationId: ${widget.verificationId}');
+      print(
+        'Gọi onOtpVerified với OTP: $otp, verificationId: ${widget.verificationId}',
+      );
       widget.onOtpVerified(otp, widget.verificationId);
       setState(() {
         isLoading = false;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       print('Lỗi xác minh OTP trong OtpVerificationScreen: $e');
       setState(() {
         errorMessage = 'Xác minh OTP thất bại: $e';
@@ -64,10 +66,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(color: Colors.white),
-              ),
+              child: Text(message, style: const TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -84,9 +83,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle;
     final iconColor = labelStyle?.color ?? Colors.black54;
     final labelTextColor =
-        Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.grey[400]!;
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Colors.grey[400]!;
     final hintTextColor =
-        Theme.of(context).brightness == Brightness.dark ? Colors.grey[400]! : Colors.grey[400]!;
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[400]!
+            : Colors.grey[400]!;
 
     return Scaffold(
       appBar: AppBar(
@@ -137,12 +140,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Xác minh OTP',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
+                  child:
+                      isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                            'Xác minh OTP',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
                 ),
               ),
             ],

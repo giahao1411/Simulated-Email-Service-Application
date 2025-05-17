@@ -1,7 +1,6 @@
 import 'package:email_application/features/email/controllers/auth_service.dart';
+import 'package:email_application/features/email/views/new_password_screen.dart';
 import 'package:email_application/features/email/views/otp_verification_screen.dart';
-import 'package:email_application/features/email/views/login_screen.dart';
-import 'package:email_application/features/email/views/new_password_screen.dart'; // Thêm import này
 import 'package:flutter/material.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -38,7 +37,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final phonePattern = RegExp(r'^(?:\+84|0)\d{9}$');
       if (!phonePattern.hasMatch(phone)) {
         setState(() {
-          errorMessage = 'Số điện thoại không hợp lệ. Vui lòng nhập định dạng +84 hoặc 0xxxxxxxxx';
+          errorMessage =
+              'Số điện thoại không hợp lệ. Vui lòng nhập định dạng +84 hoặc 0xxxxxxxxx';
           isLoading = false;
         });
         _showSnackBar(errorMessage!, false);
@@ -52,22 +52,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OtpVerificationScreen(
-                phoneNumber: phone,
-                verificationId: verificationId,
-                onOtpVerified: (otp, verificationId) async {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NewPasswordScreen(
-                        phoneNumber: phone,
-                        verificationId: verificationId,
-                        otp: otp,
-                      ),
-                    ),
-                  );
-                },
-              ),
+              builder:
+                  (context) => OtpVerificationScreen(
+                    phoneNumber: phone,
+                    verificationId: verificationId,
+                    onOtpVerified: (otp, verificationId) async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => NewPasswordScreen(
+                                phoneNumber: phone,
+                                verificationId: verificationId,
+                                otp: otp,
+                              ),
+                        ),
+                      );
+                    },
+                  ),
             ),
           );
         },
@@ -79,7 +81,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           _showSnackBar(error, false);
         },
       );
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         errorMessage = 'Khôi phục mật khẩu thất bại: $e';
         isLoading = false;
@@ -99,10 +101,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(color: Colors.white),
-              ),
+              child: Text(message, style: const TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -119,9 +118,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle;
     final iconColor = labelStyle?.color ?? Colors.black54;
     final labelTextColor =
-        Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.grey[400]!;
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Colors.grey[400]!;
     final hintTextColor =
-        Theme.of(context).brightness == Brightness.dark ? Colors.grey[400]! : Colors.grey[400]!;
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[400]!
+            : Colors.grey[400]!;
 
     return Scaffold(
       appBar: AppBar(
@@ -171,12 +174,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Gửi mã OTP',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
+                  child:
+                      isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                            'Gửi mã OTP',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
                 ),
               ),
             ],

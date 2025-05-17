@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String? _verificationId;
 
   // Định dạng số điện thoại
   String _formatPhoneNumber(String phoneNumber) {
@@ -52,7 +51,7 @@ class AuthService {
                 otp: credential.smsCode ?? '',
               );
               print('Đăng ký tự động thành công');
-            } catch (e) {
+            } on Exception catch (e) {
               print('Lỗi đăng ký tự động: $e');
               onError('Đăng ký tự động thất bại: $e');
             }
@@ -82,16 +81,16 @@ class AuthService {
         },
         codeSent: (String verificationId, int? resendToken) {
           print('Mã OTP đã được gửi, verificationId: $verificationId');
-          _verificationId = verificationId;
           onCodeSent(verificationId);
         },
         codeAutoRetrievalTimeout: (String verificationId) {
-          print('Hết thời gian tự động lấy mã OTP, verificationId: $verificationId');
-          _verificationId = verificationId;
+          print(
+            'Hết thời gian tự động lấy mã OTP, verificationId: $verificationId',
+          );
         },
         timeout: const Duration(seconds: 60),
       );
-    } catch (e) {
+    } on Exception catch (e) {
       print('Lỗi gửi OTP: $e');
       onError('Gửi OTP thất bại: $e');
     }
@@ -125,7 +124,7 @@ class AuthService {
           errorMessage = 'Xác minh OTP thất bại: ${e.message}';
       }
       throw Exception(errorMessage);
-    } catch (e) {
+    } on Exception catch (e) {
       print('Lỗi xác minh OTP: $e');
       rethrow;
     }
@@ -136,11 +135,11 @@ class AuthService {
     required String email,
     required String password,
     required String phoneNumber,
+    required String verificationId,
+    required String otp,
     String? firstName,
     String? lastName,
     DateTime? dateOfBirth,
-    required String verificationId,
-    required String otp,
   }) async {
     try {
       print('Bắt đầu đăng ký với email: $email, phone: $phoneNumber');
@@ -198,7 +197,7 @@ class AuthService {
                 },
               );
           print('Lưu hồ sơ vào Firestore thành công');
-        } catch (e) {
+        } on Exception catch (e) {
           print('Lỗi khi lưu hồ sơ vào Firestore: $e');
           throw Exception('Không thể lưu hồ sơ: $e');
         }
@@ -217,7 +216,7 @@ class AuthService {
         throw Exception('Mật khẩu quá yếu');
       }
       throw Exception('Đăng ký thất bại: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       print('Lỗi đăng ký: $e');
       rethrow;
     }
@@ -284,7 +283,7 @@ class AuthService {
         throw Exception('Email không hợp lệ');
       }
       throw Exception('Đăng nhập thất bại: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       print('Lỗi đăng nhập: $e');
       rethrow;
     }
@@ -308,7 +307,7 @@ class AuthService {
         throw Exception('Vui lòng đăng nhập lại để đổi mật khẩu');
       }
       throw Exception('Đổi mật khẩu thất bại: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       print('Lỗi đổi mật khẩu: $e');
       rethrow;
     }
@@ -340,10 +339,11 @@ class AuthService {
       final formattedPhoneNumber = _formatPhoneNumber(phoneNumber);
 
       // Tìm tài khoản người dùng theo số điện thoại
-      final QuerySnapshot userQuery = await _firestore
-          .collection('users')
-          .where('phoneNumber', isEqualTo: formattedPhoneNumber)
-          .get();
+      final QuerySnapshot userQuery =
+          await _firestore
+              .collection('users')
+              .where('phoneNumber', isEqualTo: formattedPhoneNumber)
+              .get();
 
       if (userQuery.docs.isEmpty) {
         throw Exception(
@@ -366,7 +366,9 @@ class AuthService {
 
       // Kiểm tra xem tài khoản OTP có khớp với tài khoản Firestore không
       if (phoneUser.uid != userUid) {
-        print('CẢNH BÁO: UID OTP (${phoneUser.uid}) không khớp với UID Firestore ($userUid)');
+        print(
+          'CẢNH BÁO: UID OTP (${phoneUser.uid}) không khớp với UID Firestore ($userUid)',
+        );
         // Liên kết thông tin xác thực điện thoại với tài khoản email
         try {
           await _auth.signOut();
@@ -376,14 +378,16 @@ class AuthService {
           if (emailUser != null) {
             await emailUser.linkWithCredential(credential);
             await emailUser.updateEmail(userEmail);
-            print('Liên kết thông tin xác thực điện thoại với tài khoản email thành công');
+            print(
+              'Liên kết thông tin xác thực điện thoại với tài khoản email thành công',
+            );
             // Gửi email đặt lại mật khẩu
             await _auth.sendPasswordResetEmail(email: userEmail);
             print('Đã gửi email đặt lại mật khẩu đến: $userEmail');
           } else {
             throw Exception('Không thể tạo tài khoản tạm thời để liên kết');
           }
-        } catch (e) {
+        } on Exception catch (e) {
           print('Không thể liên kết thông tin xác thực: $e');
           // Gửi email đặt lại mật khẩu như phương án dự phòng
           await _auth.sendPasswordResetEmail(email: userEmail);
@@ -411,7 +415,7 @@ class AuthService {
         throw Exception('Yêu cầu đăng nhập lại để đổi mật khẩu');
       }
       throw Exception('Khôi phục mật khẩu thất bại: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       print('Lỗi khôi phục mật khẩu: $e');
       rethrow;
     }
@@ -428,7 +432,7 @@ class AuthService {
         'twoStepEnabled': enable,
       }, SetOptions(merge: true));
       print('Cập nhật xác minh hai bước thành công: $enable');
-    } catch (e) {
+    } on Exception catch (e) {
       print('Lỗi cập nhật xác minh hai bước: $e');
       rethrow;
     }
@@ -469,7 +473,7 @@ class AuthService {
         }
       }
       return null;
-    } catch (e) {
+    } on Exception catch (e) {
       print('Lỗi lấy thông tin người dùng hiện tại: $e');
       return null;
     }
@@ -480,7 +484,7 @@ class AuthService {
     try {
       await _auth.signOut();
       print('Đăng xuất thành công');
-    } catch (e) {
+    } on Exception catch (e) {
       print('Lỗi đăng xuất: $e');
       rethrow;
     }
