@@ -1,8 +1,15 @@
+import 'dart:convert';
+import 'dart:html' as html; // Cho web
+import 'dart:io';
+
+import 'package:email_application/features/email/controllers/auth_service.dart';
+import 'package:email_application/features/email/controllers/profile_service.dart';
+import 'package:email_application/features/email/models/user_profile.dart';
+import 'package:email_application/features/email/views/login_screen.dart';
+import 'package:flutter/foundation.dart'; // Cho kIsWeb
 import 'package:flutter/material.dart';
-import '../controllers/auth_service.dart';
-import '../controllers/profile_service.dart';
-import '../models/user_profile.dart';
-import 'login_screen.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -22,11 +29,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool isTwoStepEnabled = false;
   bool isLoading = false;
   UserProfile? userProfile;
+  String? _avatarImagePath;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
+    _loadPreferences();
     _loadProfile();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      isAutoReply = prefs.getBool('isAutoReply') ?? false;
+    });
+  }
+
+  Future<void> _savePreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', isDarkMode);
+    await prefs.setBool('isAutoReply', isAutoReply);
   }
 
   Future<void> _loadProfile() async {
@@ -38,11 +62,104 @@ class _SettingsScreenState extends State<SettingsScreen> {
           lastNameController.text = profile.lastName ?? '';
           isTwoStepEnabled = profile.twoStepEnabled ?? false;
           userProfile = profile;
+          _avatarImagePath = profile.photoUrl;
         });
+      } else {
+        _showSnackBar('Không tải được hồ sơ', false);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       print('Lỗi khi tải hồ sơ: $e');
       _showSnackBar('Lỗi khi tải hồ sơ: $e', false);
+    }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      if (kIsWeb) {
+        final input =
+            html.FileUploadInputElement()
+              ..accept = 'image/*'
+              ..click();
+
+        await input.onChange.first;
+        final files = input.files;
+        if (files != null && files.isNotEmpty) {
+          final file = files.first;
+          final reader = html.FileReader()..readAsDataUrl(file);
+          await reader.onLoad.first;
+          final encoded = reader.result! as String;
+          setState(() {
+            _avatarImagePath = encoded;
+          });
+          await _updateAvatarFromWeb(encoded);
+        }
+      } else {
+        final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+        if (pickedFile != null) {
+          setState(() {
+            _avatarImagePath = pickedFile.path;
+          });
+          await _updateAvatar(_avatarImagePath!);
+        }
+      }
+    } on Exception catch (e) {
+      _showSnackBar('Lỗi khi chọn ảnh: $e', false);
+    }
+  }
+
+  Future<void> _updateAvatar(String imagePath) async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final downloadUrl = await profileService.uploadImage(imagePath);
+      print('Download URL (Mobile): $downloadUrl');
+      await profileService.updateProfile(photoUrl: downloadUrl);
+      setState(() {
+        _avatarImagePath = downloadUrl;
+      });
+      _showSnackBar('Cập nhật avatar thành công', true);
+    } on Exception catch (e) {
+      _showSnackBar('Lỗi khi cập nhật avatar: $e', false);
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _updateAvatarFromWeb(String base64String) async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final user = await authService.currentUser;
+      if (user == null) throw Exception('Người dùng chưa đăng nhập');
+
+      final base64Data = base64String.split(',').last;
+      final bytes = base64Decode(base64Data);
+
+      final storageRef = profileService
+          .storage // Sử dụng getter public
+          .ref()
+          .child(
+            'avatars/${user.uid}/${DateTime.now().millisecondsSinceEpoch}.png',
+          );
+      await storageRef.putData(bytes);
+
+      final downloadUrl = await storageRef.getDownloadURL();
+      print('Download URL (Web): $downloadUrl');
+      await profileService.updateProfile(photoUrl: downloadUrl);
+      setState(() {
+        _avatarImagePath = downloadUrl;
+      });
+      _showSnackBar('Cập nhật avatar thành công', true);
+    } on Exception catch (e) {
+      _showSnackBar('Lỗi khi cập nhật avatar: $e', false);
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -54,10 +171,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await profileService.updateProfile(
         firstName: firstNameController.text,
         lastName: lastNameController.text,
-        photoUrl: null,
       );
       _showSnackBar('Cập nhật hồ sơ thành công', true);
-    } catch (e) {
+    } on Exception catch (e) {
       _showSnackBar('Lỗi khi cập nhật hồ sơ: $e', false);
     } finally {
       setState(() {
@@ -78,7 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await authService.changePassword(passwordController.text);
       _showSnackBar('Đổi mật khẩu thành công', true);
       passwordController.clear();
-    } catch (e) {
+    } on Exception catch (e) {
       _showSnackBar('Lỗi khi đổi mật khẩu: $e', false);
     } finally {
       setState(() {
@@ -93,11 +209,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     try {
       await authService.enableTwoStepVerification(value);
+      await profileService.updateProfile(twoStepEnabled: value);
       setState(() {
         isTwoStepEnabled = value;
       });
       _showSnackBar('Cập nhật xác minh hai bước thành công', true);
-    } catch (e) {
+    } on Exception catch (e) {
       _showSnackBar('Lỗi khi cập nhật xác minh hai bước: $e', false);
     } finally {
       setState(() {
@@ -114,12 +231,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await authService.signOut();
       if (mounted) {
         _showSnackBar('Đăng xuất thành công', true);
-        Navigator.pushReplacement(
+        await Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _showSnackBar('Lỗi khi đăng xuất: $e', false);
     } finally {
       setState(() {
@@ -152,6 +269,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   @override
+  void dispose() {
+    _savePreferences();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<UserProfile?>(
       future: authService.currentUser,
@@ -170,9 +296,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
           body: ListView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             children: [
-              // Thông tin hồ sơ
+              Center(
+                child: Column(
+                  children: [
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundImage:
+                              _avatarImagePath != null
+                                  ? (_avatarImagePath!.startsWith('http')
+                                      ? NetworkImage(_avatarImagePath!)
+                                      : kIsWeb
+                                      ? null
+                                      : FileImage(File(_avatarImagePath!))
+                                          as ImageProvider)
+                                  : null,
+                          child:
+                              _avatarImagePath == null
+                                  ? Text(
+                                    (userProfile?.firstName ?? '').isNotEmpty
+                                        ? userProfile!.firstName![0]
+                                        : (userProfile?.lastName ?? '')
+                                            .isNotEmpty
+                                        ? userProfile!.lastName![0]
+                                        : '?',
+                                    style: const TextStyle(
+                                      fontSize: 40,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                  : null,
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.camera_alt,
+                            color: Colors.white,
+                          ),
+                          onPressed: isLoading ? null : _pickImage,
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
               ListTile(
                 title: const Text('Email'),
                 subtitle: Text(user.email ?? 'Chưa có email'),
@@ -186,21 +359,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: TextField(
                   controller: firstNameController,
                   decoration: const InputDecoration(labelText: 'Họ'),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: TextField(
                   controller: lastNameController,
                   decoration: const InputDecoration(labelText: 'Tên'),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: ElevatedButton(
                   onPressed: isLoading ? null : handleUpdateProfile,
                   child:
@@ -212,9 +385,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                 ),
               ),
-              // Đổi mật khẩu
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: TextField(
                   controller: passwordController,
                   decoration: const InputDecoration(labelText: 'Mật khẩu mới'),
@@ -222,7 +394,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: ElevatedButton(
                   onPressed: isLoading ? null : handleChangePassword,
                   child:
@@ -234,7 +406,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                 ),
               ),
-              // Chế độ tối
               ListTile(
                 title: const Text('Chế độ tối'),
                 trailing: Switch(
@@ -243,10 +414,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setState(() {
                       isDarkMode = value;
                     });
+                    _savePreferences();
                   },
                 ),
               ),
-              // Trả lời tự động
               ListTile(
                 title: const Text('Trả lời tự động'),
                 trailing: Switch(
@@ -255,10 +426,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setState(() {
                       isAutoReply = value;
                     });
+                    _savePreferences();
                   },
                 ),
               ),
-              // Xác minh hai bước
               ListTile(
                 title: const Text('Xác minh hai bước'),
                 trailing: Switch(
@@ -266,9 +437,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onChanged: isLoading ? null : handleToggleTwoStep,
                 ),
               ),
-              // Nút đăng xuất
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: ElevatedButton(
                   onPressed: isLoading ? null : handleSignOut,
                   style: ElevatedButton.styleFrom(

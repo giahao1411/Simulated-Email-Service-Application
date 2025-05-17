@@ -440,6 +440,7 @@ class AuthService {
       final user = _auth.currentUser;
       if (user != null) {
         print('Lấy thông tin người dùng hiện tại: ${user.uid}');
+        // Lấy hồ sơ từ Firestore
         final DocumentSnapshot doc = await _firestore
             .collection('users')
             .doc(user.uid)

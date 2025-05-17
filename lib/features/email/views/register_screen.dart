@@ -142,8 +142,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> selectDate(BuildContext context) async {
-    final ThemeData theme = Theme.of(context);
-    final DateTime? picked = await showDatePicker(
+    final theme = Theme.of(context);
+    final picked = await showDatePicker(
       context: context,
       initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime(1900),
@@ -159,9 +159,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ? Colors.white
                   : Colors.black,
             ),
-            dialogBackgroundColor: theme.scaffoldBackgroundColor,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(foregroundColor: Colors.red[700]),
+            ),
+            dialogTheme: DialogThemeData(
+              backgroundColor: theme.scaffoldBackgroundColor,
             ),
           ),
           child: child!,
@@ -193,7 +195,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
                 padding: const EdgeInsets.only(bottom: 48),

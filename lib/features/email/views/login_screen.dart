@@ -3,9 +3,6 @@ import 'package:email_application/features/email/views/forgot_password_screen.da
 import 'package:email_application/features/email/views/gmail_screen.dart';
 import 'package:email_application/features/email/views/register_screen.dart';
 import 'package:flutter/material.dart';
-import '../controllers/auth_service.dart';
-import 'gmail_screen.dart';
-import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,15 +41,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         _showSnackBar('Đăng nhập thành công!', true);
-        Navigator.pushReplacement(
+        await Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const GmailScreen()),
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         errorMessage = 'Đăng nhập thất bại: $e';
         isLoading = false;
+      });
+      _showSnackBar(errorMessage!, false);
+    }
+  }
+
+  Future<void> handlePasswordReset() async {
+    final email = emailController.text.trim();
+    if (email.isEmpty) {
+      setState(() {
+        errorMessage = 'Vui lòng nhập email để đặt lại mật khẩu';
+      });
+      _showSnackBar(errorMessage!, false);
+      return;
+    }
+
+    try {
+      await authService.resetPassword(email);
+      _showSnackBar('Email đặt lại mật khẩu đã được gửi', true);
+    } on Exception catch (e) {
+      setState(() {
+        errorMessage = 'Đặt lại mật khẩu thất bại: $e';
       });
       _showSnackBar(errorMessage!, false);
     }
@@ -95,7 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
                 padding: const EdgeInsets.only(bottom: 48),

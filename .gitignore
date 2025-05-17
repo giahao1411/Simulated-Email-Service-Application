@@ -4,6 +4,10 @@
 ### Dart ###
 # See https://www.dartlang.org/guides/libraries/private-files
 
+# IDE settings
+.idea/
+.vscode/
+
 # Files and directories created by pub
 .dart_tool/
 .packages
@@ -29,6 +33,8 @@ doc/api/
 
 .flutter-plugins
 .flutter-plugins-dependencies
+
+
 
 ### Dart Patch ###
 # dotenv environment variables file

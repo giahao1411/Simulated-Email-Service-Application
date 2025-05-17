@@ -54,7 +54,7 @@ class EmailService {
       'timestamp': FieldValue.serverTimestamp(),
       'read': false,
       'starred': false,
-      'labels': [],
+      'labels': <String>[],
     });
   }
 

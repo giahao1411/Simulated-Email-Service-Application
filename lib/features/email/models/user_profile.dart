@@ -1,15 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserProfile {
-  final String uid;
-  final String phoneNumber;
-  final String? firstName;
-  final String? lastName;
-  final DateTime? dateOfBirth;
-  final String? photoUrl;
-  final String? email;
-  final bool? twoStepEnabled;
-
   UserProfile({
     required this.uid,
     required this.phoneNumber,
@@ -23,19 +14,27 @@ class UserProfile {
 
   factory UserProfile.fromMap(Map<String, dynamic> data) {
     return UserProfile(
-      uid: data['uid'] ?? '',
-      phoneNumber: data['phoneNumber'] ?? '',
-      firstName: data['firstName'],
-      lastName: data['lastName'],
+      uid: data['uid'] as String? ?? '',
+      phoneNumber: data['phoneNumber'] as String? ?? '',
+      firstName: data['firstName'] as String?,
+      lastName: data['lastName'] as String?,
       dateOfBirth:
           data['dateOfBirth'] != null
               ? (data['dateOfBirth'] as Timestamp).toDate()
               : null,
-      photoUrl: data['photoUrl'],
-      email: data['email'],
-      twoStepEnabled: data['twoStepEnabled'] ?? false,
+      photoUrl: data['photoUrl'] as String?,
+      email: data['email'] as String?,
+      twoStepEnabled: data['twoStepEnabled'] as bool? ?? false,
     );
   }
+  final String uid;
+  final String phoneNumber;
+  final String? firstName;
+  final String? lastName;
+  final DateTime? dateOfBirth;
+  final String? photoUrl;
+  final String? email;
+  final bool? twoStepEnabled;
 
   Map<String, dynamic> toMap() {
     return {
