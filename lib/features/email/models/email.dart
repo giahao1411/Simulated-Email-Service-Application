@@ -5,6 +5,8 @@ class Email {
     required this.id,
     required this.from,
     required this.to,
+    required this.cc,
+    required this.bcc,
     required this.subject,
     required this.body,
     required this.timestamp,
@@ -18,6 +20,8 @@ class Email {
       id: id,
       from: data['from'] as String? ?? '',
       to: data['to'] as String? ?? '',
+      cc: (data['cc'] as List<dynamic>? ?? []).cast<String>(),
+      bcc: (data['bcc'] as List<dynamic>? ?? []).cast<String>(),
       subject: data['subject'] as String? ?? '',
       body: data['body'] as String? ?? '',
       timestamp: (data['timestamp'] as Timestamp).toDate(),
@@ -30,6 +34,8 @@ class Email {
   final String id;
   final String from;
   final String to;
+  final List<String> cc;
+  final List<String> bcc;
   final String subject;
   final String body;
   final DateTime timestamp;
@@ -41,6 +47,8 @@ class Email {
     return {
       'from': from,
       'to': to,
+      'cc': cc,
+      'bcc': bcc,
       'subject': subject,
       'body': body,
       'timestamp': timestamp.toIso8601String(),
