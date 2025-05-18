@@ -95,7 +95,7 @@ class GmailDrawer extends StatelessWidget {
                     onCategorySelected(AppStrings.settings);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      MaterialPageRoute<SettingsScreen>(
                         builder: (context) => const SettingsScreen(),
                       ),
                     );

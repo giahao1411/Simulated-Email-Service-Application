@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:email_application/core/constants/app_strings.dart';
+import 'package:email_application/features/email/controllers/auth_service.dart';
+import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:flutter/material.dart';
 
 class GmailAppBar extends StatelessWidget {
-
   const GmailAppBar({required this.onMenuPressed, super.key});
   final VoidCallback onMenuPressed;
 
@@ -20,10 +23,7 @@ class GmailAppBar extends StatelessWidget {
               spreadRadius: 2,
               blurRadius: 5,
             ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 2,
-            ),
+            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 2),
           ],
         ),
         height: 50,
@@ -40,15 +40,62 @@ class GmailAppBar extends StatelessWidget {
               style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const Spacer(),
-            const Padding(
-              padding: EdgeInsets.only(right: 12),
-              child: CircleAvatar(
-                radius: 16,
-                backgroundColor: Colors.teal,
-                backgroundImage: NetworkImage(
-                  'https://picsum.photos/250?image=100',
-                ),
-              ),
+            FutureBuilder<UserProfile?>(
+              future: AuthService().currentUser,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.only(right: 12),
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: Colors.amberAccent,
+                      child: CircularProgressIndicator(color: Colors.white),
+                    ),
+                  );
+                }
+                if (snapshot.hasError || !snapshot.hasData) {
+                  return const Padding(
+                    padding: EdgeInsets.only(right: 12),
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: Colors.amberAccent,
+                      child: Text(
+                        '?',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
+                  );
+                }
+
+                final userProfile = snapshot.data!;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.amberAccent,
+                    backgroundImage:
+                        userProfile.photoUrl != null &&
+                                userProfile.photoUrl!.isNotEmpty
+                            ? (userProfile.photoUrl!.startsWith('http')
+                                ? NetworkImage(userProfile.photoUrl!)
+                                    as ImageProvider
+                                : FileImage(File(userProfile.photoUrl!))
+                                    as ImageProvider)
+                            : null,
+                    child:
+                        userProfile.photoUrl == null ||
+                                userProfile.photoUrl!.isEmpty
+                            ? const Text(
+                              '?',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            )
+                            : null,
+                  ),
+                );
+              },
             ),
           ],
         ),
