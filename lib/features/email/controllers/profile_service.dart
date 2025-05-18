@@ -23,6 +23,7 @@ class ProfileService {
   Future<void> updateProfile({
     String? firstName,
     String? lastName,
+    DateTime? dateOfBirth,
     String? photoUrl,
     bool? twoStepEnabled,
   }) async {
@@ -38,7 +39,7 @@ class ProfileService {
       phoneNumber: currentProfile.phoneNumber,
       firstName: firstName ?? currentProfile.firstName,
       lastName: lastName ?? currentProfile.lastName,
-      dateOfBirth: currentProfile.dateOfBirth,
+      dateOfBirth: dateOfBirth ?? currentProfile.dateOfBirth,
       photoUrl: photoUrl ?? currentProfile.photoUrl,
       email: currentProfile.email,
       twoStepEnabled: twoStepEnabled ?? currentProfile.twoStepEnabled,
