@@ -42,6 +42,16 @@ class _GmailScreenState extends State<GmailScreen>
           Column(
             children: [
               GmailAppBar(onMenuPressed: toggleDrawer),
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    currentCategory,
+                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
+                ),
+              ),
               Expanded(
                 child: EmailList(
                   emailService: emailService,
