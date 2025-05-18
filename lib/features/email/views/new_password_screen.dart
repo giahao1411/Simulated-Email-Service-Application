@@ -20,8 +20,7 @@ class NewPasswordScreen extends StatefulWidget {
 
 class _NewPasswordScreenState extends State<NewPasswordScreen> {
   final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
   final AuthService authService = AuthService();
   String? errorMessage;
   bool isLoading = false;
@@ -38,8 +37,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
 
       if (newPassword.isEmpty || confirmPassword.isEmpty) {
         setState(() {
-          errorMessage =
-              'Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu';
+          errorMessage = 'Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu';
           isLoading = false;
         });
         _showSnackBar(errorMessage!, false);
@@ -71,10 +69,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         newPassword: newPassword,
       );
 
-      _showSnackBar(
-        'Một email đặt lại mật khẩu đã được gửi đến email của bạn. Vui lòng khôi phục email hao@123.com để tiếp tục.',
-        true,
-      );
+      _showSnackBar('Mật khẩu đã được cập nhật thành công. Vui lòng đăng nhập lại.', true);
       await Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -115,14 +110,8 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   Widget build(BuildContext context) {
     final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle;
     final iconColor = labelStyle?.color ?? Colors.black54;
-    final labelTextColor =
-        Theme.of(context).brightness == Brightness.dark
-            ? Colors.white
-            : Colors.grey[400]!;
-    final hintTextColor =
-        Theme.of(context).brightness == Brightness.dark
-            ? Colors.grey[400]!
-            : Colors.grey[400]!;
+    final labelTextColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.grey[400]!;
+    final hintTextColor = Theme.of(context).brightness == Brightness.dark ? Colors.grey[400]! : Colors.grey[400]!;
 
     return Scaffold(
       appBar: AppBar(
@@ -144,7 +133,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Vui lòng nhập mật khẩu mới. Một email đặt lại mật khẩu sẽ được gửi đến email của bạn để hoàn tất quá trình. Kiểm tra cả thư mục Spam nếu không thấy email.',
+                'Vui lòng nhập mật khẩu mới để cập nhật tài khoản của bạn.',
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 32),
@@ -187,44 +176,12 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child:
-                      isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                            'Gửi email đặt lại mật khẩu',
-                            style: TextStyle(fontSize: 16, color: Colors.white),
-                          ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: TextButton(
-                  onPressed:
-                      isLoading
-                          ? null
-                          : () async {
-                            try {
-                              await authService.resetPasswordWithOtp(
-                                phoneNumber: widget.phoneNumber,
-                                verificationId: widget.verificationId,
-                                otp: widget.otp,
-                                newPassword: newPasswordController.text.trim(),
-                              );
-                              _showSnackBar(
-                                'Đã gửi lại email đặt lại mật khẩu! Vui lòng khôi phục email hao@123.com.',
-                                true,
-                              );
-                            } on Exception catch (e) {
-                              _showSnackBar(
-                                e.toString().replaceFirst('Exception: ', ''),
-                                false,
-                              );
-                            }
-                          },
-                  child: const Text(
-                    'Gửi lại email',
-                    style: TextStyle(color: Colors.blue),
-                  ),
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Cập nhật mật khẩu',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
                 ),
               ),
             ],

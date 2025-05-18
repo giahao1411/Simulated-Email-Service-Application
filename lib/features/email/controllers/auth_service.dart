@@ -84,9 +84,7 @@ class AuthService {
           onCodeSent(verificationId);
         },
         codeAutoRetrievalTimeout: (String verificationId) {
-          print(
-            'Hết thời gian tự động lấy mã OTP, verificationId: $verificationId',
-          );
+          print('Hết thời gian tự động lấy mã OTP, verificationId: $verificationId');
         },
         timeout: const Duration(seconds: 60),
       );
@@ -191,9 +189,7 @@ class AuthService {
               .timeout(
                 const Duration(seconds: 30),
                 onTimeout: () {
-                  throw Exception(
-                    'Hết thời gian chờ khi lưu hồ sơ vào Firestore',
-                  );
+                  throw Exception('Hết thời gian chờ khi lưu hồ sơ vào Firestore');
                 },
               );
           print('Lưu hồ sơ vào Firestore thành công');
@@ -339,22 +335,17 @@ class AuthService {
       final formattedPhoneNumber = _formatPhoneNumber(phoneNumber);
 
       // Tìm tài khoản người dùng theo số điện thoại
-      final QuerySnapshot userQuery =
-          await _firestore
-              .collection('users')
-              .where('phoneNumber', isEqualTo: formattedPhoneNumber)
-              .get();
+      final QuerySnapshot userQuery = await _firestore
+          .collection('users')
+          .where('phoneNumber', isEqualTo: formattedPhoneNumber)
+          .get();
 
       if (userQuery.docs.isEmpty) {
-        throw Exception(
-          'Không tìm thấy tài khoản liên kết với số điện thoại này',
-        );
+        throw Exception('Không tìm thấy tài khoản liên kết với số điện thoại này');
       }
 
       if (userQuery.docs.length > 1) {
-        throw Exception(
-          'Có nhiều tài khoản liên kết với số điện thoại này, vui lòng liên hệ hỗ trợ',
-        );
+        throw Exception('Có nhiều tài khoản liên kết với số điện thoại này, vui lòng liên hệ hỗ trợ');
       }
 
       final userDoc = userQuery.docs.first;
@@ -364,45 +355,26 @@ class AuthService {
 
       print('Tìm thấy tài khoản với email: $userEmail, UID: $userUid');
 
-      // Kiểm tra xem tài khoản OTP có khớp với tài khoản Firestore không
-      if (phoneUser.uid != userUid) {
-        print(
-          'CẢNH BÁO: UID OTP (${phoneUser.uid}) không khớp với UID Firestore ($userUid)',
-        );
-        // Liên kết thông tin xác thực điện thoại với tài khoản email
+      if (phoneUser.uid == userUid) {
+        // Cập nhật mật khẩu trực tiếp
         try {
-          await _auth.signOut();
-          // Đăng nhập vào tài khoản email/mật khẩu bằng liên kết OTP
-          final emailUserCredential = await _auth.signInAnonymously();
-          final emailUser = emailUserCredential.user;
-          if (emailUser != null) {
-            await emailUser.linkWithCredential(credential);
-            await emailUser.updateEmail(userEmail);
-            print(
-              'Liên kết thông tin xác thực điện thoại với tài khoản email thành công',
-            );
-            // Gửi email đặt lại mật khẩu
-            await _auth.sendPasswordResetEmail(email: userEmail);
-            print('Đã gửi email đặt lại mật khẩu đến: $userEmail');
-          } else {
-            throw Exception('Không thể tạo tài khoản tạm thời để liên kết');
+          await phoneUser.updatePassword(newPassword);
+          print('Đã cập nhật mật khẩu thành công');
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'requires-recent-login') {
+            throw Exception('Yêu cầu đăng nhập lại để đổi mật khẩu');
+          } else if (e.code == 'weak-password') {
+            throw Exception('Mật khẩu mới quá yếu');
           }
-        } on Exception catch (e) {
-          print('Không thể liên kết thông tin xác thực: $e');
-          // Gửi email đặt lại mật khẩu như phương án dự phòng
-          await _auth.sendPasswordResetEmail(email: userEmail);
-          print('Đã gửi email đặt lại mật khẩu đến: $userEmail');
-          throw Exception(
-            'Không thể liên kết tài khoản. Email đặt lại mật khẩu đã được gửi đến $userEmail. Vui lòng kiểm tra email để đặt lại mật khẩu.',
-          );
+          throw Exception('Cập nhật mật khẩu thất bại: ${e.message}');
         }
       } else {
-        // Nếu UID khớp, gửi email đặt lại mật khẩu
+        // Trường hợp UID không khớp, gửi email đặt lại mật khẩu
         await _auth.sendPasswordResetEmail(email: userEmail);
         print('Đã gửi email đặt lại mật khẩu đến: $userEmail');
       }
 
-      // Đăng xuất sau khi gửi email
+      // Đăng xuất sau khi hoàn tất
       await _auth.signOut();
       print('Đăng xuất sau khi khôi phục mật khẩu');
     } on FirebaseAuthException catch (e) {
@@ -411,8 +383,6 @@ class AuthService {
         throw Exception('Mã OTP không đúng');
       } else if (e.code == 'session-expired') {
         throw Exception('Phiên xác minh đã hết hạn, vui lòng gửi lại OTP');
-      } else if (e.code == 'requires-recent-login') {
-        throw Exception('Yêu cầu đăng nhập lại để đổi mật khẩu');
       }
       throw Exception('Khôi phục mật khẩu thất bại: ${e.message}');
     } on Exception catch (e) {

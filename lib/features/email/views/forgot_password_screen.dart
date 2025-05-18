@@ -154,7 +154,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 controller: phoneController,
                 decoration: InputDecoration(
                   labelText: 'Số điện thoại',
-                  hintText: 'Nhập số điện thoại đã đăng ký (VD: +84912345678)',
+                  hintText: 'Nhập số điện thoại đã đăng ký',
                   prefixIcon: Icon(Icons.phone, color: iconColor),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
