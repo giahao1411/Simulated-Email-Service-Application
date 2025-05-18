@@ -13,18 +13,54 @@ class ComposeScreen extends StatefulWidget {
 class _ComposeScreenState extends State<ComposeScreen> {
   final TextEditingController toController = TextEditingController();
   final TextEditingController fromController = TextEditingController();
+  final TextEditingController ccController = TextEditingController();
+  final TextEditingController bccController = TextEditingController();
   final TextEditingController subjectController = TextEditingController();
   final TextEditingController bodyController = TextEditingController();
   final EmailService emailService = EmailService();
 
   Future<void> handleSendEmail() async {
-    await emailService.sendEmail(
-      toController.text,
-      subjectController.text,
-      bodyController.text,
-    );
-    if (mounted) {
-      Navigator.pop(context);
+    if (toController.text.isEmpty) {
+      // show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập địa chỉ email người nhận')),
+      );
+      return;
+    }
+
+    // get to, cc, and bcc emails
+    final toEmails = toController.text.split(',').map((e) => e.trim()).toList();
+    final ccEmails =
+        ccController.text.isNotEmpty
+            ? ccController.text.split(',').map((e) => e.trim()).toList()
+            : <String>[];
+    final bccEmails =
+        bccController.text.isNotEmpty
+            ? bccController.text.split(',').map((e) => e.trim()).toList()
+            : <String>[];
+
+    // send mail
+    try {
+      await emailService.sendEmail(
+        to: toEmails,
+        cc: ccEmails,
+        bcc: bccEmails,
+        subject: subjectController.text,
+        body: bodyController.text,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Gửi email thành công')));
+        Navigator.pop(context);
+      }
+    } on Exception catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gửi email thất bại: $e')));
+      }
     }
   }
 
@@ -49,6 +85,8 @@ class _ComposeScreenState extends State<ComposeScreen> {
       body: ComposeBody(
         toController: toController,
         fromController: fromController,
+        ccController: ccController,
+        bccController: bccController,
         subjectController: subjectController,
         bodyController: bodyController,
       ),
