@@ -13,6 +13,7 @@ class SettingsController {
     required this.firstNameController,
     required this.lastNameController,
     required this.passwordController,
+    required this.dateOfBirthController, // Thêm tham số
   }) {
     _imagePickerHandler = getImagePickerHandler();
   }
@@ -21,6 +22,8 @@ class SettingsController {
   final TextEditingController firstNameController;
   final TextEditingController lastNameController;
   final TextEditingController passwordController;
+  final TextEditingController
+  dateOfBirthController; // Thêm controller cho ngày sinh
 
   bool isDarkMode = false;
   bool isAutoReply = false;
@@ -46,16 +49,17 @@ class SettingsController {
 
   Future<void> loadProfile() async {
     try {
-      final profile =
-          await authService.currentUser; // Sử dụng authService.currentUser
+      final profile = await authService.currentUser;
       if (profile != null) {
         firstNameController.text = profile.firstName ?? '';
         lastNameController.text = profile.lastName ?? '';
+        dateOfBirthController.text =
+            profile.dateOfBirth?.toIso8601String().split('T')[0] ?? '';
         isTwoStepEnabled = profile.twoStepEnabled ?? false;
         userProfile = profile;
         _avatarImagePath = profile.photoUrl;
       } else {
-        userProfile = null; // Đảm bảo userProfile là null nếu không có dữ liệu
+        userProfile = null;
         _avatarImagePath = null;
       }
     } on Exception catch (e) {
@@ -79,15 +83,7 @@ class SettingsController {
     isLoading = true;
     try {
       final downloadUrl = await profileService.uploadImage(imagePath);
-      await profileService.updateProfile(
-        photoUrl: downloadUrl,
-        firstName:
-            firstNameController.text.isNotEmpty
-                ? firstNameController.text
-                : null,
-        lastName:
-            lastNameController.text.isNotEmpty ? lastNameController.text : null,
-      );
+      await profileService.updateProfile(photoUrl: downloadUrl);
       _avatarImagePath = downloadUrl;
       _showSnackBar('Cập nhật avatar thành công', true, context);
     } on Exception catch (e) {
@@ -100,9 +96,14 @@ class SettingsController {
   Future<void> updateProfile(BuildContext context) async {
     isLoading = true;
     try {
+      final dateOfBirth =
+          dateOfBirthController.text.isNotEmpty
+              ? DateTime.parse(dateOfBirthController.text)
+              : null;
       await profileService.updateProfile(
         firstName: firstNameController.text,
         lastName: lastNameController.text,
+        dateOfBirth: dateOfBirth,
       );
       _showSnackBar('Cập nhật hồ sơ thành công', true, context);
     } on Exception catch (e) {
@@ -151,7 +152,7 @@ class SettingsController {
         _showSnackBar('Đăng xuất thành công', true, context);
         await Navigator.pushReplacement(
           context,
-          MaterialPageRoute<dynamic>(builder: (context) => const LoginScreen()),
+          MaterialPageRoute<Widget>(builder: (context) => const LoginScreen()),
         );
       }
     } on Exception catch (e) {

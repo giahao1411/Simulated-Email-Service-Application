@@ -25,6 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       firstNameController: TextEditingController(),
       lastNameController: TextEditingController(),
       passwordController: TextEditingController(),
+      dateOfBirthController: TextEditingController(), // Đã thêm
     );
     _controller.loadPreferences();
     _controller.loadProfile().then((_) {
@@ -38,7 +39,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _controller.firstNameController.dispose();
     _controller.lastNameController.dispose();
     _controller.passwordController.dispose();
+    _controller.dateOfBirthController.dispose(); // Dispose
     super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate:
+          _controller.dateOfBirthController.text.isNotEmpty
+              ? DateTime.parse(_controller.dateOfBirthController.text)
+              : DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _controller.dateOfBirthController.text =
+            picked.toIso8601String().split('T')[0];
+      });
+    }
   }
 
   @override
@@ -55,8 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           );
         }
 
-        final user =
-            snapshot.data; // An toàn để dùng ! vì đã kiểm tra snapshot.hasData
+        final user = snapshot.data!;
         return Scaffold(
           appBar: AppBar(
             title: const Text('Cài đặt'),
@@ -71,12 +90,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ProfileAvatar(
                       controller: _controller,
                       isLoading: _controller.isLoading,
+                      onPickImage: () async {
+                        try {
+                          await _controller.pickImage(context);
+                        } catch (e) {
+                          // Xử lý lỗi nếu cần
+                        }
+                      },
                     ),
                     const SizedBox(height: 16),
                   ],
                 ),
               ),
-              ProfileField(controller: _controller, user: user!),
+              ProfileField(
+                controller: _controller,
+                user: user,
+                onDateSelected: () => _selectDate(context),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: ElevatedButton(

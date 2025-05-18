@@ -3,9 +3,15 @@ import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:flutter/material.dart';
 
 class ProfileField extends StatelessWidget {
-  const ProfileField({required this.controller, required this.user, super.key});
+  const ProfileField({
+    required this.controller,
+    required this.user,
+    required this.onDateSelected,
+    super.key,
+  });
   final SettingsController controller;
   final UserProfile user;
+  final VoidCallback onDateSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +32,16 @@ class ProfileField extends StatelessWidget {
         ListTile(
           title: const Text('Ngày sinh'),
           subtitle: Text(
-            user.dateOfBirth.toString().isNotEmpty == true
-                ? user.dateOfBirth.toString().substring(0, 10)
+            controller.dateOfBirthController.text.isNotEmpty
+                ? controller.dateOfBirthController.text
                 : 'Chưa có ngày sinh',
           ),
+          trailing: IconButton(
+            icon: const Icon(Icons.calendar_today, size: 20),
+            onPressed: onDateSelected,
+          ),
         ),
+        const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: TextField(
