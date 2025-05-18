@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,7 +11,6 @@ class ProfileService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Getter public để truy cập _storage
   FirebaseStorage get storage => _storage;
 
   Future<UserProfile?> getProfile() async {
@@ -29,16 +29,25 @@ class ProfileService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Người dùng chưa đăng nhập');
 
-    final data = <String, dynamic>{};
-    if (firstName != null) data['firstName'] = firstName;
-    if (lastName != null) data['lastName'] = lastName;
-    if (photoUrl != null) data['photoUrl'] = photoUrl;
-    if (twoStepEnabled != null) data['twoStepEnabled'] = twoStepEnabled;
+    final currentProfile = await getProfile();
+    if (currentProfile == null)
+      throw Exception('Không tìm thấy hồ sơ người dùng');
+
+    final updatedProfile = UserProfile(
+      uid: currentProfile.uid,
+      phoneNumber: currentProfile.phoneNumber,
+      firstName: firstName ?? currentProfile.firstName,
+      lastName: lastName ?? currentProfile.lastName,
+      dateOfBirth: currentProfile.dateOfBirth,
+      photoUrl: photoUrl ?? currentProfile.photoUrl,
+      email: currentProfile.email,
+      twoStepEnabled: twoStepEnabled ?? currentProfile.twoStepEnabled,
+    );
 
     await _firestore
         .collection('users')
         .doc(user.uid)
-        .set(data, SetOptions(merge: true));
+        .set(updatedProfile.toMap(), SetOptions(merge: true));
   }
 
   Future<String> uploadImage(String imagePath) async {
@@ -51,6 +60,21 @@ class ProfileService {
 
     final file = File(imagePath);
     await storageRef.putFile(file);
+    return storageRef.getDownloadURL();
+  }
+
+  Future<String> uploadImageWeb(String base64String) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+
+    final base64Data = base64String.split(',').last;
+    final bytes = base64Decode(base64Data);
+
+    final storageRef = _storage.ref().child(
+      'avatars/${user.uid}/${DateTime.now().millisecondsSinceEpoch}.png',
+    );
+
+    await storageRef.putData(bytes);
     return storageRef.getDownloadURL();
   }
 }

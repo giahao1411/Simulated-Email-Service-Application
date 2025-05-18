@@ -1,14 +1,11 @@
-import 'dart:convert';
-import 'dart:html' as html; // Cho web
 import 'dart:io';
 
 import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/controllers/profile_service.dart';
 import 'package:email_application/features/email/models/user_profile.dart';
+import 'package:email_application/features/email/utils/image_picker_handler.dart';
 import 'package:email_application/features/email/views/login_screen.dart';
-import 'package:flutter/foundation.dart'; // Cho kIsWeb
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -30,11 +27,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool isLoading = false;
   UserProfile? userProfile;
   String? _avatarImagePath;
-  final ImagePicker _picker = ImagePicker();
+  late final ImagePickerHandlerBase _imagePickerHandler;
 
   @override
   void initState() {
     super.initState();
+    _imagePickerHandler = getImagePickerHandler();
     _loadPreferences();
     _loadProfile();
   }
@@ -68,38 +66,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _showSnackBar('Không tải được hồ sơ', false);
       }
     } on Exception catch (e) {
-      print('Lỗi khi tải hồ sơ: $e');
       _showSnackBar('Lỗi khi tải hồ sơ: $e', false);
     }
   }
 
   Future<void> _pickImage() async {
     try {
-      if (kIsWeb) {
-        final input = html.FileUploadInputElement()..accept = 'image/*';
-        input.click();
-
-        await input.onChange.first;
-        final files = input.files;
-        if (files != null && files.isNotEmpty) {
-          final file = files.first;
-          final reader = html.FileReader();
-          reader.readAsDataUrl(file);
-          await reader.onLoad.first;
-          final encoded = reader.result! as String;
-          setState(() {
-            _avatarImagePath = encoded;
-          });
-          await _updateAvatarFromWeb(encoded);
-        }
-      } else {
-        final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-        if (pickedFile != null) {
-          setState(() {
-            _avatarImagePath = pickedFile.path;
-          });
-          await _updateAvatar(_avatarImagePath!);
-        }
+      final imagePath = await _imagePickerHandler.pickImage();
+      if (imagePath != null) {
+        setState(() {
+          _avatarImagePath = imagePath;
+        });
+        // Bỏ logic Web, chỉ gọi _updateAvatar vì chỉ chạy trên Android
+        await _updateAvatar(imagePath);
       }
     } catch (e) {
       _showSnackBar('Lỗi khi chọn ảnh: $e', false);
@@ -112,8 +91,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     try {
       final downloadUrl = await profileService.uploadImage(imagePath);
-      print('Download URL (Mobile): $downloadUrl');
-      await profileService.updateProfile(photoUrl: downloadUrl);
+      await profileService.updateProfile(
+        photoUrl: downloadUrl,
+        firstName:
+            firstNameController.text.isNotEmpty
+                ? firstNameController.text
+                : null,
+        lastName:
+            lastNameController.text.isNotEmpty ? lastNameController.text : null,
+      );
       setState(() {
         _avatarImagePath = downloadUrl;
       });
@@ -128,38 +114,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _updateAvatarFromWeb(String base64String) async {
-    setState(() {
-      isLoading = true;
-    });
-    try {
-      final user = await authService.currentUser;
-      if (user == null) throw Exception('Người dùng chưa đăng nhập');
-
-      final base64Data = base64String.split(',').last;
-      final bytes = base64Decode(base64Data);
-
-      final storageRef = profileService
-          .storage // Sử dụng getter public
-          .ref()
-          .child(
-            'avatars/${user.uid}/${DateTime.now().millisecondsSinceEpoch}.png',
-          );
-      await storageRef.putData(bytes);
-
-      final downloadUrl = await storageRef.getDownloadURL();
-      print('Download URL (Web): $downloadUrl');
-      await profileService.updateProfile(photoUrl: downloadUrl);
-      setState(() {
-        _avatarImagePath = downloadUrl;
-      });
-      _showSnackBar('Cập nhật avatar thành công', true);
-    } on Exception catch (e) {
-      _showSnackBar('Lỗi khi cập nhật avatar: $e', false);
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
+    // Bỏ hàm này vì không hỗ trợ Web
+    _showSnackBar('Chức năng không hỗ trợ trên Android', false);
   }
 
   Future<void> handleUpdateProfile() async {
@@ -309,14 +265,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               _avatarImagePath != null
                                   ? (_avatarImagePath!.startsWith('http')
                                       ? NetworkImage(_avatarImagePath!)
-                                      : kIsWeb
-                                      ? null
+                                          as ImageProvider
                                       : FileImage(File(_avatarImagePath!))
                                           as ImageProvider)
                                   : null,
                           child:
-                              _avatarImagePath == null
-                                  ? Text(
+                              _avatarImagePath == null ||
+                                      (_avatarImagePath!.startsWith('http'))
+                                  ? ClipOval(
+                                    child: Image.network(
+                                      _avatarImagePath!,
+                                      fit: BoxFit.cover,
+                                      width: 100,
+                                      height: 100,
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
+                                        print('Lỗi tải ảnh: $error');
+                                        return Text(
+                                          userProfile?.firstName?.isNotEmpty ==
+                                                  true
+                                              ? userProfile!.firstName![0]
+                                              : userProfile
+                                                      ?.lastName
+                                                      ?.isNotEmpty ==
+                                                  true
+                                              ? userProfile!.lastName![0]
+                                              : '?',
+                                          style: const TextStyle(
+                                            fontSize: 40,
+                                            color: Colors.white,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  )
+                                  : Text(
                                     userProfile?.firstName?.isNotEmpty == true
                                         ? userProfile!.firstName![0]
                                         : userProfile?.lastName?.isNotEmpty ==
@@ -327,8 +313,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       fontSize: 40,
                                       color: Colors.white,
                                     ),
-                                  )
-                                  : null,
+                                  ),
                         ),
                         IconButton(
                           icon: const Icon(
