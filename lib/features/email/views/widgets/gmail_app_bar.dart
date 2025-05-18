@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/models/user_profile.dart';

@@ -25,11 +25,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       firstNameController: TextEditingController(),
       lastNameController: TextEditingController(),
       passwordController: TextEditingController(),
-      dateOfBirthController: TextEditingController(), // Đã thêm
+      dateOfBirthController: TextEditingController(),
     );
     _controller.loadPreferences();
     _controller.loadProfile().then((_) {
-      if (mounted) setState(() {}); // Cập nhật UI sau khi loadProfile hoàn tất
+      if (mounted) setState(() {});
     });
   }
 
@@ -39,11 +39,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _controller.firstNameController.dispose();
     _controller.lastNameController.dispose();
     _controller.passwordController.dispose();
-    _controller.dateOfBirthController.dispose(); // Dispose
+    _controller.dateOfBirthController.dispose();
     super.dispose();
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    final theme = Theme.of(context);
     final picked = await showDatePicker(
       context: context,
       initialDate:
@@ -52,6 +53,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               : DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: theme.copyWith(
+            colorScheme: theme.colorScheme.copyWith(
+              primary: Colors.red[700],
+              onPrimary: Colors.white,
+              surface: theme.scaffoldBackgroundColor,
+              onSurface:
+                  theme.brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: Colors.red[700]),
+            ),
+            dialogTheme: DialogThemeData(
+              backgroundColor: theme.scaffoldBackgroundColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && mounted) {
       setState(() {
@@ -79,6 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Cài đặt'),
+            foregroundColor: Colors.white,
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
           body: ListView(
@@ -128,6 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: TextField(
                   controller: _controller.passwordController,
                   decoration: const InputDecoration(labelText: 'Mật khẩu mới'),
+                  
                   obscureText: true,
                 ),
               ),
