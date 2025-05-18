@@ -15,4 +15,6 @@ class AppStrings {
   static const String trash = 'Thùng rác';
   static const String settings = 'Cài đặt';
   static const String noEmails = 'Không có email';
+  static const String errorLoadingEmails = 'Lỗi khi tải email';
+  static const String errorLoadingDrafts = 'Lỗi khi tải thư nháp';
 }

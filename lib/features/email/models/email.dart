@@ -5,11 +5,11 @@ class Email {
     required this.id,
     required this.from,
     required this.to,
-    required this.cc,
-    required this.bcc,
     required this.subject,
     required this.body,
     required this.timestamp,
+    this.cc = const [],
+    this.bcc = const [],
     this.read = false,
     this.starred = false,
     this.labels = const [],
@@ -19,7 +19,7 @@ class Email {
     return Email(
       id: id,
       from: data['from'] as String? ?? '',
-      to: data['to'] as String? ?? '',
+      to: (data['to'] as List<dynamic>? ?? []).cast<String>(),
       cc: (data['cc'] as List<dynamic>? ?? []).cast<String>(),
       bcc: (data['bcc'] as List<dynamic>? ?? []).cast<String>(),
       subject: data['subject'] as String? ?? '',
@@ -33,7 +33,7 @@ class Email {
 
   final String id;
   final String from;
-  final String to;
+  final List<String> to;
   final List<String> cc;
   final List<String> bcc;
   final String subject;

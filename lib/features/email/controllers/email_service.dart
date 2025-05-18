@@ -3,13 +3,13 @@ import 'package:email_application/features/email/models/email.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class EmailService {
-  EmailService() : userPhone = FirebaseAuth.instance.currentUser?.phoneNumber;
+  EmailService() : userEmail = FirebaseAuth.instance.currentUser?.email;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String? userPhone;
+  final String? userEmail;
 
   Stream<List<Email>> getEmails(String category) {
     // Kiểm tra nếu người dùng chưa đăng nhập
-    if (userPhone == null || FirebaseAuth.instance.currentUser == null) {
+    if (userEmail == null || FirebaseAuth.instance.currentUser == null) {
       print('Không truy vấn email vì chưa đăng nhập');
       return Stream.value([]);
     }
@@ -17,7 +17,7 @@ class EmailService {
     print('Lấy email cho danh mục: $category');
     var query = _firestore
         .collection('emails')
-        .where('to', isEqualTo: userPhone)
+        .where('to', arrayContains: userEmail)
         .orderBy('timestamp', descending: true);
 
     if (category == 'Có gắn dấu sao') {
@@ -25,7 +25,7 @@ class EmailService {
     } else if (category == 'Đã gửi') {
       query = _firestore
           .collection('emails')
-          .where('from', isEqualTo: userPhone)
+          .where('from', isEqualTo: userEmail)
           .orderBy('timestamp', descending: true);
     } else if (category == 'Thư nháp') {
       query = _firestore
@@ -34,11 +34,23 @@ class EmailService {
           .orderBy('timestamp', descending: true);
     }
 
-    return query.snapshots().map(
-      (snapshot) =>
-          snapshot.docs
-              .map((doc) => Email.fromMap(doc.id, doc.data()))
-              .toList(),
+    return Stream.fromFuture(
+      query
+          .get()
+          .then((snapshot) {
+            try {
+              return snapshot.docs
+                  .map((doc) => Email.fromMap(doc.id, doc.data()))
+                  .toList();
+            } on Exception catch (e) {
+              print('Lỗi khi ánh xạ dữ liệu email: $e');
+              return <Email>[]; // Trả về danh sách rỗng nếu có lỗi
+            }
+          })
+          .catchError((e) {
+            print('Lỗi khi truy vấn Firestore: $e');
+            return <Email>[]; // Trả về danh sách rỗng nếu có lỗi truy vấn
+          }),
     );
   }
 
@@ -49,46 +61,66 @@ class EmailService {
     required String subject,
     required String body,
   }) async {
-    if (userPhone == null) {
-      throw Exception('Chưa đăng nhập để gửi email');
-    }
+    try {
+      if (userEmail == null) {
+        throw Exception('Chưa đăng nhập để gửi email');
+      }
 
-    await _firestore.collection('emails').add({
-      'from': userPhone,
-      'to': to,
-      'cc': cc,
-      'bcc': bcc,
-      'subject': subject,
-      'body': body,
-      'timestamp': FieldValue.serverTimestamp(),
-      'read': false,
-      'starred': false,
-      'labels': <String>[],
-    });
+      await _firestore.collection('emails').add({
+        'from': userEmail,
+        'to': to,
+        'cc': cc,
+        'bcc': bcc,
+        'subject': subject,
+        'body': body,
+        'timestamp': FieldValue.serverTimestamp(),
+        'read': false,
+        'starred': false,
+        'labels': <String>[],
+      });
+    } on Exception catch (e) {
+      print('Lỗi khi gửi email: $e');
+      throw Exception('Lỗi khi gửi email: $e');
+    }
   }
 
   Future<void> saveDraft(String to, String subject, String body) async {
-    if (FirebaseAuth.instance.currentUser == null) {
-      throw Exception('Chưa đăng nhập để lưu thư nháp');
+    try {
+      if (FirebaseAuth.instance.currentUser == null) {
+        throw Exception('Chưa đăng nhập để lưu thư nháp');
+      }
+      await _firestore.collection('drafts').add({
+        'userId': FirebaseAuth.instance.currentUser!.uid,
+        'to': to,
+        'subject': subject,
+        'body': body,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } on Exception catch (e) {
+      print('Lỗi khi lưu thư nháp: $e');
+      throw Exception('Lỗi khi lưu thư nháp: $e');
     }
-    await _firestore.collection('drafts').add({
-      'userId': FirebaseAuth.instance.currentUser!.uid,
-      'to': to,
-      'subject': subject,
-      'body': body,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
   }
 
   Future<void> toggleStar(String emailId, bool currentStatus) async {
-    await _firestore.collection('emails').doc(emailId).update({
-      'starred': !currentStatus,
-    });
+    try {
+      await _firestore.collection('emails').doc(emailId).update({
+        'starred': !currentStatus,
+      });
+    } catch (e) {
+      print('Lỗi khi thay đổi trạng thái sao: $e');
+      throw Exception('Không thể thay đổi trạng thái sao: $e');
+    }
   }
 
   Future<void> addLabel(String emailId, String label) async {
-    await _firestore.collection('emails').doc(emailId).update({
-      'labels': FieldValue.arrayUnion([label]),
-    });
+    try {
+      await _firestore.collection('emails').doc(emailId).update({
+        'labels': FieldValue.arrayUnion([label]),
+      });
+    } catch (e) {
+      print('Lỗi khi thêm nhãn: $e');
+      throw Exception('Không thể thêm nhãn: $e');
+    }
   }
 }
