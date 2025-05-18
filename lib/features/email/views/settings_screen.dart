@@ -342,6 +342,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       : 'Chưa có số điện thoại',
                 ),
               ),
+              ListTile(
+                title: const Text('Ngày sinh'),
+                subtitle: Text(
+                  user.dateOfBirth.toString().isNotEmpty == true
+                      ? user.dateOfBirth.toString().substring(0, 10)
+                      : 'Chưa có ngày sinh',
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: TextField(
