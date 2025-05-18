@@ -80,7 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Bỏ logic Web, chỉ gọi _updateAvatar vì chỉ chạy trên Android
         await _updateAvatar(imagePath);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _showSnackBar('Lỗi khi chọn ảnh: $e', false);
     }
   }
@@ -305,8 +305,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   : Text(
                                     userProfile?.firstName?.isNotEmpty == true
                                         ? userProfile!.firstName![0]
-                                        : userProfile?.lastName?.isNotEmpty ==
-                                            true
+                                        : (userProfile?.lastName ?? '')
+                                            .isNotEmpty
                                         ? userProfile!.lastName![0]
                                         : '?',
                                     style: const TextStyle(

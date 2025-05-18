@@ -1,5 +1,6 @@
 import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/views/login_screen.dart';
+import 'package:email_application/features/email/views/otp_verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -60,23 +61,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      await authService.register(
-        email: email,
-        password: password,
+      // Gửi OTP
+      await authService.sendOtp(
         phoneNumber: phone,
-        firstName: firstName,
-        lastName: lastName,
-        dateOfBirth: selectedDate,
+        onCodeSent: (verificationId) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpVerificationScreen(
+                phoneNumber: phone,
+                verificationId: verificationId,
+                onOtpVerified: (otp, verificationId) async {
+                  try {
+                    await authService.register(
+                      email: email,
+                      password: password,
+                      phoneNumber: phone,
+                      firstName: firstName,
+                      lastName: lastName,
+                      dateOfBirth: selectedDate,
+                      verificationId: verificationId,
+                      otp: otp,
+                    );
+                    if (mounted) {
+                      _showSnackBar('Đăng ký thành công! Vui lòng đăng nhập', true);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      );
+                    }
+                  } catch (e) {
+                    _showSnackBar('Đăng ký thất bại: $e', false);
+                  }
+                },
+              ),
+            ),
+          );
+          setState(() {
+            isLoading = false;
+          });
+        },
+        onError: (error) {
+          setState(() {
+            errorMessage = error;
+            isLoading = false;
+          });
+          _showSnackBar(error, false);
+        },
       );
-
-      if (mounted) {
-        _showSnackBar('Đăng ký thành công! Vui lòng đăng nhập', true);
-        await Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
-      }
-    } on Exception catch (e) {
+    } catch (e) {
       setState(() {
         errorMessage = 'Đăng ký thất bại: $e';
         isLoading = false;
@@ -122,10 +155,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               primary: Colors.red[700],
               onPrimary: Colors.white,
               surface: theme.scaffoldBackgroundColor,
-              onSurface:
-                  theme.brightness == Brightness.dark
-                      ? Colors.white
-                      : Colors.black,
+              onSurface: theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(foregroundColor: Colors.red[700]),
@@ -175,10 +207,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Text(
                 'Đăng ký',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 30,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
               ),
               const SizedBox(height: 32),
               Row(
@@ -192,6 +224,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         prefixIcon: Icon(Icons.person, color: iconColor),
                         labelStyle: TextStyle(color: labelTextColor),
                         hintStyle: TextStyle(color: hintTextColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
@@ -205,25 +240,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         prefixIcon: Icon(Icons.person, color: iconColor),
                         labelStyle: TextStyle(color: labelTextColor),
                         hintStyle: TextStyle(color: hintTextColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              // Trường ngày sinh
               GestureDetector(
                 onTap: () => selectDate(context),
                 child: AbsorbPointer(
                   child: TextField(
                     decoration: InputDecoration(
-                      hintText:
-                          selectedDate == null
-                              ? 'Chọn ngày sinh'
-                              : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+                      hintText: selectedDate == null
+                          ? 'Chọn ngày sinh'
+                          : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
                       prefixIcon: Icon(Icons.calendar_today, color: iconColor),
                       labelStyle: TextStyle(color: labelTextColor),
                       hintStyle: TextStyle(color: hintTextColor),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),
@@ -237,6 +276,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icon(Icons.email, color: iconColor),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -249,6 +291,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icon(Icons.lock, color: iconColor),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 obscureText: true,
               ),
@@ -261,6 +306,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icon(Icons.lock, color: iconColor),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 obscureText: true,
               ),
@@ -273,27 +321,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icon(Icons.phone, color: iconColor),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
               const SizedBox(height: 24),
-              // Nút đăng ký
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : handleRegister,
-                  child:
-                      isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                            'Đăng ký',
-                            style: TextStyle(fontSize: 16, color: Colors.white),
-                          ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Đăng ký',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),
-              // Chuyển sang đăng nhập
               TextButton(
                 onPressed: () {
                   Navigator.push(

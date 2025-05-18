@@ -42,13 +42,22 @@ class EmailService {
     );
   }
 
-  Future<void> sendEmail(String to, String subject, String body) async {
+  Future<void> sendEmail({
+    required List<String> to,
+    required List<String> cc,
+    required List<String> bcc,
+    required String subject,
+    required String body,
+  }) async {
     if (userPhone == null) {
       throw Exception('Chưa đăng nhập để gửi email');
     }
+
     await _firestore.collection('emails').add({
       'from': userPhone,
       'to': to,
+      'cc': cc,
+      'bcc': bcc,
       'subject': subject,
       'body': body,
       'timestamp': FieldValue.serverTimestamp(),
