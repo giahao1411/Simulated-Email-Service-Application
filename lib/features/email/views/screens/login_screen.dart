@@ -1,7 +1,7 @@
 import 'package:email_application/features/email/controllers/auth_service.dart';
-import 'package:email_application/features/email/views/forgot_password_screen.dart';
-import 'package:email_application/features/email/views/gmail_screen.dart';
-import 'package:email_application/features/email/views/register_screen.dart';
+import 'package:email_application/features/email/views/screens/forgot_password_screen.dart';
+import 'package:email_application/features/email/views/screens/gmail_screen.dart';
+import 'package:email_application/features/email/views/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {

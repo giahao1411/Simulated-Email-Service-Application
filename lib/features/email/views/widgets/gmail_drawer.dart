@@ -5,7 +5,7 @@ import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/controllers/label_controller.dart';
 import 'package:email_application/features/email/utils/label_dialogs.dart';
 import 'package:email_application/features/email/utils/label_sorter.dart';
-import 'package:email_application/features/email/views/settings_screen.dart';
+import 'package:email_application/features/email/views/screens/settings_screen.dart';
 import 'package:email_application/features/email/views/widgets/drawer_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

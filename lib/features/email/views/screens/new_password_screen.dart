@@ -1,5 +1,5 @@
 import 'package:email_application/features/email/controllers/auth_service.dart';
-import 'package:email_application/features/email/views/login_screen.dart';
+import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 
 class NewPasswordScreen extends StatefulWidget {
