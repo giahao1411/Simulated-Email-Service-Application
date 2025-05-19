@@ -1,13 +1,22 @@
 import 'package:email_application/core/constants/app_strings.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ComposeButton extends StatelessWidget {
-
   const ComposeButton({required this.onPressed, super.key});
+
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
+    // Lấy trạng thái Dark Mode trực tiếp từ ThemeManage
+    final isDarkMode = Provider.of<ThemeManage>(context).isDarkMode;
+
+    // Định nghĩa màu sắc dựa trên chế độ
+    final buttonColor = isDarkMode ? Colors.blue[900] : Colors.red;
+    final iconTextColor = isDarkMode ? Colors.cyan[100] : Colors.pink[100];
+
     return Positioned(
       bottom: 66,
       right: 16,
@@ -16,7 +25,7 @@ class ComposeButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.grey[800],
+            color: buttonColor,
             borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
@@ -30,11 +39,11 @@ class ComposeButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.edit_outlined, color: Colors.red[200], size: 18),
+              Icon(Icons.edit_outlined, color: iconTextColor, size: 18),
               const SizedBox(width: 8),
               Text(
                 AppStrings.composeEmail,
-                style: TextStyle(color: Colors.red[200], fontSize: 14),
+                style: TextStyle(color: iconTextColor, fontSize: 14),
               ),
             ],
           ),

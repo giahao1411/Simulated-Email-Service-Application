@@ -87,8 +87,8 @@ class LabelDialogs {
                   ],
                 ),
               ],
-              contentPadding: const EdgeInsets.all(16.0),
-              actionsPadding: const EdgeInsets.only(right: 16.0, bottom: 8.0),
+              contentPadding: const EdgeInsets.all(16),
+              actionsPadding: const EdgeInsets.only(right: 16, bottom: 8),
             ),
           ),
     );
@@ -101,7 +101,7 @@ class LabelDialogs {
     required RenameLabelCallback onRename,
     required VoidCallback onLoadLabels,
   }) {
-    TextEditingController controller = TextEditingController(text: oldLabel);
+    final controller = TextEditingController(text: oldLabel);
     showDialog(
       context: context,
       builder:
@@ -182,8 +182,8 @@ class LabelDialogs {
                   ],
                 ),
               ],
-              contentPadding: const EdgeInsets.all(16.0),
-              actionsPadding: const EdgeInsets.only(right: 16.0, bottom: 8.0),
+              contentPadding: const EdgeInsets.all(16),
+              actionsPadding: const EdgeInsets.only(right: 16, bottom: 8),
             ),
           ),
     );
@@ -195,7 +195,7 @@ class LabelDialogs {
     required LabelActionCallback onCreate,
     required VoidCallback onLoadLabels,
   }) {
-    TextEditingController controller = TextEditingController();
+    final controller = TextEditingController();
     showDialog(
       context: context,
       builder:
@@ -257,10 +257,7 @@ class LabelDialogs {
                             onLoadLabels();
                             Navigator.pop(context);
                           } else {
-                            showSnackBar(
-                              context,
-                              'Nhãn đã tồn tại hoặc bạn chưa đăng nhập',
-                            );
+                            showSnackBar(context, 'Nhãn đã tồn tại');
                           }
                         }
                       },
@@ -272,8 +269,8 @@ class LabelDialogs {
                   ],
                 ),
               ],
-              contentPadding: const EdgeInsets.all(16.0),
-              actionsPadding: const EdgeInsets.only(right: 16.0, bottom: 8.0),
+              contentPadding: const EdgeInsets.all(16),
+              actionsPadding: const EdgeInsets.only(right: 16, bottom: 8),
             ),
           ),
     );

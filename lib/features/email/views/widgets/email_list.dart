@@ -25,19 +25,25 @@ class _EmailListState extends State<EmailList> {
   @override
   void initState() {
     super.initState();
-    emailStream = widget.emailService.getEmails(widget.currentCategory);
+    emailStream =
+        widget.emailService
+            .getEmails(widget.currentCategory)
+            .asBroadcastStream();
   }
 
   void refreshStream() {
     setState(() {
-      emailStream = widget.emailService.getEmails(widget.currentCategory);
+      emailStream =
+          widget.emailService
+              .getEmails(widget.currentCategory)
+              .asBroadcastStream();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.grey[900],
+    return ColoredBox(
+      color: Theme.of(context).scaffoldBackgroundColor, // Sử dụng màu từ Theme
       child: StreamBuilder<List<Email>>(
         stream: emailStream,
         builder: (context, snapshot) {
@@ -45,18 +51,26 @@ class _EmailListState extends State<EmailList> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return const Center(
+            return Center(
               child: Text(
                 AppStrings.errorLoadingEmails,
-                style: TextStyle(color: Colors.grey),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
             );
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 AppStrings.noEmails,
-                style: TextStyle(color: Colors.grey),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
             );
           }
