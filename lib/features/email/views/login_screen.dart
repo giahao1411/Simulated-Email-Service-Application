@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } on Exception catch (e) {
       setState(() {
-        errorMessage = 'Đăng nhập thất bại: $e';
+        errorMessage = 'Đăng nhập thất bại email hoặc mật khẩu không đúng';
         isLoading = false;
       });
       _showSnackBar(errorMessage!, false);

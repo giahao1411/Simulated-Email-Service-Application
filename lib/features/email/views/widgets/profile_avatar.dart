@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:email_application/features/email/controllers/settings_controller.dart';
 import 'package:flutter/material.dart';
 
