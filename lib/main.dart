@@ -1,6 +1,6 @@
 import 'package:email_application/core/config/firebase_options.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
-import 'package:email_application/features/email/views/login_screen.dart';
+import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

@@ -1,6 +1,6 @@
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
-import 'package:email_application/features/email/views/compose_screen.dart';
+import 'package:email_application/features/email/views/screens/compose_screen.dart';
 import 'package:email_application/features/email/views/widgets/compose_button.dart';
 import 'package:email_application/features/email/views/widgets/email_list.dart';
 import 'package:email_application/features/email/views/widgets/gmail_app_bar.dart';
