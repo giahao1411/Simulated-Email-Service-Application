@@ -44,12 +44,12 @@ class EmailService {
                   .toList();
             } on Exception catch (e) {
               print('Lỗi khi ánh xạ dữ liệu email: $e');
-              return <Email>[]; // Trả về danh sách rỗng nếu có lỗi
+              return <Email>[];
             }
           })
           .catchError((e) {
             print('Lỗi khi truy vấn Firestore: $e');
-            return <Email>[]; // Trả về danh sách rỗng nếu có lỗi truy vấn
+            return <Email>[];
           }),
     );
   }
@@ -110,6 +110,17 @@ class EmailService {
     } catch (e) {
       print('Lỗi khi thay đổi trạng thái sao: $e');
       throw Exception('Không thể thay đổi trạng thái sao: $e');
+    }
+  }
+
+  Future<void> toggleRead(String emailId, bool currentStatus) async {
+    try {
+      await _firestore.collection('emails').doc(emailId).update({
+        'read': !currentStatus,
+      });
+    } catch (e) {
+      print('Lỗi khi thay đổi trạng thái đã đọc: $e');
+      throw Exception('Không thể thay đổi trạng thái đã đọc: $e');
     }
   }
 

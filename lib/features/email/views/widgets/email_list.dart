@@ -1,7 +1,7 @@
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
-import 'package:email_application/features/email/views/mail_detail_screen.dart';
+import 'package:email_application/features/email/views/screens/mail_detail_screen.dart';
 import 'package:email_application/features/email/views/widgets/email_tile.dart';
 import 'package:flutter/material.dart';
 
@@ -75,7 +75,11 @@ class _EmailListState extends State<EmailList> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EmailDetail(email: email),
+                      builder:
+                          (context) => MailDetail(
+                            email: email,
+                            onRefresh: refreshStream,
+                          ),
                     ),
                   );
                 },

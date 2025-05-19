@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 class ProfileField extends StatelessWidget {
   const ProfileField({required this.controller, required this.user, super.key});
+
   final SettingsController controller;
   final UserProfile user;
 

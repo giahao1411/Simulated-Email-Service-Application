@@ -2,7 +2,7 @@ import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/controllers/profile_service.dart';
 import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:email_application/features/email/utils/image_picker_handler.dart';
-import 'package:email_application/features/email/views/login_screen.dart';
+import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,7 +12,7 @@ class SettingsController {
     required this.profileService,
     required this.firstNameController,
     required this.lastNameController,
-    required this.passwordController,
+    required this.passwordController, required TextEditingController dateOfBirthController,
   }) {
     _imagePickerHandler = getImagePickerHandler();
   }
@@ -29,6 +29,8 @@ class SettingsController {
   UserProfile? userProfile;
   String? _avatarImagePath;
   late final ImagePickerHandlerBase _imagePickerHandler;
+
+  var dateOfBirthController;
 
   String? get avatarImagePath => _avatarImagePath;
 

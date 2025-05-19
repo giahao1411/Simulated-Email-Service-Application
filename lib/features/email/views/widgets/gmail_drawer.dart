@@ -1,12 +1,12 @@
 import 'dart:async';
+
 import 'package:email_application/core/constants/app_strings.dart';
-import 'package:email_application/features/email/controllers/label_controller.dart';
-import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
-import 'package:email_application/features/email/views/settings_screen.dart';
-import 'package:email_application/features/email/views/widgets/drawer_item.dart';
+import 'package:email_application/features/email/controllers/label_controller.dart';
 import 'package:email_application/features/email/utils/label_dialogs.dart';
 import 'package:email_application/features/email/utils/label_sorter.dart';
+import 'package:email_application/features/email/views/screens/settings_screen.dart';
+import 'package:email_application/features/email/views/widgets/drawer_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -21,7 +21,7 @@ class GmailDrawer extends StatefulWidget {
   final Function(String) onCategorySelected;
 
   @override
-  _GmailDrawerState createState() => _GmailDrawerState();
+  State<GmailDrawer> createState() => _GmailDrawerState();
 }
 
 class _GmailDrawerState extends State<GmailDrawer> {
@@ -38,7 +38,9 @@ class _GmailDrawerState extends State<GmailDrawer> {
     _initializeFuture = _initializeControllerAndLoadLabels();
 
     // Lắng nghe thay đổi trạng thái đăng nhập
-    _authStateSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+    _authStateSubscription = FirebaseAuth.instance.authStateChanges().listen((
+      user,
+    ) {
       print('Auth state changed: User ${user?.uid ?? "logged out"}');
       setState(() {
         _initializeFuture = _initializeControllerAndLoadLabels();
@@ -54,7 +56,9 @@ class _GmailDrawerState extends State<GmailDrawer> {
 
   Future<void> _initializeControllerAndLoadLabels() async {
     final userProfile = await _authService.currentUser;
-    print('Initialized LabelController with UID: ${userProfile?.uid ?? "No UID"}, Email: ${userProfile?.email ?? "No email"}');
+    print(
+      'Initialized LabelController with UID: ${userProfile?.uid ?? "No UID"}, Email: ${userProfile?.email ?? "No email"}',
+    );
     final loadedLabels = await _labelController.loadLabels();
     // Sắp xếp danh sách nhãn
     LabelSorter.sortLabels(loadedLabels);
@@ -85,7 +89,12 @@ class _GmailDrawerState extends State<GmailDrawer> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return const Center(child: Text('Lỗi khi tải dữ liệu', style: TextStyle(color: Colors.white)));
+            return const Center(
+              child: Text(
+                'Lỗi khi tải dữ liệu',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
           }
           return Column(
             children: [
@@ -133,7 +142,8 @@ class _GmailDrawerState extends State<GmailDrawer> {
                       title: AppStrings.starred,
                       icon: Icons.star_border,
                       isSelected: widget.currentCategory == AppStrings.starred,
-                      onTap: () => widget.onCategorySelected(AppStrings.starred),
+                      onTap:
+                          () => widget.onCategorySelected(AppStrings.starred),
                     ),
                     DrawerItem(
                       title: AppStrings.sent,
@@ -167,24 +177,35 @@ class _GmailDrawerState extends State<GmailDrawer> {
                         ),
                       ),
                       const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Text('NHÃN', style: TextStyle(fontSize: 12, color: Colors.white)),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          'NHÃN',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
                       ),
                       // Hiển thị danh sách nhãn
                       ...labels.map(
                         (label) => GestureDetector(
-                          onLongPress: () => LabelDialogs.showLabelOptions(
-                            context,
-                            label: label,
-                            onDelete: _labelController.deleteLabel,
-                            onRename: (oldLabel) => LabelDialogs.showRenameLabelDialog(
-                              context,
-                              oldLabel: oldLabel,
-                              onRename: _labelController.updateLabel,
-                              onLoadLabels: _loadLabels,
-                            ),
-                            onLoadLabels: _loadLabels, // Truyền onLoadLabels vào đây
-                          ),
+                          onLongPress:
+                              () => LabelDialogs.showLabelOptions(
+                                context,
+                                label: label,
+                                onDelete: _labelController.deleteLabel,
+                                onRename:
+                                    (oldLabel) =>
+                                        LabelDialogs.showRenameLabelDialog(
+                                          context,
+                                          oldLabel: oldLabel,
+                                          onRename:
+                                              _labelController.updateLabel,
+                                          onLoadLabels: _loadLabels,
+                                        ),
+                                onLoadLabels:
+                                    _loadLabels, // Truyền onLoadLabels vào đây
+                              ),
                           child: DrawerItem(
                             title: label,
                             icon: Icons.label_outline_rounded,
@@ -208,11 +229,12 @@ class _GmailDrawerState extends State<GmailDrawer> {
                     DrawerItem(
                       title: 'Tạo mới',
                       icon: Icons.add,
-                      onTap: () => LabelDialogs.showCreateLabelDialog(
-                        context,
-                        onCreate: _labelController.saveLabel,
-                        onLoadLabels: _loadLabels,
-                      ),
+                      onTap:
+                          () => LabelDialogs.showCreateLabelDialog(
+                            context,
+                            onCreate: _labelController.saveLabel,
+                            onLoadLabels: _loadLabels,
+                          ),
                     ),
                     // Dòng phân cách
                     Padding(

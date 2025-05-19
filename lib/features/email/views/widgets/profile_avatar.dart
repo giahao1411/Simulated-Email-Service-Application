@@ -4,14 +4,14 @@ import 'package:email_application/features/email/controllers/settings_controller
 import 'package:flutter/material.dart';
 
 class ProfileAvatar extends StatelessWidget {
-  final SettingsController controller;
-  final bool isLoading;
-
   const ProfileAvatar({
-    super.key,
     required this.controller,
     required this.isLoading,
+    super.key,
   });
+
+  final SettingsController controller;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
