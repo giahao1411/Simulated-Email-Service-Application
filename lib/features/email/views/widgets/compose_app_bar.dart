@@ -14,21 +14,31 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       leading: IconButton(
-        icon: const Icon(Icons.close, color: Colors.white70),
+        icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
         onPressed: () => Navigator.pop(context),
       ),
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       actions: [
         IconButton(
-          icon: const Icon(Icons.attachment, color: Colors.white70),
+          icon: Icon(
+            Icons.attachment,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: () {},
         ),
         IconButton(
-          icon: const Icon(Icons.send, size: 18, color: Colors.white70),
+          icon: Icon(
+            Icons.send,
+            size: 18,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: onSendEmail,
         ),
         IconButton(
-          icon: const Icon(Icons.more_horiz, color: Colors.white70),
+          icon: Icon(
+            Icons.more_horiz,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: () {},
         ),
       ],

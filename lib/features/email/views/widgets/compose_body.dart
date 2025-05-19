@@ -37,16 +37,20 @@ class _ComposeBodyState extends State<ComposeBody> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    print('ComposeBody - isDarkMode: $isDarkMode'); // Debug
+    final labelColor = isDarkMode ? Colors.white : Colors.black87;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Padding(
-              padding: EdgeInsets.only(right: 16, left: 16),
+            Padding(
+              padding: const EdgeInsets.only(right: 16, left: 16),
               child: Text(
                 AppStrings.to,
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+                style: TextStyle(color: labelColor, fontSize: 16),
               ),
             ),
             Expanded(
@@ -64,7 +68,7 @@ class _ComposeBodyState extends State<ComposeBody> {
                     },
                     child: Icon(
                       showCcBcc ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                      color: Colors.white70,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -72,15 +76,19 @@ class _ComposeBodyState extends State<ComposeBody> {
             ),
           ],
         ),
-        Divider(color: Colors.grey[300], height: 1, thickness: 0.75),
+        Divider(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+          height: 1,
+          thickness: 0.75,
+        ),
         if (showCcBcc) ...[
           Row(
             children: [
-              const Padding(
-                padding: EdgeInsets.only(right: 16, left: 16),
+              Padding(
+                padding: const EdgeInsets.only(right: 16, left: 16),
                 child: Text(
                   AppStrings.cc,
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                  style: TextStyle(color: labelColor, fontSize: 16),
                 ),
               ),
               Expanded(
@@ -95,14 +103,18 @@ class _ComposeBodyState extends State<ComposeBody> {
               ),
             ],
           ),
-          Divider(color: Colors.grey[300], height: 1, thickness: 0.75),
+          Divider(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+            height: 1,
+            thickness: 0.75,
+          ),
           Row(
             children: [
-              const Padding(
-                padding: EdgeInsets.only(right: 16, left: 16),
+              Padding(
+                padding: const EdgeInsets.only(right: 16, left: 16),
                 child: Text(
                   AppStrings.bcc,
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                  style: TextStyle(color: labelColor, fontSize: 16),
                 ),
               ),
               Expanded(
@@ -117,15 +129,19 @@ class _ComposeBodyState extends State<ComposeBody> {
               ),
             ],
           ),
-          Divider(color: Colors.grey[300], height: 1, thickness: 0.75),
+          Divider(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+            height: 1,
+            thickness: 0.75,
+          ),
         ],
         Row(
           children: [
-            const Padding(
-              padding: EdgeInsets.only(right: 16, left: 16),
+            Padding(
+              padding: const EdgeInsets.only(right: 16, left: 16),
               child: Text(
                 AppStrings.from,
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+                style: TextStyle(color: labelColor, fontSize: 16),
               ),
             ),
             Expanded(
@@ -135,21 +151,29 @@ class _ComposeBodyState extends State<ComposeBody> {
                   controller: widget.fromController,
                   labelText: '',
                   useLabelAsFixed: true,
-                  suffixIcon: const Icon(
+                  suffixIcon: Icon(
                     Icons.arrow_drop_down,
-                    color: Colors.white70,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
             ),
           ],
         ),
-        Divider(color: Colors.grey[300], height: 1, thickness: 0.75),
+        Divider(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+          height: 1,
+          thickness: 0.75,
+        ),
         EmailTextField(
           controller: widget.subjectController,
           labelText: AppStrings.subject,
         ),
-        Divider(color: Colors.grey[300], height: 1, thickness: 0.75),
+        Divider(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+          height: 1,
+          thickness: 0.75,
+        ),
         Expanded(
           child: EmailTextField(
             controller: widget.bodyController,

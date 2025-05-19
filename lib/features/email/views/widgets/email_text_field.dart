@@ -28,23 +28,57 @@ class EmailTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    print('EmailTextField - isDarkMode: $isDarkMode'); // Debug
+
     return TextField(
       controller: controller,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(
+        color:
+            isDarkMode
+                ? Colors.white
+                : Colors.black87, // Chữ trắng trong Dark Mode
+      ),
       maxLines: maxLines,
       keyboardType: keyboardType,
+      enabled: enable,
       decoration: InputDecoration(
         hintText: useLabelAsFixed ? null : labelText,
-        hintStyle: const TextStyle(color: Colors.white70),
-        suffixIcon: suffixIcon,
-        border: InputBorder.none,
-        enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[600]!, width: 0.5),
+        hintStyle: TextStyle(
+          color:
+              isDarkMode
+                  ? Colors.white70
+                  : Colors.black54, // Gợi ý trắng nhạt trong Dark Mode
         ),
-        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        suffixIcon: suffixIcon,
+        border:
+            border ??
+            UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+              ),
+            ),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          ),
+        ),
+        focusedBorder:
+            focusedBorder ??
+            UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
+            ),
+        contentPadding:
+            contentPadding ??
+            const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         filled: true,
-        fillColor: Colors.grey[900],
+        fillColor:
+            isDarkMode
+                ? Colors.grey[800]
+                : Theme.of(context).scaffoldBackgroundColor,
       ),
     );
   }
