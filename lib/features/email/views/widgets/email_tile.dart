@@ -49,9 +49,11 @@ class EmailTile extends StatelessWidget {
                         child: Text(
                           email.from,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.grey,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyLarge?.copyWith(
                             fontSize: 16,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight:
                                 email.read
                                     ? FontWeight.normal
@@ -61,8 +63,10 @@ class EmailTile extends StatelessWidget {
                       ),
                       Text(
                         DateFormat.formatTimestamp(email.timestamp),
-                        style: const TextStyle(
-                          color: Colors.grey,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -73,8 +77,8 @@ class EmailTile extends StatelessWidget {
                     email.subject,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.grey,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight:
                           email.read ? FontWeight.normal : FontWeight.bold,
                     ),
@@ -87,7 +91,13 @@ class EmailTile extends StatelessWidget {
                           email.body,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Colors.grey),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.6),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 2),
@@ -102,8 +112,10 @@ class EmailTile extends StatelessWidget {
                               email.starred ? Icons.star : Icons.star_border,
                               color:
                                   email.starred
-                                      ? const Color.fromARGB(255, 255, 204, 1)
-                                      : Colors.grey,
+                                      ? Colors.amber
+                                      : Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.6),
                               size: 25,
                             ),
                             onPressed: () async {
@@ -112,7 +124,7 @@ class EmailTile extends StatelessWidget {
                                   email.id,
                                   email.starred,
                                 );
-                                onStarToggled!(); // Refresh the email list
+                                onStarToggled?.call();
                               } on Exception catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text('Lỗi: $e')),

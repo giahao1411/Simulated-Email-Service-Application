@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
 
 class LabelController {
-  final CollectionReference _labelsRef = FirebaseFirestore.instance.collection('labels');
+  final CollectionReference _labelsRef = FirebaseFirestore.instance.collection(
+    'labels',
+  );
   final AuthService _authService = AuthService();
   String? uid; // UID của người dùng hiện tại
   String? email; // Email của người dùng hiện tại (vẫn giữ để tham khảo)
@@ -14,7 +16,9 @@ class LabelController {
   Future<void> initializeUserData() async {
     final userProfile = await _authService.currentUser;
     uid = userProfile?.uid ?? 'default_uid'; // Fallback nếu không có UID
-    email = userProfile?.email ?? 'default@example.com'; // Fallback nếu không có email
+    email =
+        userProfile?.email ??
+        'default@example.com'; // Fallback nếu không có emai
     print('Initialized user data for labels: UID=$uid, Email=$email');
   }
 
@@ -26,9 +30,8 @@ class LabelController {
       return [];
     }
     try {
-      final QuerySnapshot snapshot = await _labelsRef
-          .where('uid', isEqualTo: uid)
-          .get();
+      final QuerySnapshot snapshot =
+          await _labelsRef.where('uid', isEqualTo: uid).get();
       final labels = snapshot.docs.map((doc) => doc['name'] as String).toList();
       print('Loaded labels for UID $uid: $labels');
       return labels;
@@ -42,11 +45,12 @@ class LabelController {
   Future<bool> doesLabelExist(String labelName) async {
     await initializeUserData();
     if (uid == 'default_uid') return false;
-    final QuerySnapshot snapshot = await _labelsRef
-        .where('uid', isEqualTo: uid)
-        .where('name', isEqualTo: labelName)
-        .limit(1)
-        .get();
+    final QuerySnapshot snapshot =
+        await _labelsRef
+            .where('uid', isEqualTo: uid)
+            .where('name', isEqualTo: labelName)
+            .limit(1)
+            .get();
     return snapshot.docs.isNotEmpty;
   }
 
@@ -84,11 +88,12 @@ class LabelController {
         print('New label already exists: $newLabel');
         return false; // Nhãn mới đã tồn tại
       }
-      final QuerySnapshot snapshot = await _labelsRef
-          .where('uid', isEqualTo: uid)
-          .where('name', isEqualTo: oldLabel)
-          .limit(1)
-          .get();
+      final QuerySnapshot snapshot =
+          await _labelsRef
+              .where('uid', isEqualTo: uid)
+              .where('name', isEqualTo: oldLabel)
+              .limit(1)
+              .get();
       if (snapshot.docs.isNotEmpty) {
         await _labelsRef.doc(snapshot.docs.first.id).update({'name': newLabel});
         print('Updated label from $oldLabel to $newLabel for UID: $uid');
@@ -107,11 +112,12 @@ class LabelController {
     await initializeUserData();
     if (uid == 'default_uid') return false;
     try {
-      final QuerySnapshot snapshot = await _labelsRef
-          .where('uid', isEqualTo: uid)
-          .where('name', isEqualTo: label)
-          .limit(1)
-          .get();
+      final QuerySnapshot snapshot =
+          await _labelsRef
+              .where('uid', isEqualTo: uid)
+              .where('name', isEqualTo: label)
+              .limit(1)
+              .get();
       if (snapshot.docs.isNotEmpty) {
         await _labelsRef.doc(snapshot.docs.first.id).delete();
         print('Deleted label: $label for UID: $uid');
