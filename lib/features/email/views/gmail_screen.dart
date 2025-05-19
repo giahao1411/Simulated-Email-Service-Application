@@ -36,8 +36,7 @@ class _GmailScreenState extends State<GmailScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Theme.of(context).scaffoldBackgroundColor, // Sử dụng màu từ Theme
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           Column(
@@ -69,9 +68,7 @@ class _GmailScreenState extends State<GmailScreen>
           if (isDrawerOpen)
             GestureDetector(
               onTap: toggleDrawer,
-              child: Container(
-                color: Colors.black54, // Giữ màu này vì đây là lớp phủ mờ
-              ),
+              child: Container(color: Colors.black54),
             ),
           if (isDrawerOpen)
             GmailDrawer(
