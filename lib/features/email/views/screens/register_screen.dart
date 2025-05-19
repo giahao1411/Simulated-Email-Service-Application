@@ -1,6 +1,6 @@
 import 'package:email_application/features/email/controllers/auth_service.dart';
-import 'package:email_application/features/email/views/login_screen.dart';
-import 'package:email_application/features/email/views/otp_verification_screen.dart';
+import 'package:email_application/features/email/views/screens/login_screen.dart';
+import 'package:email_application/features/email/views/screens/otp_verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

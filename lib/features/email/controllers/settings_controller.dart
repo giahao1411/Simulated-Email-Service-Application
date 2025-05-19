@@ -2,7 +2,7 @@ import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/controllers/profile_service.dart';
 import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:email_application/features/email/utils/image_picker_handler.dart';
-import 'package:email_application/features/email/views/login_screen.dart';
+import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 
 class SettingsController {

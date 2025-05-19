@@ -113,6 +113,17 @@ class EmailService {
     }
   }
 
+  Future<void> toggleRead(String emailId, bool currentStatus) async {
+    try {
+      await _firestore.collection('emails').doc(emailId).update({
+        'read': !currentStatus,
+      });
+    } catch (e) {
+      print('Lỗi khi thay đổi trạng thái đã đọc: $e');
+      throw Exception('Không thể thay đổi trạng thái đã đọc: $e');
+    }
+  }
+
   Future<void> addLabel(String emailId, String label) async {
     try {
       await _firestore.collection('emails').doc(emailId).update({
