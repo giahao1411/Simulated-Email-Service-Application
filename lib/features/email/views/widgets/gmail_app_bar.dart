@@ -14,7 +14,7 @@ class GmailAppBar extends StatelessWidget {
       padding: const EdgeInsets.only(top: 20, left: 16, right: 16, bottom: 8),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.grey[850],
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
@@ -30,37 +30,48 @@ class GmailAppBar extends StatelessWidget {
           children: [
             const SizedBox(width: 8),
             IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white),
+              icon: Icon(
+                Icons.menu,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
               onPressed: onMenuPressed,
             ),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               AppStrings.searchInMail,
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
             ),
             const Spacer(),
             FutureBuilder<UserProfile?>(
               future: AuthService().currentUser,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.only(right: 12),
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
                     child: CircleAvatar(
                       radius: 16,
-                      backgroundColor: Colors.amberAccent,
-                      child: CircularProgressIndicator(color: Colors.white),
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.onSecondary,
+                      ),
                     ),
                   );
                 }
                 if (snapshot.hasError || !snapshot.hasData) {
-                  return const Padding(
-                    padding: EdgeInsets.only(right: 12),
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
                     child: CircleAvatar(
                       radius: 16,
-                      backgroundColor: Colors.amberAccent,
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
                       child: Text(
                         '?',
-                        style: TextStyle(fontSize: 16, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Theme.of(context).colorScheme.onSecondary,
+                        ),
                       ),
                     ),
                   );
@@ -71,7 +82,7 @@ class GmailAppBar extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 12),
                   child: CircleAvatar(
                     radius: 16,
-                    backgroundColor: Colors.amberAccent,
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
                     backgroundImage:
                         userProfile.photoUrl != null &&
                                 userProfile.photoUrl!.isNotEmpty
@@ -84,11 +95,12 @@ class GmailAppBar extends StatelessWidget {
                     child:
                         userProfile.photoUrl == null ||
                                 userProfile.photoUrl!.isEmpty
-                            ? const Text(
+                            ? Text(
                               '?',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.white,
+                                color:
+                                    Theme.of(context).colorScheme.onSecondary,
                               ),
                             )
                             : null,

@@ -2,9 +2,11 @@ import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/controllers/profile_service.dart';
 import 'package:email_application/features/email/controllers/settings_controller.dart';
 import 'package:email_application/features/email/models/user_profile.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/views/widgets/profile_avatar.dart';
 import 'package:email_application/features/email/views/widgets/profile_field.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -27,7 +29,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       passwordController: TextEditingController(),
       dateOfBirthController: TextEditingController(),
     );
-    _controller.loadPreferences();
     _controller.loadProfile().then((_) {
       if (mounted) setState(() {});
     });
@@ -35,7 +36,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
-    _controller.savePreferences();
     _controller.firstNameController.dispose();
     _controller.lastNameController.dispose();
     _controller.passwordController.dispose();
@@ -172,17 +172,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                 ),
               ),
-              ListTile(
-                title: const Text('Chế độ tối'),
-                trailing: Switch(
-                  value: _controller.isDarkMode,
-                  onChanged: (value) {
-                    setState(() {
-                      _controller.isDarkMode = value;
-                    });
-                    _controller.savePreferences();
-                  },
-                ),
+              Consumer<ThemeManage>(
+                builder: (context, themeProvider, child) {
+                  return ListTile(
+                    title: const Text('Chế độ tối'),
+                    trailing: Switch(
+                      value: themeProvider.isDarkMode,
+                      onChanged: (value) {
+                        themeProvider.toggleDarkMode(value);
+                      },
+                    ),
+                  );
+                },
               ),
               ListTile(
                 title: const Text('Trả lời tự động'),
@@ -192,7 +193,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setState(() {
                       _controller.isAutoReply = value;
                     });
-                    _controller.savePreferences();
                   },
                 ),
               ),

@@ -47,7 +47,7 @@ class EmailService {
               return <Email>[]; // Trả về danh sách rỗng nếu có lỗi
             }
           })
-          .catchError((e) {
+          .catchError((Object e) {
             print('Lỗi khi truy vấn Firestore: $e');
             return <Email>[]; // Trả về danh sách rỗng nếu có lỗi truy vấn
           }),
