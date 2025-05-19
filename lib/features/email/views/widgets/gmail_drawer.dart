@@ -21,7 +21,7 @@ class GmailDrawer extends StatefulWidget {
   final Function(String) onCategorySelected;
 
   @override
-  _GmailDrawerState createState() => _GmailDrawerState();
+  State<GmailDrawer> createState() => _GmailDrawerState();
 }
 
 class _GmailDrawerState extends State<GmailDrawer> {
@@ -267,7 +267,6 @@ class _GmailDrawerState extends State<GmailDrawer> {
                       title: AppStrings.settings,
                       icon: Icons.settings,
                       onTap: () {
-                        widget.onCategorySelected(AppStrings.settings);
                         Navigator.push(
                           context,
                           MaterialPageRoute<SettingsScreen>(

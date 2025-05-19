@@ -20,7 +20,8 @@ class NewPasswordScreen extends StatefulWidget {
 
 class _NewPasswordScreenState extends State<NewPasswordScreen> {
   final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   final AuthService authService = AuthService();
   String? errorMessage;
   bool isLoading = false;
@@ -37,7 +38,8 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
 
       if (newPassword.isEmpty || confirmPassword.isEmpty) {
         setState(() {
-          errorMessage = 'Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu';
+          errorMessage =
+              'Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu';
           isLoading = false;
         });
         _showSnackBar(errorMessage!, false);
@@ -69,7 +71,10 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         newPassword: newPassword,
       );
 
-      _showSnackBar('Mật khẩu đã được cập nhật thành công. Vui lòng đăng nhập lại.', true);
+      _showSnackBar(
+        'Mật khẩu đã được cập nhật thành công. Vui lòng đăng nhập lại.',
+        true,
+      );
       await Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -110,8 +115,14 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   Widget build(BuildContext context) {
     final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle;
     final iconColor = labelStyle?.color ?? Colors.black54;
-    final labelTextColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.grey[400]!;
-    final hintTextColor = Theme.of(context).brightness == Brightness.dark ? Colors.grey[400]! : Colors.grey[400]!;
+    final labelTextColor =
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Colors.grey[400]!;
+    final hintTextColor =
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[400]!
+            : Colors.grey[400]!;
 
     return Scaffold(
       appBar: AppBar(
@@ -176,12 +187,13 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Cập nhật mật khẩu',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
+                  child:
+                      isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                            'Cập nhật mật khẩu',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
                 ),
               ),
             ],
