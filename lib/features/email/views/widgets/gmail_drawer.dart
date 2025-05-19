@@ -1,12 +1,12 @@
 import 'dart:async';
+
 import 'package:email_application/core/constants/app_strings.dart';
-import 'package:email_application/features/email/controllers/label_controller.dart';
-import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
-import 'package:email_application/features/email/views/settings_screen.dart';
-import 'package:email_application/features/email/views/widgets/drawer_item.dart';
+import 'package:email_application/features/email/controllers/label_controller.dart';
 import 'package:email_application/features/email/utils/label_dialogs.dart';
 import 'package:email_application/features/email/utils/label_sorter.dart';
+import 'package:email_application/features/email/views/settings_screen.dart';
+import 'package:email_application/features/email/views/widgets/drawer_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -37,8 +37,9 @@ class _GmailDrawerState extends State<GmailDrawer> {
     _labelController = LabelController();
     _initializeFuture = _initializeControllerAndLoadLabels();
 
-    // Lắng nghe thay đổi trạng thái đăng nhập
-    _authStateSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+    _authStateSubscription = FirebaseAuth.instance.authStateChanges().listen((
+      user,
+    ) {
       print('Auth state changed: User ${user?.uid ?? "logged out"}');
       setState(() {
         _initializeFuture = _initializeControllerAndLoadLabels();
@@ -54,7 +55,9 @@ class _GmailDrawerState extends State<GmailDrawer> {
 
   Future<void> _initializeControllerAndLoadLabels() async {
     final userProfile = await _authService.currentUser;
-    print('Initialized LabelController with UID: ${userProfile?.uid ?? "No UID"}, Email: ${userProfile?.email ?? "No email"}');
+    print(
+      'Initialized LabelController with UID: ${userProfile?.uid ?? "No UID"}, Email: ${userProfile?.email ?? "No email"}',
+    );
     final loadedLabels = await _labelController.loadLabels();
     // Sắp xếp danh sách nhãn
     LabelSorter.sortLabels(loadedLabels);
@@ -63,7 +66,6 @@ class _GmailDrawerState extends State<GmailDrawer> {
     });
   }
 
-  // Tải lại nhãn khi cần
   Future<void> _loadLabels() async {
     final loadedLabels = await _labelController.loadLabels();
     // Sắp xếp danh sách nhãn
@@ -75,9 +77,9 @@ class _GmailDrawerState extends State<GmailDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Drawer(
       width: MediaQuery.of(context).size.width * 0.7,
-      color: Colors.grey[850],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: FutureBuilder<void>(
         future: _initializeFuture,
         builder: (context, snapshot) {
@@ -85,11 +87,17 @@ class _GmailDrawerState extends State<GmailDrawer> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return const Center(child: Text('Lỗi khi tải dữ liệu', style: TextStyle(color: Colors.white)));
+            return Center(
+              child: Text(
+                'Lỗi khi tải dữ liệu',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            );
           }
           return Column(
             children: [
-              // Header với logo Gmail
               Container(
                 padding: const EdgeInsets.only(
                   top: 20,
@@ -99,7 +107,12 @@ class _GmailDrawerState extends State<GmailDrawer> {
                 ),
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: Colors.grey[800]!, width: 1.5),
+                    bottom: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.2),
+                      width: 1.5,
+                    ),
                   ),
                 ),
                 child: Row(
@@ -110,19 +123,21 @@ class _GmailDrawerState extends State<GmailDrawer> {
                       height: 30,
                     ),
                     const SizedBox(width: 10),
-                    const Text(
+                    Text(
                       AppStrings.gmail,
-                      style: TextStyle(color: Colors.white, fontSize: 20),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 20,
+                      ),
                     ),
                   ],
                 ),
               ),
-              // Danh sách danh mục và nhãn
+
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [
-                    // Các danh mục chính
                     DrawerItem(
                       title: AppStrings.inbox,
                       icon: Icons.inbox,
@@ -133,7 +148,8 @@ class _GmailDrawerState extends State<GmailDrawer> {
                       title: AppStrings.starred,
                       icon: Icons.star_border,
                       isSelected: widget.currentCategory == AppStrings.starred,
-                      onTap: () => widget.onCategorySelected(AppStrings.starred),
+                      onTap:
+                          () => widget.onCategorySelected(AppStrings.starred),
                     ),
                     DrawerItem(
                       title: AppStrings.sent,
@@ -154,37 +170,53 @@ class _GmailDrawerState extends State<GmailDrawer> {
                       onTap: () => widget.onCategorySelected(AppStrings.trash),
                     ),
 
-                    // Phần nhãn (Labels) chỉ hiển thị khi có nhãn
                     if (labels.isNotEmpty) ...[
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Divider(
-                          color: Colors.grey[700],
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.2),
                           height: 1,
                           thickness: 1,
                           indent: 52,
                           endIndent: 16,
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Text('NHÃN', style: TextStyle(fontSize: 12, color: Colors.white)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          'NHÃN',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
-                      // Hiển thị danh sách nhãn
+
                       ...labels.map(
                         (label) => GestureDetector(
-                          onLongPress: () => LabelDialogs.showLabelOptions(
-                            context,
-                            label: label,
-                            onDelete: _labelController.deleteLabel,
-                            onRename: (oldLabel) => LabelDialogs.showRenameLabelDialog(
-                              context,
-                              oldLabel: oldLabel,
-                              onRename: _labelController.updateLabel,
-                              onLoadLabels: _loadLabels,
-                            ),
-                            onLoadLabels: _loadLabels, // Truyền onLoadLabels vào đây
-                          ),
+                          onLongPress:
+                              () => LabelDialogs.showLabelOptions(
+                                context,
+                                label: label,
+                                onDelete: _labelController.deleteLabel,
+                                onRename:
+                                    (oldLabel) =>
+                                        LabelDialogs.showRenameLabelDialog(
+                                          context,
+                                          oldLabel: oldLabel,
+                                          onRename:
+                                              _labelController.updateLabel,
+                                          onLoadLabels: _loadLabels,
+                                        ),
+                                onLoadLabels: _loadLabels,
+                              ),
                           child: DrawerItem(
                             title: label,
                             icon: Icons.label_outline_rounded,
@@ -197,7 +229,9 @@ class _GmailDrawerState extends State<GmailDrawer> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Divider(
-                        color: Colors.grey[700],
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.2),
                         height: 1,
                         thickness: 1,
                         indent: 52,
@@ -208,17 +242,20 @@ class _GmailDrawerState extends State<GmailDrawer> {
                     DrawerItem(
                       title: 'Tạo mới',
                       icon: Icons.add,
-                      onTap: () => LabelDialogs.showCreateLabelDialog(
-                        context,
-                        onCreate: _labelController.saveLabel,
-                        onLoadLabels: _loadLabels,
-                      ),
+                      onTap:
+                          () => LabelDialogs.showCreateLabelDialog(
+                            context,
+                            onCreate: _labelController.saveLabel,
+                            onLoadLabels: _loadLabels,
+                          ),
                     ),
                     // Dòng phân cách
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Divider(
-                        color: Colors.grey[700],
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.2),
                         height: 1,
                         thickness: 1,
                         indent: 52,

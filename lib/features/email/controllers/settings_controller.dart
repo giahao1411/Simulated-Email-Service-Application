@@ -4,7 +4,6 @@ import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:email_application/features/email/utils/image_picker_handler.dart';
 import 'package:email_application/features/email/views/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsController {
   SettingsController({
@@ -13,7 +12,7 @@ class SettingsController {
     required this.firstNameController,
     required this.lastNameController,
     required this.passwordController,
-    required this.dateOfBirthController, // Thêm tham số
+    required this.dateOfBirthController,
   }) {
     _imagePickerHandler = getImagePickerHandler();
   }
@@ -22,10 +21,8 @@ class SettingsController {
   final TextEditingController firstNameController;
   final TextEditingController lastNameController;
   final TextEditingController passwordController;
-  final TextEditingController
-  dateOfBirthController; // Thêm controller cho ngày sinh
+  final TextEditingController dateOfBirthController;
 
-  bool isDarkMode = false;
   bool isAutoReply = false;
   bool isTwoStepEnabled = false;
   bool isLoading = false;
@@ -34,18 +31,6 @@ class SettingsController {
   late final ImagePickerHandlerBase _imagePickerHandler;
 
   String? get avatarImagePath => _avatarImagePath;
-
-  Future<void> loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    isDarkMode = prefs.getBool('isDarkMode') ?? false;
-    isAutoReply = prefs.getBool('isAutoReply') ?? false;
-  }
-
-  Future<void> savePreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isDarkMode', isDarkMode);
-    await prefs.setBool('isAutoReply', isAutoReply);
-  }
 
   Future<void> loadProfile() async {
     try {

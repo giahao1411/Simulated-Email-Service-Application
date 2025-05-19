@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 class DrawerItem extends StatelessWidget {
-
   const DrawerItem({
-    required this.title, required this.icon, required this.onTap, super.key,
+    required this.title,
+    required this.icon,
+    required this.onTap,
+    super.key,
     this.isSelected = false,
     this.count,
   });
+
   final String title;
   final IconData icon;
   final bool isSelected;
@@ -21,7 +24,7 @@ class DrawerItem extends StatelessWidget {
         decoration:
             isSelected
                 ? BoxDecoration(
-                  color: Colors.red[200]!.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                   borderRadius: const BorderRadius.only(
                     topRight: Radius.circular(30),
                     bottomRight: Radius.circular(30),
@@ -32,13 +35,19 @@ class DrawerItem extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
           leading: Icon(
             icon,
-            color: isSelected ? Colors.red[200] : Colors.grey,
+            color:
+                isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             size: 16,
           ),
           title: Text(
             title,
-            style: TextStyle(
-              color: isSelected ? Colors.red[200] : Colors.white,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color:
+                  isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurface,
               fontSize: 14,
             ),
           ),
@@ -46,7 +55,11 @@ class DrawerItem extends StatelessWidget {
               count != null
                   ? Text(
                     count.toString(),
-                    style: const TextStyle(color: Colors.grey),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
                   )
                   : null,
           selected: isSelected,
