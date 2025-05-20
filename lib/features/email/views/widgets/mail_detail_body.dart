@@ -9,8 +9,9 @@ class MailDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      color: Colors.grey[900],
+      color: theme.scaffoldBackgroundColor,
       padding: const EdgeInsets.all(16),
       child: ListView(
         children: [
@@ -19,24 +20,31 @@ class MailDetailBody extends StatelessWidget {
             to: email.to,
             cc: email.cc,
             bcc: email.bcc,
+            theme: theme,
           ),
           const SizedBox(height: 16),
           // Subject section
           Text(
             'Subject: ${email.subject}',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 18,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 16),
           // Body section
-          Text(email.body, style: const TextStyle(color: Colors.white70)),
+          Text(
+            email.body,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             'Date: ${DateFormat.formatTimestamp(email.timestamp)}',
-            style: const TextStyle(color: Colors.white54, fontSize: 14),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
           ),
         ],
       ),
@@ -48,31 +56,40 @@ class MailDetailBody extends StatelessWidget {
     required List<String> to,
     required List<String> cc,
     required List<String> bcc,
+    required ThemeData theme,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'From: $from',
-          style: const TextStyle(color: Colors.white70, fontSize: 16),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
           'To: ${to.join(', ')}',
-          style: const TextStyle(color: Colors.white54, fontSize: 14),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
+          ),
         ),
         if (cc.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
             'CC: ${cc.join(', ')}',
-            style: const TextStyle(color: Colors.white54, fontSize: 14),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
           ),
         ],
         if (bcc.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
             'BCC: ${bcc.join(', ')}',
-            style: const TextStyle(color: Colors.white54, fontSize: 14),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
           ),
         ],
       ],
