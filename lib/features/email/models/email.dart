@@ -57,4 +57,32 @@ class Email {
       'labels': labels,
     };
   }
+
+  Email copyWith({
+    String? id,
+    String? from,
+    List<String>? to,
+    List<String>? cc,
+    List<String>? bcc,
+    String? subject,
+    String? body,
+    DateTime? timestamp,
+    bool? read,
+    bool? starred,
+    List<String>? labels,
+  }) {
+    return Email(
+      id: id ?? this.id,
+      from: from ?? this.from,
+      to: to ?? this.to,
+      cc: cc ?? this.cc,
+      bcc: bcc ?? this.bcc,
+      subject: subject ?? this.subject,
+      body: body ?? this.body,
+      timestamp: timestamp ?? this.timestamp,
+      read: read ?? this.read,
+      starred: starred ?? this.starred,
+      labels: labels ?? this.labels,
+    );
+  }
 }

@@ -134,4 +134,19 @@ class EmailService {
       throw Exception('Không thể thêm nhãn: $e');
     }
   }
+
+  Future<int> countUnreadEmails() async {
+    try {
+      final snapshot =
+          await _firestore
+              .collection('emails')
+              .where('to', arrayContains: userEmail)
+              .where('read', isEqualTo: false)
+              .get();
+      return snapshot.docs.length;
+    } catch (e) {
+      print('Lỗi khi đếm email chưa đọc: $e');
+      throw Exception('Không thể đếm email chưa đọc: $e');
+    }
+  }
 }
