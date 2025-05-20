@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/controllers/label_controller.dart';
@@ -40,7 +41,9 @@ class _GmailDrawerState extends State<GmailDrawer> {
     _authStateSubscription = FirebaseAuth.instance.authStateChanges().listen((
       user,
     ) {
-      print('Auth state changed: User ${user?.uid ?? "logged out"}');
+      AppFunctions.debugPrint(
+        'Auth state changed: User ${user?.uid ?? "logged out"}',
+      );
       setState(() {
         _initializeFuture = _initializeControllerAndLoadLabels();
       });
@@ -55,7 +58,7 @@ class _GmailDrawerState extends State<GmailDrawer> {
 
   Future<void> _initializeControllerAndLoadLabels() async {
     final userProfile = await _authService.currentUser;
-    print(
+    AppFunctions.debugPrint(
       'Initialized LabelController with UID: ${userProfile?.uid ?? "No UID"}, Email: ${userProfile?.email ?? "No email"}',
     );
     final loadedLabels = await _labelController.loadLabels();
