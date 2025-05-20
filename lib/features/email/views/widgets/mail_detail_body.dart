@@ -140,7 +140,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white38),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                       child: const Row(
@@ -161,7 +161,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white38),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                       child: const Row(
@@ -199,7 +199,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           return Badge(
             label: const Text('...'),
             child: IconButton(
-              icon: const Icon(Icons.mail),
+              icon: const Icon(Icons.mail_outline),
               onPressed: () {
                 Navigator.pop(context);
                 widget.onRefresh?.call();
@@ -211,7 +211,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           return Badge(
             label: const Text('Err'),
             child: IconButton(
-              icon: const Icon(Icons.mail),
+              icon: const Icon(Icons.mail_outline),
               onPressed: () {
                 Navigator.pop(context);
                 widget.onRefresh?.call();
@@ -223,7 +223,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           return Badge(
             label: Text(snapshot.data.toString()),
             child: IconButton(
-              icon: const Icon(Icons.mail),
+              icon: const Icon(Icons.mail_outline),
               onPressed: () {
                 Navigator.pop(context);
                 widget.onRefresh?.call();

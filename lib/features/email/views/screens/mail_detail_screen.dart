@@ -30,17 +30,7 @@ class _MailDetailState extends State<MailDetail> {
       if (!email.read) {
         await emailService.toggleRead(email.id, email.read);
         setState(() {
-          email = Email(
-            id: email.id,
-            from: email.from,
-            to: email.to,
-            cc: email.cc,
-            bcc: email.bcc,
-            subject: email.subject,
-            body: email.body,
-            timestamp: email.timestamp,
-            read: true,
-          );
+          email = email.copyWith(read: true);
         });
       }
     } on Exception catch (e) {
