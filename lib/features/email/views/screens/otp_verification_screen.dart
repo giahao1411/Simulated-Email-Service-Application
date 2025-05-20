@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:flutter/material.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
@@ -38,7 +39,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         return;
       }
 
-      print(
+      AppFunctions.debugPrint(
         'Gọi onOtpVerified với OTP: $otp, verificationId: ${widget.verificationId}',
       );
       widget.onOtpVerified(otp, widget.verificationId);
@@ -46,7 +47,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         isLoading = false;
       });
     } on Exception catch (e) {
-      print('Lỗi xác minh OTP trong OtpVerificationScreen: $e');
+      AppFunctions.debugPrint(
+        'Lỗi xác minh OTP trong OtpVerificationScreen: $e',
+      );
       setState(() {
         errorMessage = 'Xác minh OTP thất bại: $e';
         isLoading = false;
