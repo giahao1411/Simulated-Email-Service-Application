@@ -4,9 +4,11 @@ import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:flutter/material.dart';
 
 class MailDetailBody extends StatefulWidget {
-  MailDetailBody({required this.email, super.key});
+  MailDetailBody({required this.email, this.onRefresh, super.key});
 
   final Email email;
+  final VoidCallback? onRefresh;
+
   final EmailService emailService = EmailService();
 
   @override
@@ -116,84 +118,127 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                 ),
 
                 // mail body
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    email.body,
-                    style: const TextStyle(fontSize: 16, color: Colors.white70),
-                  ),
+                Text(
+                  email.body,
+                  style: const TextStyle(fontSize: 16, color: Colors.white70),
                 ),
+              ],
+            ),
+          ),
 
-                // utils/icons
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  color: Colors.grey[900],
-                  child: Column(
-                    children: [
-                      OverflowBar(
-                        alignment: MainAxisAlignment.center,
+          // utils/icons
+          Container(
+            padding: const EdgeInsets.all(8),
+            color: Colors.grey[900],
+            child: Column(
+              children: [
+                OverflowBar(
+                  alignment: MainAxisAlignment.center,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () {},
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.white38),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(0),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          ElevatedButton(
-                            onPressed: () {},
-                            child: const Text('Reply'),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: () {},
-                            child: const Text('Forward'),
+                          Icon(Icons.reply, color: Colors.white38),
+                          SizedBox(width: 4),
+                          Text(
+                            'Reply',
+                            style: TextStyle(color: Colors.white38),
                           ),
                         ],
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: () {},
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.white38),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(0),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          FutureBuilder<int>(
-                            future: countUnreadMails(),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return Badge(
-                                  label: const Text('...'),
-                                  child: IconButton(
-                                    icon: const Icon(Icons.mail),
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                    },
-                                  ),
-                                );
-                              }
-                              if (snapshot.hasError) {
-                                return Badge(
-                                  label: const Text('Err'),
-                                  child: IconButton(
-                                    icon: const Icon(Icons.mail),
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                    },
-                                  ),
-                                );
-                              }
-                              return Badge(
-                                label: Text(snapshot.data.toString()),
-                                child: IconButton(
-                                  icon: const Icon(Icons.mail),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                              );
-                            },
+                          Icon(Icons.forward, color: Colors.white38),
+                          SizedBox(width: 4),
+                          Text(
+                            'Forward',
+                            style: TextStyle(color: Colors.white38),
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [_unreadMailRemainingIcon()],
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _unreadMailRemainingIcon() {
+    return FutureBuilder<int>(
+      future: countUnreadMails(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Badge(
+            label: const Text('...'),
+            child: IconButton(
+              icon: const Icon(Icons.mail),
+              onPressed: () {
+                Navigator.pop(context);
+                widget.onRefresh?.call();
+              },
+            ),
+          );
+        }
+        if (snapshot.hasError) {
+          return Badge(
+            label: const Text('Err'),
+            child: IconButton(
+              icon: const Icon(Icons.mail),
+              onPressed: () {
+                Navigator.pop(context);
+                widget.onRefresh?.call();
+              },
+            ),
+          );
+        }
+        if (snapshot.data != null && snapshot.data! > 0) {
+          return Badge(
+            label: Text(snapshot.data.toString()),
+            child: IconButton(
+              icon: const Icon(Icons.mail),
+              onPressed: () {
+                Navigator.pop(context);
+                widget.onRefresh?.call();
+              },
+            ),
+          );
+        }
+        return IconButton(
+          icon: const Icon(Icons.mail),
+          onPressed: () {
+            Navigator.pop(context);
+            widget.onRefresh?.call();
+          },
+        );
+      },
     );
   }
 }

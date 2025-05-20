@@ -56,7 +56,7 @@ class _MailDetailState extends State<MailDetail> {
         emailService: emailService,
         onRefresh: widget.onRefresh,
       ),
-      body: MailDetailBody(email: email),
+      body: MailDetailBody(email: email, onRefresh: widget.onRefresh),
     );
   }
 }
