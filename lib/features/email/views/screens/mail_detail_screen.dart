@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/views/widgets/mail_detail_app_bar.dart';
@@ -34,7 +35,7 @@ class _MailDetailState extends State<MailDetail> {
         });
       }
     } on Exception catch (e) {
-      print('Lỗi khi chuyển trạng thái đã đọc: $e');
+      AppFunctions.debugPrint('Lỗi khi chuyển trạng thái đã đọc: $e');
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,11 +11,11 @@ class EmailService {
 
   Stream<List<Email>> getEmails(String category) {
     if (userEmail == null || FirebaseAuth.instance.currentUser == null) {
-      print('Không truy vấn email vì chưa đăng nhập');
+      AppFunctions.debugPrint('Không truy vấn email vì chưa đăng nhập');
       return Stream.value([]);
     }
 
-    print('Lấy email cho danh mục: $category');
+    AppFunctions.debugPrint('Lấy email cho danh mục: $category');
     var query = _firestore
         .collection(category == 'Thư nháp' ? 'drafts' : 'emails')
         .orderBy('timestamp', descending: true);
@@ -48,7 +49,7 @@ class EmailService {
             .map((doc) => Email.fromMap(doc.id, doc.data()))
             .toList();
       } on Exception catch (e) {
-        print('Lỗi khi ánh xạ dữ liệu email: $e');
+        AppFunctions.debugPrint('Lỗi khi ánh xạ dữ liệu email: $e');
         return <Email>[];
       }
     });
@@ -79,7 +80,7 @@ class EmailService {
         'labels': <String>[],
       });
     } on Exception catch (e) {
-      print('Lỗi khi gửi email: $e');
+      AppFunctions.debugPrint('Lỗi khi gửi email: $e');
       throw Exception('Lỗi khi gửi email: $e');
     }
   }
@@ -97,7 +98,7 @@ class EmailService {
         'timestamp': FieldValue.serverTimestamp(),
       });
     } on Exception catch (e) {
-      print('Lỗi khi lưu thư nháp: $e');
+      AppFunctions.debugPrint('Lỗi khi lưu thư nháp: $e');
       throw Exception('Lỗi khi lưu thư nháp: $e');
     }
   }
@@ -108,7 +109,7 @@ class EmailService {
         'starred': !currentStatus,
       });
     } catch (e) {
-      print('Lỗi khi thay đổi trạng thái sao: $e');
+      AppFunctions.debugPrint('Lỗi khi thay đổi trạng thái sao: $e');
       throw Exception('Không thể thay đổi trạng thái sao: $e');
     }
   }
@@ -119,7 +120,7 @@ class EmailService {
         'read': !currentStatus,
       });
     } catch (e) {
-      print('Lỗi khi thay đổi trạng thái đã đọc: $e');
+      AppFunctions.debugPrint('Lỗi khi thay đổi trạng thái đã đọc: $e');
       throw Exception('Không thể thay đổi trạng thái đã đọc: $e');
     }
   }
@@ -130,7 +131,7 @@ class EmailService {
         'labels': FieldValue.arrayUnion([label]),
       });
     } catch (e) {
-      print('Lỗi khi thêm nhãn: $e');
+      AppFunctions.debugPrint('Lỗi khi thêm nhãn: $e');
       throw Exception('Không thể thêm nhãn: $e');
     }
   }
@@ -145,7 +146,7 @@ class EmailService {
               .get();
       return snapshot.docs.length;
     } catch (e) {
-      print('Lỗi khi đếm email chưa đọc: $e');
+      AppFunctions.debugPrint('Lỗi khi đếm email chưa đọc: $e');
       throw Exception('Không thể đếm email chưa đọc: $e');
     }
   }

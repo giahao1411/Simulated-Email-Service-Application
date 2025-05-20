@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/views/screens/forgot_password_screen.dart';
 import 'package:email_application/features/email/views/screens/gmail_screen.dart';
@@ -43,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _showSnackBar('Đăng nhập thành công!', true);
         await Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const GmailScreen()),
+          MaterialPageRoute<void>(builder: (context) => const GmailScreen()),
         );
       }
     } on Exception catch (e) {
@@ -52,6 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
         isLoading = false;
       });
       _showSnackBar(errorMessage!, false);
+      AppFunctions.debugPrint('Đăng nhập thất bại: $e');
     }
   }
 
@@ -167,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
+                    MaterialPageRoute<void>(
                       builder: (context) => const ForgotPasswordScreen(),
                     ),
                   );
@@ -181,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
+                    MaterialPageRoute<void>(
                       builder: (context) => const RegisterScreen(),
                     ),
                   );

@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/controllers/profile_service.dart';
 import 'package:email_application/features/email/controllers/settings_controller.dart';
@@ -117,8 +118,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onPickImage: () async {
                         try {
                           await _controller.pickImage(context);
-                        } catch (e) {
-                          // Xử lý lỗi nếu cần
+                        } on Exception catch (e) {
+                          AppFunctions.debugPrint(
+                            'Lỗi khi chọn ảnh đại diện: $e',
+                          );
                         }
                       },
                     ),
@@ -152,7 +155,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: TextField(
                   controller: _controller.passwordController,
                   decoration: const InputDecoration(labelText: 'Mật khẩu mới'),
-                  
+
                   obscureText: true,
                 ),
               ),

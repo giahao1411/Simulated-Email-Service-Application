@@ -68,7 +68,7 @@ class EmailList extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
+                    MaterialPageRoute<void>(
                       builder:
                           (context) =>
                               MailDetail(email: email, onRefresh: onRefresh),

@@ -1,17 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
 
 class LabelController {
+  // Email của người dùng hiện tại (vẫn giữ để tham khảo)
+
+  LabelController() {
+    // Không gọi _initializeUserData trong constructor nữa
+  }
   final CollectionReference _labelsRef = FirebaseFirestore.instance.collection(
     'labels',
   );
   final AuthService _authService = AuthService();
   String? uid; // UID của người dùng hiện tại
-  String? email; // Email của người dùng hiện tại (vẫn giữ để tham khảo)
-
-  LabelController() {
-    // Không gọi _initializeUserData trong constructor nữa
-  }
+  String? email;
 
   Future<void> initializeUserData() async {
     final userProfile = await _authService.currentUser;
@@ -19,24 +21,25 @@ class LabelController {
     email =
         userProfile?.email ??
         'default@example.com'; // Fallback nếu không có emai
-    print('Initialized user data for labels: UID=$uid, Email=$email');
+    AppFunctions.debugPrint(
+      'Initialized user data for labels: UID=$uid, Email=$email',
+    );
   }
 
   // Tải danh sách nhãn từ Firestore, chỉ lấy nhãn của UID hiện tại
   Future<List<String>> loadLabels() async {
     await initializeUserData(); // Đảm bảo UID được khởi tạo
     if (uid == 'default_uid') {
-      print('No user logged in, returning empty labels');
+      AppFunctions.debugPrint('No user logged in, returning empty labels');
       return [];
     }
     try {
-      final QuerySnapshot snapshot =
-          await _labelsRef.where('uid', isEqualTo: uid).get();
+      final snapshot = await _labelsRef.where('uid', isEqualTo: uid).get();
       final labels = snapshot.docs.map((doc) => doc['name'] as String).toList();
-      print('Loaded labels for UID $uid: $labels');
+      AppFunctions.debugPrint('Loaded labels for UID $uid: $labels');
       return labels;
     } catch (e) {
-      print('Lỗi khi tải nhãn: $e');
+      AppFunctions.debugPrint('Lỗi khi tải nhãn: $e');
       return [];
     }
   }
@@ -45,7 +48,7 @@ class LabelController {
   Future<bool> doesLabelExist(String labelName) async {
     await initializeUserData();
     if (uid == 'default_uid') return false;
-    final QuerySnapshot snapshot =
+    final snapshot =
         await _labelsRef
             .where('uid', isEqualTo: uid)
             .where('name', isEqualTo: labelName)
@@ -58,12 +61,12 @@ class LabelController {
   Future<bool> saveLabel(String label) async {
     await initializeUserData();
     if (uid == 'default_uid') {
-      print('Cannot save label: No user logged in');
+      AppFunctions.debugPrint('Cannot save label: No user logged in');
       return false;
     }
     try {
       if (await doesLabelExist(label)) {
-        print('Label already exists: $label');
+        AppFunctions.debugPrint('Label already exists: $label');
         return false; // Nhãn đã tồn tại
       }
       await _labelsRef.add({
@@ -71,10 +74,10 @@ class LabelController {
         'uid': uid, // Sử dụng UID để phân quyền
         'email': email, // Lưu email để tham khảo (tùy chọn)
       });
-      print('Saved label: $label for UID: $uid');
+      AppFunctions.debugPrint('Saved label: $label for UID: $uid');
       return true;
     } catch (e) {
-      print('Lỗi khi lưu nhãn: $e');
+      AppFunctions.debugPrint('Lỗi khi lưu nhãn: $e');
       return false;
     }
   }
@@ -85,10 +88,10 @@ class LabelController {
     if (uid == 'default_uid') return false;
     try {
       if (await doesLabelExist(newLabel)) {
-        print('New label already exists: $newLabel');
+        AppFunctions.debugPrint('New label already exists: $newLabel');
         return false; // Nhãn mới đã tồn tại
       }
-      final QuerySnapshot snapshot =
+      final snapshot =
           await _labelsRef
               .where('uid', isEqualTo: uid)
               .where('name', isEqualTo: oldLabel)
@@ -96,13 +99,15 @@ class LabelController {
               .get();
       if (snapshot.docs.isNotEmpty) {
         await _labelsRef.doc(snapshot.docs.first.id).update({'name': newLabel});
-        print('Updated label from $oldLabel to $newLabel for UID: $uid');
+        AppFunctions.debugPrint(
+          'Updated label from $oldLabel to $newLabel for UID: $uid',
+        );
         return true;
       }
-      print('Label not found: $oldLabel');
+      AppFunctions.debugPrint('Label not found: $oldLabel');
       return false;
     } catch (e) {
-      print('Lỗi khi cập nhật nhãn: $e');
+      AppFunctions.debugPrint('Lỗi khi cập nhật nhãn: $e');
       return false;
     }
   }
@@ -112,7 +117,7 @@ class LabelController {
     await initializeUserData();
     if (uid == 'default_uid') return false;
     try {
-      final QuerySnapshot snapshot =
+      final snapshot =
           await _labelsRef
               .where('uid', isEqualTo: uid)
               .where('name', isEqualTo: label)
@@ -120,13 +125,13 @@ class LabelController {
               .get();
       if (snapshot.docs.isNotEmpty) {
         await _labelsRef.doc(snapshot.docs.first.id).delete();
-        print('Deleted label: $label for UID: $uid');
+        AppFunctions.debugPrint('Deleted label: $label for UID: $uid');
         return true;
       }
-      print('Label not found: $label');
+      AppFunctions.debugPrint('Label not found: $label');
       return false;
     } catch (e) {
-      print('Lỗi khi xóa nhãn: $e');
+      AppFunctions.debugPrint('Lỗi khi xóa nhãn: $e');
       return false;
     }
   }

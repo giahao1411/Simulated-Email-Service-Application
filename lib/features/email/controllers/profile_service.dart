@@ -31,8 +31,9 @@ class ProfileService {
     if (user == null) throw Exception('Người dùng chưa đăng nhập');
 
     final currentProfile = await getProfile();
-    if (currentProfile == null)
+    if (currentProfile == null) {
       throw Exception('Không tìm thấy hồ sơ người dùng');
+    }
 
     final updatedProfile = UserProfile(
       uid: currentProfile.uid,
