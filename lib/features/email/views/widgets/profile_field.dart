@@ -1,6 +1,8 @@
 import 'package:email_application/features/email/controllers/settings_controller.dart';
 import 'package:email_application/features/email/models/user_profile.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ProfileField extends StatelessWidget {
   const ProfileField({
@@ -15,6 +17,9 @@ class ProfileField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeManage>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Column(
       children: [
         ListTile(
@@ -48,18 +53,17 @@ class ProfileField extends StatelessWidget {
                 borderRadius: BorderRadius.all(Radius.circular(8)),
                 borderSide: BorderSide(color: Colors.red, width: 2),
               ),
-
               suffixIcon: IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.calendar_today,
                   size: 20,
-                  color: Colors.grey,
+                  color: isDarkMode ? Colors.white70 : Colors.grey[700],
                 ),
                 onPressed: onDateSelected,
               ),
             ),
             readOnly: true,
-            style: const TextStyle(color: Colors.white70),
+            style: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black),
           ),
         ),
         Padding(
