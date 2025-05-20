@@ -31,8 +31,9 @@ class _MailDetailBodyState extends State<MailDetailBody> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      color: Colors.grey[900],
+      color: theme.scaffoldBackgroundColor,
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
