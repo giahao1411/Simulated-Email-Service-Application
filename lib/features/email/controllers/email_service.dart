@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -8,7 +9,6 @@ class EmailService {
   final String? userEmail;
 
   Stream<List<Email>> getEmails(String category) {
-    // Kiểm tra nếu người dùng chưa đăng nhập
     if (userEmail == null || FirebaseAuth.instance.currentUser == null) {
       print('Không truy vấn email vì chưa đăng nhập');
       return Stream.value([]);
@@ -16,42 +16,42 @@ class EmailService {
 
     print('Lấy email cho danh mục: $category');
     var query = _firestore
-        .collection('emails')
-        .where('to', arrayContains: userEmail)
+        .collection(category == 'Thư nháp' ? 'drafts' : 'emails')
         .orderBy('timestamp', descending: true);
 
-    if (category == 'Có gắn dấu sao') {
-      query = query.where('starred', isEqualTo: true);
-    } else if (category == 'Đã gửi') {
-      query = _firestore
-          .collection('emails')
-          .where('from', isEqualTo: userEmail)
-          .orderBy('timestamp', descending: true);
-    } else if (category == 'Thư nháp') {
-      query = _firestore
-          .collection('drafts')
-          .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-          .orderBy('timestamp', descending: true);
+    if (category == AppStrings.inbox) {
+      query = query.where('to', arrayContains: userEmail);
+    } else if (category == AppStrings.starred) {
+      query = query
+          .where('to', arrayContains: userEmail)
+          .where('starred', isEqualTo: true);
+    } else if (category == AppStrings.sent) {
+      query = query.where('from', isEqualTo: userEmail);
+    } else if (category == AppStrings.drafts) {
+      query = query.where(
+        'userId',
+        isEqualTo: FirebaseAuth.instance.currentUser?.uid,
+      );
+    } else if (category == AppStrings.trash) {
+      query = query
+          .where('to', arrayContains: userEmail)
+          .where('trashed', isEqualTo: true);
+    } else {
+      query = query
+          .where('labels', arrayContains: category)
+          .where('to', arrayContains: userEmail);
     }
 
-    return Stream.fromFuture(
-      query
-          .get()
-          .then((snapshot) {
-            try {
-              return snapshot.docs
-                  .map((doc) => Email.fromMap(doc.id, doc.data()))
-                  .toList();
-            } on Exception catch (e) {
-              print('Lỗi khi ánh xạ dữ liệu email: $e');
-              return <Email>[]; // Trả về danh sách rỗng nếu có lỗi
-            }
-          })
-          .catchError((Object e) {
-            print('Lỗi khi truy vấn Firestore: $e');
-            return <Email>[]; // Trả về danh sách rỗng nếu có lỗi truy vấn
-          }),
-    );
+    return query.snapshots().map((snapshot) {
+      try {
+        return snapshot.docs
+            .map((doc) => Email.fromMap(doc.id, doc.data()))
+            .toList();
+      } on Exception catch (e) {
+        print('Lỗi khi ánh xạ dữ liệu email: $e');
+        return <Email>[];
+      }
+    });
   }
 
   Future<void> sendEmail({

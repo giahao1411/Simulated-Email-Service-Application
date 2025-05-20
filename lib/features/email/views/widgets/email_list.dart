@@ -5,45 +5,24 @@ import 'package:email_application/features/email/views/screens/mail_detail_scree
 import 'package:email_application/features/email/views/widgets/email_tile.dart';
 import 'package:flutter/material.dart';
 
-class EmailList extends StatefulWidget {
+class EmailList extends StatelessWidget {
   const EmailList({
     required this.emailService,
     required this.currentCategory,
+    required this.emailStream,
+    this.onRefresh,
     super.key,
   });
 
   final EmailService emailService;
   final String currentCategory;
-
-  @override
-  State<StatefulWidget> createState() => _EmailListState();
-}
-
-class _EmailListState extends State<EmailList> {
-  late Stream<List<Email>> emailStream;
-
-  @override
-  void initState() {
-    super.initState();
-    emailStream =
-        widget.emailService
-            .getEmails(widget.currentCategory)
-            .asBroadcastStream();
-  }
-
-  void refreshStream() {
-    setState(() {
-      emailStream =
-          widget.emailService
-              .getEmails(widget.currentCategory)
-              .asBroadcastStream();
-    });
-  }
+  final Stream<List<Email>>? emailStream;
+  final VoidCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: Theme.of(context).scaffoldBackgroundColor, // Sử dụng màu từ Theme
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: StreamBuilder<List<Email>>(
         stream: emailStream,
         builder: (context, snapshot) {
@@ -83,17 +62,16 @@ class _EmailListState extends State<EmailList> {
               return EmailTile(
                 email: email,
                 index: index,
-                emailService: widget.emailService,
-                onStarToggled: refreshStream,
+                emailService: emailService,
+                currentCategory: currentCategory,
+                onStarToggled: onRefresh,
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder:
-                          (context) => MailDetail(
-                            email: email,
-                            onRefresh: refreshStream,
-                          ),
+                          (context) =>
+                              MailDetail(email: email, onRefresh: onRefresh),
                     ),
                   );
                 },

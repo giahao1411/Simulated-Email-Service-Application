@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
@@ -8,6 +9,7 @@ class EmailTile extends StatelessWidget {
     required this.email,
     required this.index,
     required this.emailService,
+    required this.currentCategory,
     this.onStarToggled,
     this.onTap,
     super.key,
@@ -16,11 +18,21 @@ class EmailTile extends StatelessWidget {
   final Email email;
   final int index;
   final EmailService emailService;
+  final String currentCategory;
   final VoidCallback? onStarToggled;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    String senderOrReceiver;
+    if (currentCategory == AppStrings.drafts ||
+        currentCategory == AppStrings.sent) {
+      senderOrReceiver =
+          email.to.isNotEmpty ? email.to.join(', ') : 'Không có người nhận';
+    } else {
+      senderOrReceiver = email.from;
+    }
+
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -47,7 +59,7 @@ class EmailTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          email.from,
+                          senderOrReceiver,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(
                             context,
