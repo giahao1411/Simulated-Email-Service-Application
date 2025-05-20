@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/views/widgets/email_text_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -38,7 +39,7 @@ class _ComposeBodyState extends State<ComposeBody> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    print('ComposeBody - isDarkMode: $isDarkMode'); // Debug
+    AppFunctions.debugPrint('ComposeBody - isDarkMode: $isDarkMode'); // Debug
     final labelColor = isDarkMode ? Colors.white : Colors.black87;
 
     return Column(

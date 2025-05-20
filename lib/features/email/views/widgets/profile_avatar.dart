@@ -1,4 +1,6 @@
 import 'dart:io';
+
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/settings_controller.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +14,18 @@ class ProfileAvatar extends StatelessWidget {
   final SettingsController controller;
   final bool isLoading;
   final VoidCallback? onPickImage;
+
+  String _getProfileInitial() {
+    final firstName = controller.userProfile?.firstName;
+    final lastName = controller.userProfile?.lastName;
+    if (firstName != null && firstName.isNotEmpty) {
+      return firstName[0];
+    } else if (lastName != null && lastName.isNotEmpty) {
+      return lastName[0];
+    } else {
+      return '?';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,14 +52,9 @@ class ProfileAvatar extends StatelessWidget {
                       width: 100,
                       height: 100,
                       errorBuilder: (context, error, stackTrace) {
-                        print('Lỗi tải ảnh: $error');
+                        AppFunctions.debugPrint('Lỗi tải ảnh: $error');
                         return Text(
-                          controller.userProfile?.firstName?.isNotEmpty == true
-                              ? controller.userProfile!.firstName![0]
-                              : (controller.userProfile?.lastName ?? '')
-                                  .isNotEmpty
-                              ? controller.userProfile!.lastName![0]
-                              : '?',
+                          _getProfileInitial(),
                           style: const TextStyle(
                             fontSize: 40,
                             color: Colors.white,
@@ -55,11 +64,7 @@ class ProfileAvatar extends StatelessWidget {
                     ),
                   )
                   : Text(
-                    controller.userProfile?.firstName?.isNotEmpty == true
-                        ? controller.userProfile!.firstName![0]
-                        : (controller.userProfile?.lastName ?? '').isNotEmpty
-                        ? controller.userProfile!.lastName![0]
-                        : '?',
+                    _getProfileInitial(),
                     style: const TextStyle(fontSize: 40, color: Colors.white),
                   ),
         ),

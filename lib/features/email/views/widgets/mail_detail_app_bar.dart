@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +45,7 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
               onRefresh?.call();
               Navigator.pop(context);
             } on Exception catch (e) {
-              print('Lỗi khi chuyển trạng thái đã đọc: $e');
+              AppFunctions.debugPrint('Lỗi khi chuyển trạng thái đã đọc: $e');
             }
           },
         ),

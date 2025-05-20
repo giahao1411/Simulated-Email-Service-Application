@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:flutter/material.dart';
 
 class EmailTextField extends StatelessWidget {
@@ -29,7 +30,9 @@ class EmailTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    print('EmailTextField - isDarkMode: $isDarkMode'); // Debug
+    AppFunctions.debugPrint(
+      'EmailTextField - isDarkMode: $isDarkMode',
+    ); // Debug
 
     return TextField(
       controller: controller,
