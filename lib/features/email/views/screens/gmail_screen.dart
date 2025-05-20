@@ -1,5 +1,6 @@
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
+import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/views/screens/compose_screen.dart';
 import 'package:email_application/features/email/views/widgets/compose_button.dart';
 import 'package:email_application/features/email/views/widgets/email_list.dart';
@@ -19,6 +20,19 @@ class _GmailScreenState extends State<GmailScreen>
   bool isDrawerOpen = false;
   String currentCategory = AppStrings.inbox;
   final EmailService emailService = EmailService();
+  late Stream<List<Email>> emailStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshStream();
+  }
+
+  void _refreshStream() {
+    setState(() {
+      emailStream = emailService.getEmails(currentCategory).asBroadcastStream();
+    });
+  }
 
   void toggleDrawer() {
     setState(() {
@@ -30,6 +44,7 @@ class _GmailScreenState extends State<GmailScreen>
     setState(() {
       currentCategory = category;
       isDrawerOpen = false;
+      _refreshStream();
     });
   }
 
@@ -61,6 +76,8 @@ class _GmailScreenState extends State<GmailScreen>
                 child: EmailList(
                   emailService: emailService,
                   currentCategory: currentCategory,
+                  emailStream: emailStream,
+                  onRefresh: _refreshStream,
                 ),
               ),
             ],
