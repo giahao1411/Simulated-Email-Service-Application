@@ -96,7 +96,9 @@ class _GmailScreenState extends State<GmailScreen>
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ComposeScreen()),
+                MaterialPageRoute<void>(
+                  builder: (context) => const ComposeScreen(),
+                ),
               );
             },
           ),

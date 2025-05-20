@@ -77,7 +77,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       );
       await Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
       );
     } on Exception catch (e) {
       setState(() {

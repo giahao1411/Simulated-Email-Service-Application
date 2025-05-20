@@ -1,4 +1,5 @@
 import 'package:email_application/core/config/firebase_options.dart';
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -11,9 +12,9 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    print('Firebase initialized successfully');
-  } catch (e) {
-    print('Firebase initialization error: $e');
+    AppFunctions.debugPrint('Firebase initialized successfully');
+  } on Exception catch (e) {
+    AppFunctions.debugPrint('Firebase initialization error: $e');
   }
   runApp(const MyApp());
 }

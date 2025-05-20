@@ -67,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         onCodeSent: (verificationId) {
           Navigator.push(
             context,
-            MaterialPageRoute(
+            MaterialPageRoute<void>(
               builder:
                   (context) => OtpVerificationScreen(
                     phoneNumber: phone,
@@ -91,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           );
                           await Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(
+                            MaterialPageRoute<void>(
                               builder: (context) => const LoginScreen(),
                             ),
                           );
@@ -359,7 +359,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
+                    MaterialPageRoute<void>(
                       builder: (context) => const LoginScreen(),
                     ),
                   );

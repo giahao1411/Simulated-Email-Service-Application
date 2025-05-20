@@ -51,7 +51,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         onCodeSent: (verificationId) {
           Navigator.push(
             context,
-            MaterialPageRoute(
+            MaterialPageRoute<void>(
               builder:
                   (context) => OtpVerificationScreen(
                     phoneNumber: phone,
@@ -59,7 +59,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     onOtpVerified: (otp, verificationId) async {
                       await Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        MaterialPageRoute<void>(
                           builder:
                               (context) => NewPasswordScreen(
                                 phoneNumber: phone,
