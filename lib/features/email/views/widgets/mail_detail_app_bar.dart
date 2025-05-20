@@ -16,25 +16,27 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AppBar(
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white70),
+        icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
         onPressed: () {
           onRefresh?.call();
           Navigator.pop(context);
         },
       ),
-      backgroundColor: Colors.grey[900],
+      backgroundColor:
+          theme.appBarTheme.backgroundColor ?? theme.scaffoldBackgroundColor,
       actions: [
         IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.white70),
+          icon: Icon(Icons.delete_outline, color: theme.colorScheme.onSurface),
           onPressed: () {},
         ),
         const SizedBox(width: 8),
         IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.mark_email_unread_outlined,
-            color: Colors.white70,
+            color: theme.colorScheme.onSurface,
           ),
           onPressed: () async {
             try {
@@ -48,7 +50,7 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         const SizedBox(width: 8),
         IconButton(
-          icon: const Icon(Icons.more_horiz, color: Colors.white70),
+          icon: Icon(Icons.more_horiz, color: theme.colorScheme.onSurface),
           onPressed: () {},
         ),
       ],
