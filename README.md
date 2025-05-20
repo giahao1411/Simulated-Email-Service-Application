@@ -1,4 +1,4 @@
-# email_application
+# Simulated-Email-Service-Application
 
 A new Flutter project.
 
