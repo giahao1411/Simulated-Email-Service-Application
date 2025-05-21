@@ -32,6 +32,9 @@ class _MailDetailBodyState extends State<MailDetailBody> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final onSurface = theme.colorScheme.onSurface;
+    final onSurface60 = onSurface.withOpacity(0.6);
+    final onSurface70 = onSurface.withOpacity(0.7);
     return Container(
       color: theme.scaffoldBackgroundColor,
       padding: const EdgeInsets.all(16),
@@ -46,21 +49,16 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                   children: [
                     Text(
                       email.subject,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: onSurface,
                       ),
                     ),
                     IconButton(
                       icon: Icon(
                         email.starred ? Icons.star : Icons.star_border,
-                        color:
-                            email.starred
-                                ? Colors.amber
-                                : Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.6),
+                        color: email.starred ? Colors.amber : onSurface60,
                         size: 25,
                       ),
                       onPressed: () async {
@@ -84,33 +82,44 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                   ),
                   title: Row(
                     children: [
-                      Text(
-                        email.from,
-                        style: const TextStyle(color: Colors.white),
+                      FutureBuilder<String>(
+                        future: emailService.getUserFullNameByEmail(email.from),
+                        builder: (context, snapshot) {
+                          final displayName =
+                              (snapshot.connectionState ==
+                                          ConnectionState.done &&
+                                      snapshot.hasData &&
+                                      snapshot.data != null &&
+                                      snapshot.data!.trim().isNotEmpty &&
+                                      snapshot.data != email.from)
+                                  ? snapshot.data!
+                                  : email.from;
+                          return Text(
+                            displayName,
+                            style: TextStyle(color: onSurface),
+                          );
+                        },
                       ),
                       const SizedBox(width: 8),
                       Text(
                         DateFormat.formatTimestamp(email.timestamp),
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: onSurface70, fontSize: 12),
                       ),
                     ],
                   ),
                   subtitle: Text(
                     'to bcc: ${email.bcc}',
-                    style: const TextStyle(color: Colors.white70),
+                    style: TextStyle(color: onSurface70),
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.reply),
+                        icon: Icon(Icons.reply, color: onSurface60),
                         onPressed: () {},
                       ),
                       IconButton(
-                        icon: const Icon(Icons.more_horiz),
+                        icon: Icon(Icons.more_horiz, color: onSurface60),
                         onPressed: () {},
                       ),
                     ],
@@ -121,7 +130,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                 // mail body
                 Text(
                   email.body,
-                  style: const TextStyle(fontSize: 16, color: Colors.white70),
+                  style: TextStyle(fontSize: 16, color: onSurface70),
                 ),
               ],
             ),
@@ -130,7 +139,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           // utils/icons
           Container(
             padding: const EdgeInsets.all(8),
-            color: Colors.grey[900],
+            color: theme.colorScheme.surface,
             child: Column(
               children: [
                 OverflowBar(
@@ -139,20 +148,17 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                     OutlinedButton(
                       onPressed: () {},
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.white38),
+                        side: BorderSide(color: onSurface60),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.reply, color: Colors.white38),
-                          SizedBox(width: 4),
-                          Text(
-                            'Reply',
-                            style: TextStyle(color: Colors.white38),
-                          ),
+                          Icon(Icons.reply, color: onSurface60),
+                          const SizedBox(width: 4),
+                          Text('Reply', style: TextStyle(color: onSurface60)),
                         ],
                       ),
                     ),
@@ -160,20 +166,17 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                     OutlinedButton(
                       onPressed: () {},
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.white38),
+                        side: BorderSide(color: onSurface60),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.forward, color: Colors.white38),
-                          SizedBox(width: 4),
-                          Text(
-                            'Forward',
-                            style: TextStyle(color: Colors.white38),
-                          ),
+                          Icon(Icons.forward, color: onSurface60),
+                          const SizedBox(width: 4),
+                          Text('Forward', style: TextStyle(color: onSurface60)),
                         ],
                       ),
                     ),
@@ -182,7 +185,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [_unreadMailRemainingIcon()],
+                  children: [_unreadMailRemainingIcon(onSurface)],
                 ),
               ],
             ),
@@ -192,7 +195,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
     );
   }
 
-  Widget _unreadMailRemainingIcon() {
+  Widget _unreadMailRemainingIcon(Color iconColor) {
     return FutureBuilder<int>(
       future: countUnreadMails(),
       builder: (context, snapshot) {
@@ -200,7 +203,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           return Badge(
             label: const Text('...'),
             child: IconButton(
-              icon: const Icon(Icons.mail_outline),
+              icon: Icon(Icons.mail_outline, color: iconColor),
               onPressed: () {
                 Navigator.pop(context);
                 widget.onRefresh?.call();
@@ -212,7 +215,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           return Badge(
             label: const Text('Err'),
             child: IconButton(
-              icon: const Icon(Icons.mail_outline),
+              icon: Icon(Icons.mail_outline, color: iconColor),
               onPressed: () {
                 Navigator.pop(context);
                 widget.onRefresh?.call();
@@ -224,7 +227,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           return Badge(
             label: Text(snapshot.data.toString()),
             child: IconButton(
-              icon: const Icon(Icons.mail_outline),
+              icon: Icon(Icons.mail_outline, color: iconColor),
               onPressed: () {
                 Navigator.pop(context);
                 widget.onRefresh?.call();
@@ -233,7 +236,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           );
         }
         return IconButton(
-          icon: const Icon(Icons.mail),
+          icon: Icon(Icons.mail, color: iconColor),
           onPressed: () {
             Navigator.pop(context);
             widget.onRefresh?.call();

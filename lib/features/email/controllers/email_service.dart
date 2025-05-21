@@ -150,4 +150,37 @@ class EmailService {
       throw Exception('Không thể đếm email chưa đọc: $e');
     }
   }
+
+  Future<String> getUserFullNameByEmail(String email) async {
+    try {
+      final query =
+          await _firestore
+              .collection('users')
+              .where('email', isEqualTo: email)
+              .limit(1)
+              .get();
+      if (query.docs.isNotEmpty) {
+        final data = query.docs.first.data();
+        final firstName = (data['firstName'] ?? '') as String;
+        final lastName = (data['lastName'] ?? '') as String;
+        final fullName = '$firstName $lastName'.trim();
+        if (fullName.isNotEmpty) {
+          return fullName;
+        }
+      }
+      return email;
+    } on Exception catch (e) {
+      AppFunctions.debugPrint('Lỗi khi lấy tên người dùng: $e');
+      return email;
+    }
+  }
+
+  Future<void> deleteEmail(String email) async {
+    try {
+      await _firestore.collection('emails').doc(email).delete();
+    } catch (e) {
+      AppFunctions.debugPrint('Lỗi khi xóa email: $e');
+      throw Exception('Không thể xóa email: $e');
+    }
+  }
 }

@@ -17,11 +17,14 @@ class LabelDialogs {
     required ValueChanged<String> onRename,
     required VoidCallback onLoadLabels,
   }) {
+    final theme = Theme.of(context);
+    final onSurface = theme.colorScheme.onSurface;
+    final surface = theme.colorScheme.surface;
     showDialog<void>(
       context: context,
       builder:
           (context) => Theme(
-            data: Theme.of(context).copyWith(
+            data: theme.copyWith(
               dialogTheme: DialogTheme(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -30,11 +33,11 @@ class LabelDialogs {
               ),
             ),
             child: AlertDialog(
-              backgroundColor: Colors.grey[800],
-              title: const Text(
+              backgroundColor: surface,
+              title: Text(
                 'Tùy chọn nhãn',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                 ),
@@ -43,10 +46,13 @@ class LabelDialogs {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.edit, color: Colors.white70),
-                    title: const Text(
+                    leading: Icon(
+                      Icons.edit,
+                      color: onSurface.withOpacity(0.7),
+                    ),
+                    title: Text(
                       'Đổi tên',
-                      style: TextStyle(color: Colors.white70),
+                      style: TextStyle(color: onSurface.withOpacity(0.7)),
                     ),
                     onTap: () {
                       Navigator.pop(context);
@@ -54,10 +60,13 @@ class LabelDialogs {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.delete, color: Colors.white70),
-                    title: const Text(
+                    leading: Icon(
+                      Icons.delete,
+                      color: onSurface.withOpacity(0.7),
+                    ),
+                    title: Text(
                       'Xóa',
-                      style: TextStyle(color: Colors.white70),
+                      style: TextStyle(color: onSurface.withOpacity(0.7)),
                     ),
                     onTap: () async {
                       Navigator.pop(context);
@@ -77,10 +86,7 @@ class LabelDialogs {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'Hủy',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: Text('Hủy', style: TextStyle(color: onSurface)),
                     ),
                     const SizedBox(width: 8),
                   ],
@@ -101,11 +107,16 @@ class LabelDialogs {
     required VoidCallback onLoadLabels,
   }) {
     final controller = TextEditingController(text: oldLabel);
+
+    final theme = Theme.of(context);
+    final onSurface = theme.colorScheme.onSurface;
+    final surface = theme.colorScheme.surface;
+
     showDialog<void>(
       context: context,
       builder:
           (context) => Theme(
-            data: Theme.of(context).copyWith(
+            data: theme.copyWith(
               dialogTheme: DialogTheme(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -114,11 +125,11 @@ class LabelDialogs {
               ),
             ),
             child: AlertDialog(
-              backgroundColor: Colors.grey[800],
-              title: const Text(
+              backgroundColor: surface,
+              title: Text(
                 'Đổi tên nhãn',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                 ),
@@ -127,20 +138,24 @@ class LabelDialogs {
                 controller: controller,
                 decoration: InputDecoration(
                   hintText: 'Nhập tên mới',
+                  hintStyle: TextStyle(color: onSurface.withOpacity(0.5)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.grey),
+                    borderSide: BorderSide(color: onSurface.withOpacity(0.3)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                    borderSide: BorderSide(
+                      color: theme.colorScheme.error,
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 10,
                   ),
                 ),
-                style: const TextStyle(color: Colors.white70),
+                style: TextStyle(color: onSurface.withOpacity(0.7)),
               ),
               actions: [
                 Row(
@@ -148,10 +163,7 @@ class LabelDialogs {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'Hủy',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: Text('Hủy', style: TextStyle(color: onSurface)),
                     ),
                     const SizedBox(width: 8),
                     TextButton(
@@ -173,9 +185,9 @@ class LabelDialogs {
                           }
                         }
                       },
-                      child: const Text(
+                      child: Text(
                         'Lưu',
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(color: theme.colorScheme.error),
                       ),
                     ),
                   ],
@@ -195,11 +207,16 @@ class LabelDialogs {
     required VoidCallback onLoadLabels,
   }) {
     final controller = TextEditingController();
+
+    final theme = Theme.of(context);
+    final onSurface = theme.colorScheme.onSurface;
+    final surface = theme.colorScheme.surface;
+
     showDialog<void>(
       context: context,
       builder:
           (context) => Theme(
-            data: Theme.of(context).copyWith(
+            data: theme.copyWith(
               dialogTheme: DialogTheme(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -208,11 +225,11 @@ class LabelDialogs {
               ),
             ),
             child: AlertDialog(
-              backgroundColor: Colors.grey[800],
-              title: const Text(
+              backgroundColor: surface,
+              title: Text(
                 'Tạo nhãn mới',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                 ),
@@ -221,20 +238,24 @@ class LabelDialogs {
                 controller: controller,
                 decoration: InputDecoration(
                   hintText: 'Nhập tên nhãn',
+                  hintStyle: TextStyle(color: onSurface.withOpacity(0.5)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.grey),
+                    borderSide: BorderSide(color: onSurface.withOpacity(0.3)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                    borderSide: BorderSide(
+                      color: theme.colorScheme.error,
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 10,
                   ),
                 ),
-                style: const TextStyle(color: Colors.white70),
+                style: TextStyle(color: onSurface.withOpacity(0.7)),
               ),
               actions: [
                 Row(
@@ -242,10 +263,7 @@ class LabelDialogs {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'Hủy',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: Text('Hủy', style: TextStyle(color: onSurface)),
                     ),
                     const SizedBox(width: 8),
                     TextButton(
@@ -260,9 +278,9 @@ class LabelDialogs {
                           }
                         }
                       },
-                      child: const Text(
+                      child: Text(
                         'Tạo',
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(color: theme.colorScheme.error),
                       ),
                     ),
                   ],
