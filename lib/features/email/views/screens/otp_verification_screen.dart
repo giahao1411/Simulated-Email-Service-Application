@@ -11,7 +11,7 @@ class OtpVerificationScreen extends StatefulWidget {
 
   final String phoneNumber;
   final String verificationId;
-  final Function(String, String) onOtpVerified;
+  final void Function(String, String) onOtpVerified;
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
