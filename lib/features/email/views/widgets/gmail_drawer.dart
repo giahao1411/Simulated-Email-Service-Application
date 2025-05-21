@@ -19,7 +19,7 @@ class GmailDrawer extends StatefulWidget {
   });
 
   final String currentCategory;
-  final Function(String) onCategorySelected;
+  final void Function(String) onCategorySelected;
 
   @override
   State<GmailDrawer> createState() => _GmailDrawerState();
@@ -62,7 +62,6 @@ class _GmailDrawerState extends State<GmailDrawer> {
       'Initialized LabelController with UID: ${userProfile?.uid ?? "No UID"}, Email: ${userProfile?.email ?? "No email"}',
     );
     final loadedLabels = await _labelController.loadLabels();
-    // Sắp xếp danh sách nhãn
     LabelSorter.sortLabels(loadedLabels);
     setState(() {
       labels = loadedLabels;

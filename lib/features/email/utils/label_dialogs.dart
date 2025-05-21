@@ -10,7 +10,6 @@ class LabelDialogs {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  // Hiển thị dialog tùy chọn nhãn (Đổi tên, Xóa)
   static void showLabelOptions(
     BuildContext context, {
     required String label,
@@ -102,7 +101,7 @@ class LabelDialogs {
     required VoidCallback onLoadLabels,
   }) {
     final controller = TextEditingController(text: oldLabel);
-    showDialog(
+    showDialog<void>(
       context: context,
       builder:
           (context) => Theme(
@@ -196,7 +195,7 @@ class LabelDialogs {
     required VoidCallback onLoadLabels,
   }) {
     final controller = TextEditingController();
-    showDialog(
+    showDialog<void>(
       context: context,
       builder:
           (context) => Theme(

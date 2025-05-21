@@ -19,11 +19,10 @@ class AuthService {
     return phoneNumber;
   }
 
-  // Gửi OTP
   Future<void> sendOtp({
     required String phoneNumber,
-    required Function(String) onCodeSent,
-    required Function(String) onError,
+    required void Function(String) onCodeSent,
+    required void Function(String) onError,
     String? email,
     String? password,
     String? firstName,

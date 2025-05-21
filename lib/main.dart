@@ -1,6 +1,7 @@
 import 'package:email_application/core/config/firebase_options.dart';
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
+import 'package:email_application/features/email/providers/two_step_manage.dart';
 import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -24,8 +25,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ThemeManage(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeManage()),
+        ChangeNotifierProvider(create: (_) => TwoStepManage()),
+      ],
       child: Consumer<ThemeManage>(
         builder: (context, themeProvider, child) {
           return MaterialApp(
