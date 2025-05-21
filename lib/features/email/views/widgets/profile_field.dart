@@ -44,7 +44,10 @@ class ProfileField extends StatelessWidget {
             controller: controller.dateOfBirthController,
             decoration: InputDecoration(
               labelText: 'Ngày sinh',
-              labelStyle: const TextStyle(fontSize: 16, color: Colors.grey),
+              labelStyle: TextStyle(
+                fontSize: 16,
+                color: isDarkMode ? Colors.white70 : Colors.grey[700],
+              ),
               border: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(8)),
                 borderSide: BorderSide(color: Colors.grey),
@@ -70,14 +73,17 @@ class ProfileField extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: TextField(
             controller: controller.firstNameController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Họ',
-              labelStyle: TextStyle(fontSize: 16, color: Colors.grey),
-              border: OutlineInputBorder(
+              labelStyle: TextStyle(
+                fontSize: 16,
+                color: isDarkMode ? Colors.white70 : Colors.grey[700],
+              ),
+              border: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(8)),
                 borderSide: BorderSide(color: Colors.grey),
               ),
-              focusedBorder: OutlineInputBorder(
+              focusedBorder: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(8)),
                 borderSide: BorderSide(color: Colors.red, width: 2),
               ),
@@ -88,14 +94,17 @@ class ProfileField extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: TextField(
             controller: controller.lastNameController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Tên',
-              labelStyle: TextStyle(fontSize: 16, color: Colors.grey),
-              border: OutlineInputBorder(
+              labelStyle: TextStyle(
+                fontSize: 16,
+                color: isDarkMode ? Colors.white70 : Colors.grey[700],
+              ),
+              border: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(8)),
                 borderSide: BorderSide(color: Colors.grey),
               ),
-              focusedBorder: OutlineInputBorder(
+              focusedBorder: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(8)),
                 borderSide: BorderSide(color: Colors.red, width: 2),
               ),

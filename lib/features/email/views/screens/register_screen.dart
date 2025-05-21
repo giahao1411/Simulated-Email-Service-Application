@@ -1,8 +1,10 @@
 import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:email_application/features/email/views/screens/otp_verification_screen.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -188,14 +190,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle;
     final iconColor = labelStyle?.color ?? Colors.black54;
-    final labelTextColor =
-        Theme.of(context).brightness == Brightness.dark
-            ? Colors.white
-            : Colors.grey[400];
-    final hintTextColor =
-        Theme.of(context).brightness == Brightness.dark
-            ? Colors.white
-            : Colors.grey[400];
+    final themeProvider = Provider.of<ThemeManage>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    final labelTextColor = isDarkMode ? Colors.white70 : Colors.grey[600];
+    final hintTextColor = isDarkMode ? Colors.white70 : Colors.grey[600];
 
     return Scaffold(
       body: SafeArea(

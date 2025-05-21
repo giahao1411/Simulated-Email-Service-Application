@@ -5,7 +5,7 @@ class LabelSorter {
       final isBNumber = RegExp(r'^\d').hasMatch(b);
 
       if (isANumber && !isBNumber) return -1;
-      if (!isANumber && isBNumber) return 1; 
+      if (!isANumber && isBNumber) return 1;
       return a.toLowerCase().compareTo(b.toLowerCase());
     });
   }

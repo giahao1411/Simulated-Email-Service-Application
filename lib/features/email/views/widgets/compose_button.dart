@@ -10,12 +10,9 @@ class ComposeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lấy trạng thái Dark Mode trực tiếp từ ThemeManage
     final isDarkMode = Provider.of<ThemeManage>(context).isDarkMode;
-
-    // Định nghĩa màu sắc dựa trên chế độ
-    final buttonColor = isDarkMode ? Colors.blue[900] : Colors.red;
-    final iconTextColor = isDarkMode ? Colors.cyan[100] : Colors.pink[100];
+    final buttonColor = isDarkMode ? Colors.red : Colors.red;
+    final iconTextColor = isDarkMode ? Colors.white : Colors.white;
 
     return Positioned(
       bottom: 66,
