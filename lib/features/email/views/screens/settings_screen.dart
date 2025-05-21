@@ -4,6 +4,7 @@ import 'package:email_application/features/email/controllers/profile_service.dar
 import 'package:email_application/features/email/controllers/settings_controller.dart';
 import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
+import 'package:email_application/features/email/providers/two_step_manage.dart';
 import 'package:email_application/features/email/views/widgets/profile_avatar.dart';
 import 'package:email_application/features/email/views/widgets/profile_field.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       dateOfBirthController: TextEditingController(),
     );
     _controller.loadProfile().then((_) {
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {
+          // Cập nhật trạng thái ban đầu của TwoStepManage từ userProfile
+          final twoStepProvider = Provider.of<TwoStepManage>(
+            context,
+            listen: false,
+          );
+          twoStepProvider.setTwoStepEnabled(_controller.isTwoStepEnabled);
+        });
+      }
     });
   }
 
@@ -82,6 +92,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _controller.dateOfBirthController.text =
             picked.toIso8601String().split('T')[0];
       });
+    }
+  }
+
+  Future<void> _handleTwoStepToggle(BuildContext context, bool value) async {
+    final twoStepProvider = Provider.of<TwoStepManage>(context, listen: false);
+    try {
+      await _controller.toggleTwoStep(context, value);
+      twoStepProvider.toggleTwoStep(
+        value,
+      ); // Cập nhật trạng thái trong provider
+    } on Exception catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -155,7 +179,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: TextField(
                   controller: _controller.passwordController,
                   decoration: const InputDecoration(labelText: 'Mật khẩu mới'),
-
                   obscureText: true,
                 ),
               ),
@@ -199,16 +222,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
               ),
-              ListTile(
-                title: const Text('Xác minh hai bước'),
-                trailing: Switch(
-                  value: _controller.isTwoStepEnabled,
-                  onChanged:
-                      _controller.isLoading
-                          ? null
-                          : (value) =>
-                              _controller.toggleTwoStep(context, value),
-                ),
+              Consumer<TwoStepManage>(
+                builder: (context, twoStepProvider, child) {
+                  return ListTile(
+                    title: const Text('Xác minh hai bước'),
+                    trailing: Switch(
+                      value: twoStepProvider.isTwoStepEnabled,
+                      onChanged:
+                          (value) => _handleTwoStepToggle(context, value),
+                    ),
+                  );
+                },
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),

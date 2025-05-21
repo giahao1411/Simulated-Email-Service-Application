@@ -1,9 +1,13 @@
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
+import 'package:email_application/features/email/models/user_profile.dart';
+import 'package:email_application/features/email/providers/two_step_manage.dart';
 import 'package:email_application/features/email/views/screens/forgot_password_screen.dart';
 import 'package:email_application/features/email/views/screens/gmail_screen.dart';
+import 'package:email_application/features/email/views/screens/otp_verification_screen.dart';
 import 'package:email_application/features/email/views/screens/register_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService authService = AuthService();
   String? errorMessage;
   bool isLoading = false;
+  UserProfile? userProfile;
 
   Future<void> handleLogin() async {
     setState(() {
@@ -38,22 +43,132 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      await authService.signInWithEmail(email: email, password: password);
+      // Đăng nhập với email và mật khẩu
+      AppFunctions.debugPrint('Bắt đầu đăng nhập với email: $email');
+      userProfile = await authService.signInWithEmail(
+        email: email,
+        password: password,
+      );
 
-      if (mounted) {
-        _showSnackBar('Đăng nhập thành công!', true);
-        await Navigator.pushReplacement(
-          context,
-          MaterialPageRoute<void>(builder: (context) => const GmailScreen()),
+      if (userProfile == null) {
+        setState(() {
+          errorMessage =
+              'Không thể đăng nhập: Thông tin người dùng không tồn tại';
+          isLoading = false;
+        });
+        _showSnackBar(errorMessage!, false);
+        return;
+      }
+
+      AppFunctions.debugPrint(
+        'Đăng nhập bước 1 thành công với UID: ${userProfile!.uid}',
+      );
+
+      // Kiểm tra xem xác minh hai bước có được bật không từ TwoStepManage
+      final twoStepProvider = Provider.of<TwoStepManage>(
+        context,
+        listen: false,
+      );
+      if (twoStepProvider.isTwoStepEnabled) {
+        AppFunctions.debugPrint(
+          'Xác minh hai bước được bật, kiểm tra số điện thoại...',
         );
+        // Kiểm tra số điện thoại
+        if (userProfile!.phoneNumber.isEmpty) {
+          setState(() {
+            errorMessage = 'Tài khoản không có số điện thoại để gửi OTP';
+            isLoading = false;
+          });
+          _showSnackBar(errorMessage!, false);
+          return;
+        }
+
+        // Gửi OTP đến số điện thoại
+        AppFunctions.debugPrint(
+          'Gửi OTP đến số điện thoại: ${userProfile!.phoneNumber}',
+        );
+        await authService.sendOtp(
+          phoneNumber: userProfile!.phoneNumber,
+          onCodeSent: (verificationId) {
+            if (mounted) {
+              // Chuyển đến màn hình nhập OTP
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder:
+                      (context) => OtpVerificationScreen(
+                        phoneNumber: userProfile!.phoneNumber,
+                        verificationId: verificationId,
+                        onOtpVerified: (otp, verificationId) async {
+                          try {
+                            // Xác minh OTP
+                            AppFunctions.debugPrint('Xác minh OTP: $otp');
+                            final isVerified = await authService.verifyOtp(
+                              otp: otp,
+                              verificationId: verificationId,
+                            );
+                            if (isVerified) {
+                              _showSnackBar('Đăng nhập thành công!', true);
+                              if (mounted) {
+                                await Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute<void>(
+                                    builder: (context) => const GmailScreen(),
+                                  ),
+                                );
+                              }
+                            }
+                          } on Exception catch (e) {
+                            _showSnackBar('Xác minh OTP thất bại: $e', false);
+                            setState(() {
+                              isLoading = false;
+                            });
+                          }
+                        },
+                      ),
+                ),
+              );
+            }
+          },
+          onError: (error) {
+            setState(() {
+              errorMessage = error;
+              isLoading = false;
+            });
+            _showSnackBar(error, false);
+          },
+        );
+      } else {
+        // Nếu không bật 2FA, đăng nhập bình thường
+        AppFunctions.debugPrint(
+          'Xác minh hai bước không được bật, đăng nhập bình thường...',
+        );
+        _showSnackBar('Đăng nhập thành công!', true);
+        if (mounted) {
+          await Navigator.pushReplacement(
+            context,
+            MaterialPageRoute<void>(builder: (context) => const GmailScreen()),
+          );
+        }
       }
     } on Exception catch (e) {
       setState(() {
-        errorMessage = 'Đăng nhập thất bại email hoặc mật khẩu không đúng';
+        errorMessage = 'Đăng nhập thất bại: email hoặc mật khẩu không đúng';
         isLoading = false;
       });
       _showSnackBar(errorMessage!, false);
       AppFunctions.debugPrint('Đăng nhập thất bại: $e');
+    } finally {
+      // Chỉ tắt isLoading nếu không cần xác minh OTP hoặc có lỗi
+      final twoStepProvider = Provider.of<TwoStepManage>(
+        context,
+        listen: false,
+      );
+      if (userProfile == null || !twoStepProvider.isTwoStepEnabled) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -87,11 +202,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final labelTextColor =
         Theme.of(context).brightness == Brightness.dark
             ? Colors.white
-            : Colors.grey[400]!;
+            : Colors.grey[600]!;
     final hintTextColor =
         Theme.of(context).brightness == Brightness.dark
-            ? Colors.grey[400]!
-            : Colors.grey[400]!;
+            ? Colors.grey[600]!
+            : Colors.grey[600]!;
 
     return Scaffold(
       body: SafeArea(
