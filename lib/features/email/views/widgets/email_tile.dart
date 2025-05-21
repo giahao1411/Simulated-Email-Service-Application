@@ -24,13 +24,19 @@ class EmailTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String senderOrReceiver;
-    if (currentCategory == AppStrings.drafts ||
-        currentCategory == AppStrings.sent) {
-      senderOrReceiver =
-          email.to.isNotEmpty ? email.to.join(', ') : 'Không có người nhận';
+    Widget senderNameWidget;
+    if (currentCategory == AppStrings.drafts) {
+      senderNameWidget = Text(
+        email.to.isNotEmpty ? email.to.join(', ') : 'Không có người nhận',
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontSize: 16,
+          color: Theme.of(context).colorScheme.onSurface,
+          fontWeight: email.read ? FontWeight.normal : FontWeight.bold,
+        ),
+      );
     } else {
-      senderOrReceiver = email.from;
+      senderNameWidget =
     }
 
     return InkWell(
@@ -57,22 +63,7 @@ class EmailTile extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: Text(
-                          senderOrReceiver,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyLarge?.copyWith(
-                            fontSize: 16,
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight:
-                                email.read
-                                    ? FontWeight.normal
-                                    : FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      Expanded(child: senderNameWidget),
                       Text(
                         DateFormat.formatTimestamp(email.timestamp),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
