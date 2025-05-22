@@ -21,7 +21,7 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           icon: Icon(
-            Icons.attachment,
+            Icons.drafts,
             color: Theme.of(context).colorScheme.onSurface,
           ),
           onPressed: () {},
