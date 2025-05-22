@@ -34,7 +34,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _controller.loadProfile().then((_) {
       if (mounted) {
         setState(() {
-          // Cập nhật trạng thái ban đầu của TwoStepManage từ userProfile
           final twoStepProvider = Provider.of<TwoStepManage>(
             context,
             listen: false,
@@ -101,7 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await _controller.toggleTwoStep(context, value);
       twoStepProvider.toggleTwoStep(
         value,
-      ); // Cập nhật trạng thái trong provider
+      ); 
     } on Exception catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),

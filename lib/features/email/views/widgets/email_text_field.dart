@@ -1,5 +1,7 @@
 import 'package:email_application/core/constants/app_functions.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class EmailTextField extends StatelessWidget {
   const EmailTextField({
@@ -13,6 +15,8 @@ class EmailTextField extends StatelessWidget {
     this.contentPadding,
     this.enable = true,
     this.useLabelAsFixed = false,
+    this.labelStyle,
+    this.focusedBorderColor,
     super.key,
   });
 
@@ -26,51 +30,41 @@ class EmailTextField extends StatelessWidget {
   final EdgeInsets? contentPadding;
   final bool enable;
   final bool useLabelAsFixed;
+  final TextStyle? labelStyle;
+  final Color? focusedBorderColor;
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    AppFunctions.debugPrint(
-      'EmailTextField - isDarkMode: $isDarkMode',
-    ); // Debug
+    final themeProvider = Provider.of<ThemeManage>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    final colorScheme = Theme.of(context).colorScheme;
+    AppFunctions.debugPrint('EmailTextField - isDarkMode: $isDarkMode');
+
+    final borderColor = isDarkMode ? Colors.white70 : Colors.grey;
+    final hintColor = isDarkMode ? Colors.white70 : Colors.grey[600];
 
     return TextField(
       controller: controller,
-      style: TextStyle(
-        color:
-            isDarkMode
-                ? Colors.white
-                : Colors.black87, // Chữ trắng trong Dark Mode
-      ),
+      style: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black87),
       maxLines: maxLines,
       keyboardType: keyboardType,
       enabled: enable,
       decoration: InputDecoration(
+        labelText: null,
         hintText: useLabelAsFixed ? null : labelText,
-        hintStyle: TextStyle(
-          color:
-              isDarkMode
-                  ? Colors.white70
-                  : Colors.black54, // Gợi ý trắng nhạt trong Dark Mode
-        ),
+        hintStyle: TextStyle(color: hintColor),
         suffixIcon: suffixIcon,
         border:
             border ??
-            UnderlineInputBorder(
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-              ),
-            ),
+            UnderlineInputBorder(borderSide: BorderSide(color: borderColor)),
         enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-          ),
+          borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder:
             focusedBorder ??
             UnderlineInputBorder(
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
+                color: focusedBorderColor ?? colorScheme.primary,
                 width: 2,
               ),
             ),
@@ -78,10 +72,7 @@ class EmailTextField extends StatelessWidget {
             contentPadding ??
             const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         filled: true,
-        fillColor:
-            isDarkMode
-                ? Colors.grey[800]
-                : Theme.of(context).scaffoldBackgroundColor,
+        fillColor: isDarkMode ? Colors.grey[900] : Colors.white,
       ),
     );
   }

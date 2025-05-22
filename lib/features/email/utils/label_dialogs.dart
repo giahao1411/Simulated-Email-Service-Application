@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 
 typedef LabelActionCallback = Future<bool> Function(String);
 typedef RenameLabelCallback = Future<bool> Function(String, String);
@@ -17,9 +19,12 @@ class LabelDialogs {
     required ValueChanged<String> onRename,
     required VoidCallback onLoadLabels,
   }) {
-    final theme = Theme.of(context);
-    final onSurface = theme.colorScheme.onSurface;
-    final surface = theme.colorScheme.surface;
+    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
+    final backgroundColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final iconColor = isDarkMode ? Colors.white70 : Colors.black54;
+    final actionColor = Theme.of(context).colorScheme.primary;
     showDialog<void>(
       context: context,
       builder:
@@ -33,11 +38,12 @@ class LabelDialogs {
               ),
             ),
             child: AlertDialog(
-              backgroundColor: surface,
+
+              backgroundColor: backgroundColor,
               title: Text(
                 'Tùy chọn nhãn',
                 style: TextStyle(
-                  color: onSurface,
+                  color: textColor,
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                 ),
@@ -46,28 +52,17 @@ class LabelDialogs {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ListTile(
-                    leading: Icon(
-                      Icons.edit,
-                      color: onSurface.withOpacity(0.7),
-                    ),
-                    title: Text(
-                      'Đổi tên',
-                      style: TextStyle(color: onSurface.withOpacity(0.7)),
-                    ),
+
+                    leading: Icon(Icons.edit, color: iconColor),
+                    title: Text('Đổi tên', style: TextStyle(color: textColor)),
                     onTap: () {
                       Navigator.pop(context);
                       onRename(label);
                     },
                   ),
                   ListTile(
-                    leading: Icon(
-                      Icons.delete,
-                      color: onSurface.withOpacity(0.7),
-                    ),
-                    title: Text(
-                      'Xóa',
-                      style: TextStyle(color: onSurface.withOpacity(0.7)),
-                    ),
+                    leading: Icon(Icons.delete, color: iconColor),
+                    title: Text('Xóa', style: TextStyle(color: textColor)),
                     onTap: () async {
                       Navigator.pop(context);
                       final success = await onDelete(label);
@@ -86,7 +81,8 @@ class LabelDialogs {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text('Hủy', style: TextStyle(color: onSurface)),
+
+                      child: Text('Hủy', style: TextStyle(color: actionColor)),
                     ),
                     const SizedBox(width: 8),
                   ],
@@ -99,7 +95,6 @@ class LabelDialogs {
     );
   }
 
-  // Hiển thị dialog đổi tên nhãn
   static void showRenameLabelDialog(
     BuildContext context, {
     required String oldLabel,
@@ -107,10 +102,15 @@ class LabelDialogs {
     required VoidCallback onLoadLabels,
   }) {
     final controller = TextEditingController(text: oldLabel);
-
-    final theme = Theme.of(context);
-    final onSurface = theme.colorScheme.onSurface;
-    final surface = theme.colorScheme.surface;
+    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
+    final backgroundColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final inputTextColor = isDarkMode ? Colors.white70 : Colors.black87;
+    final hintTextColor = isDarkMode ? Colors.white38 : Colors.grey[600];
+    final actionColor = Theme.of(context).colorScheme.primary;
+    final borderColor = isDarkMode ? Colors.grey : Colors.grey[300];
+    final focusedBorderColor = Theme.of(context).colorScheme.primary;
 
     showDialog<void>(
       context: context,
@@ -125,11 +125,11 @@ class LabelDialogs {
               ),
             ),
             child: AlertDialog(
-              backgroundColor: surface,
+              backgroundColor: backgroundColor,
               title: Text(
                 'Đổi tên nhãn',
                 style: TextStyle(
-                  color: onSurface,
+                  color: textColor,
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                 ),
@@ -138,24 +138,22 @@ class LabelDialogs {
                 controller: controller,
                 decoration: InputDecoration(
                   hintText: 'Nhập tên mới',
-                  hintStyle: TextStyle(color: onSurface.withOpacity(0.5)),
+                  hintStyle: TextStyle(color: hintTextColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: onSurface.withOpacity(0.3)),
+                    borderSide: BorderSide(color: borderColor!),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
-                      color: theme.colorScheme.error,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: focusedBorderColor, width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 10,
                   ),
                 ),
-                style: TextStyle(color: onSurface.withOpacity(0.7)),
+
+                style: TextStyle(color: inputTextColor),
               ),
               actions: [
                 Row(
@@ -163,7 +161,8 @@ class LabelDialogs {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text('Hủy', style: TextStyle(color: onSurface)),
+
+                      child: Text('Hủy', style: TextStyle(color: actionColor)),
                     ),
                     const SizedBox(width: 8),
                     TextButton(
@@ -185,10 +184,7 @@ class LabelDialogs {
                           }
                         }
                       },
-                      child: Text(
-                        'Lưu',
-                        style: TextStyle(color: theme.colorScheme.error),
-                      ),
+                      child: Text('Lưu', style: TextStyle(color: actionColor)),
                     ),
                   ],
                 ),
@@ -200,17 +196,21 @@ class LabelDialogs {
     );
   }
 
-  // Hiển thị dialog tạo nhãn mới
   static void showCreateLabelDialog(
     BuildContext context, {
     required LabelActionCallback onCreate,
     required VoidCallback onLoadLabels,
   }) {
     final controller = TextEditingController();
-
-    final theme = Theme.of(context);
-    final onSurface = theme.colorScheme.onSurface;
-    final surface = theme.colorScheme.surface;
+    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
+    final backgroundColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final inputTextColor = isDarkMode ? Colors.white70 : Colors.black87;
+    final hintTextColor = isDarkMode ? Colors.white38 : Colors.grey[600];
+    final actionColor = Theme.of(context).colorScheme.primary;
+    final borderColor = isDarkMode ? Colors.grey : Colors.grey[300];
+    final focusedBorderColor = Theme.of(context).colorScheme.primary;
 
     showDialog<void>(
       context: context,
@@ -225,11 +225,11 @@ class LabelDialogs {
               ),
             ),
             child: AlertDialog(
-              backgroundColor: surface,
+              backgroundColor: backgroundColor,
               title: Text(
                 'Tạo nhãn mới',
                 style: TextStyle(
-                  color: onSurface,
+                  color: textColor,
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                 ),
@@ -238,24 +238,21 @@ class LabelDialogs {
                 controller: controller,
                 decoration: InputDecoration(
                   hintText: 'Nhập tên nhãn',
-                  hintStyle: TextStyle(color: onSurface.withOpacity(0.5)),
+                  hintStyle: TextStyle(color: hintTextColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: onSurface.withOpacity(0.3)),
+                    borderSide: BorderSide(color: borderColor!),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
-                      color: theme.colorScheme.error,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: focusedBorderColor, width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 10,
                   ),
                 ),
-                style: TextStyle(color: onSurface.withOpacity(0.7)),
+                style: TextStyle(color: inputTextColor),
               ),
               actions: [
                 Row(
@@ -263,7 +260,7 @@ class LabelDialogs {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text('Hủy', style: TextStyle(color: onSurface)),
+                      child: Text('Hủy', style: TextStyle(color: actionColor)),
                     ),
                     const SizedBox(width: 8),
                     TextButton(
@@ -278,10 +275,7 @@ class LabelDialogs {
                           }
                         }
                       },
-                      child: Text(
-                        'Tạo',
-                        style: TextStyle(color: theme.colorScheme.error),
-                      ),
+                      child: Text('Tạo', style: TextStyle(color: actionColor)),
                     ),
                   ],
                 ),

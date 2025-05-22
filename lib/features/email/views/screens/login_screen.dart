@@ -6,6 +6,7 @@ import 'package:email_application/features/email/views/screens/forgot_password_s
 import 'package:email_application/features/email/views/screens/gmail_screen.dart';
 import 'package:email_application/features/email/views/screens/otp_verification_screen.dart';
 import 'package:email_application/features/email/views/screens/register_screen.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -43,7 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // Đăng nhập với email và mật khẩu
       AppFunctions.debugPrint('Bắt đầu đăng nhập với email: $email');
       userProfile = await authService.signInWithEmail(
         email: email,
@@ -64,7 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
         'Đăng nhập bước 1 thành công với UID: ${userProfile!.uid}',
       );
 
-      // Kiểm tra xem xác minh hai bước có được bật không từ TwoStepManage
       final twoStepProvider = Provider.of<TwoStepManage>(
         context,
         listen: false,
@@ -73,7 +72,6 @@ class _LoginScreenState extends State<LoginScreen> {
         AppFunctions.debugPrint(
           'Xác minh hai bước được bật, kiểm tra số điện thoại...',
         );
-        // Kiểm tra số điện thoại
         if (userProfile!.phoneNumber.isEmpty) {
           setState(() {
             errorMessage = 'Tài khoản không có số điện thoại để gửi OTP';
@@ -83,7 +81,6 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
 
-        // Gửi OTP đến số điện thoại
         AppFunctions.debugPrint(
           'Gửi OTP đến số điện thoại: ${userProfile!.phoneNumber}',
         );
@@ -91,7 +88,6 @@ class _LoginScreenState extends State<LoginScreen> {
           phoneNumber: userProfile!.phoneNumber,
           onCodeSent: (verificationId) {
             if (mounted) {
-              // Chuyển đến màn hình nhập OTP
               Navigator.push(
                 context,
                 MaterialPageRoute<void>(
@@ -139,7 +135,6 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         );
       } else {
-        // Nếu không bật 2FA, đăng nhập bình thường
         AppFunctions.debugPrint(
           'Xác minh hai bước không được bật, đăng nhập bình thường...',
         );
@@ -159,7 +154,6 @@ class _LoginScreenState extends State<LoginScreen> {
       _showSnackBar(errorMessage!, false);
       AppFunctions.debugPrint('Đăng nhập thất bại: $e');
     } finally {
-      // Chỉ tắt isLoading nếu không cần xác minh OTP hoặc có lỗi
       final twoStepProvider = Provider.of<TwoStepManage>(
         context,
         listen: false,
@@ -199,14 +193,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle;
     final iconColor = labelStyle?.color ?? Colors.black54;
-    final labelTextColor =
-        Theme.of(context).brightness == Brightness.dark
-            ? Colors.white
-            : Colors.grey[600]!;
-    final hintTextColor =
-        Theme.of(context).brightness == Brightness.dark
-            ? Colors.grey[600]!
-            : Colors.grey[600]!;
+    final themeProvider = Provider.of<ThemeManage>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    final labelTextColor = isDarkMode ? Colors.white70 : Colors.grey[600];
+    final hintTextColor = isDarkMode ? Colors.white70 : Colors.grey[600];
 
     return Scaffold(
       body: SafeArea(
