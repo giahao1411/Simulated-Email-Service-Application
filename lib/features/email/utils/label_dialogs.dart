@@ -25,12 +25,11 @@ class LabelDialogs {
     final textColor = isDarkMode ? Colors.white : Colors.black87;
     final iconColor = isDarkMode ? Colors.white70 : Colors.black54;
     final actionColor = Theme.of(context).colorScheme.primary;
-
     showDialog<void>(
       context: context,
       builder:
           (context) => Theme(
-            data: Theme.of(context).copyWith(
+            data: theme.copyWith(
               dialogTheme: DialogTheme(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -39,6 +38,7 @@ class LabelDialogs {
               ),
             ),
             child: AlertDialog(
+
               backgroundColor: backgroundColor,
               title: Text(
                 'Tùy chọn nhãn',
@@ -52,6 +52,7 @@ class LabelDialogs {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ListTile(
+
                     leading: Icon(Icons.edit, color: iconColor),
                     title: Text('Đổi tên', style: TextStyle(color: textColor)),
                     onTap: () {
@@ -80,6 +81,7 @@ class LabelDialogs {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
+
                       child: Text('Hủy', style: TextStyle(color: actionColor)),
                     ),
                     const SizedBox(width: 8),
@@ -114,7 +116,7 @@ class LabelDialogs {
       context: context,
       builder:
           (context) => Theme(
-            data: Theme.of(context).copyWith(
+            data: theme.copyWith(
               dialogTheme: DialogTheme(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -150,6 +152,7 @@ class LabelDialogs {
                     vertical: 10,
                   ),
                 ),
+
                 style: TextStyle(color: inputTextColor),
               ),
               actions: [
@@ -158,6 +161,7 @@ class LabelDialogs {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
+
                       child: Text('Hủy', style: TextStyle(color: actionColor)),
                     ),
                     const SizedBox(width: 8),
@@ -212,7 +216,7 @@ class LabelDialogs {
       context: context,
       builder:
           (context) => Theme(
-            data: Theme.of(context).copyWith(
+            data: theme.copyWith(
               dialogTheme: DialogTheme(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
