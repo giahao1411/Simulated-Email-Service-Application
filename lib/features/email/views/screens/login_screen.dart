@@ -1,12 +1,12 @@
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/models/user_profile.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/providers/two_step_manage.dart';
 import 'package:email_application/features/email/views/screens/forgot_password_screen.dart';
 import 'package:email_application/features/email/views/screens/gmail_screen.dart';
 import 'package:email_application/features/email/views/screens/otp_verification_screen.dart';
 import 'package:email_application/features/email/views/screens/register_screen.dart';
-import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

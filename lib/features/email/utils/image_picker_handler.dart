@@ -1,6 +1,6 @@
 import 'package:image_picker/image_picker.dart';
 
-abstract class ImagePickerHandlerBase {
+mixin ImagePickerHandlerBase {
   Future<String?> pickImage();
 }
 
