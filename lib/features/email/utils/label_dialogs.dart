@@ -1,6 +1,6 @@
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:email_application/features/email/providers/theme_manage.dart';
 
 typedef LabelActionCallback = Future<bool> Function(String);
 typedef RenameLabelCallback = Future<bool> Function(String, String);
@@ -29,7 +29,7 @@ class LabelDialogs {
       context: context,
       builder:
           (context) => Theme(
-            data: theme.copyWith(
+            data: Theme.of(context).copyWith(
               dialogTheme: DialogTheme(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -38,7 +38,6 @@ class LabelDialogs {
               ),
             ),
             child: AlertDialog(
-
               backgroundColor: backgroundColor,
               title: Text(
                 'Tùy chọn nhãn',
@@ -52,7 +51,6 @@ class LabelDialogs {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ListTile(
-
                     leading: Icon(Icons.edit, color: iconColor),
                     title: Text('Đổi tên', style: TextStyle(color: textColor)),
                     onTap: () {
@@ -116,7 +114,7 @@ class LabelDialogs {
       context: context,
       builder:
           (context) => Theme(
-            data: theme.copyWith(
+            data: Theme.of(context).copyWith(
               dialogTheme: DialogTheme(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -216,7 +214,7 @@ class LabelDialogs {
       context: context,
       builder:
           (context) => Theme(
-            data: theme.copyWith(
+            data: Theme.of(context).copyWith(
               dialogTheme: DialogTheme(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
