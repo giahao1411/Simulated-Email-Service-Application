@@ -36,7 +36,15 @@ class EmailTile extends StatelessWidget {
         ),
       );
     } else {
-      senderNameWidget =
+      senderNameWidget = Text(
+        email.from,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontSize: 16,
+          color: Theme.of(context).colorScheme.onSurface,
+          fontWeight: email.read ? FontWeight.normal : FontWeight.bold,
+        ),
+      );
     }
 
     return InkWell(
