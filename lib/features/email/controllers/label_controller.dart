@@ -106,7 +106,7 @@ class LabelController {
       }
       AppFunctions.debugPrint('Label not found: $oldLabel');
       return false;
-    } catch (e) {
+    } on Exception catch (e) {
       AppFunctions.debugPrint('Lỗi khi cập nhật nhãn: $e');
       return false;
     }
@@ -130,7 +130,7 @@ class LabelController {
       }
       AppFunctions.debugPrint('Label not found: $label');
       return false;
-    } catch (e) {
+    } on Exception catch (e) {
       AppFunctions.debugPrint('Lỗi khi xóa nhãn: $e');
       return false;
     }

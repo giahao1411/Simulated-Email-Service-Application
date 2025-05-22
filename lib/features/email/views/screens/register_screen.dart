@@ -1,7 +1,7 @@
 import 'package:email_application/features/email/controllers/auth_service.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:email_application/features/email/views/screens/otp_verification_screen.dart';
-import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -188,13 +188,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle;
-    final iconColor = labelStyle?.color ?? Colors.black54;
-    final themeProvider = Provider.of<ThemeManage>(context);
-    final isDarkMode = themeProvider.isDarkMode;
-    final labelTextColor = isDarkMode ? Colors.white70 : Colors.grey[600];
-    final hintTextColor = isDarkMode ? Colors.white70 : Colors.grey[600];
-
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -221,34 +214,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: TextField(
+                    child: CustomTextField(
+                      label: 'Họ',
+                      hint: 'Nhập họ của bạn',
+                      icon: Icons.person,
                       controller: firstNameController,
-                      decoration: InputDecoration(
-                        labelText: 'Họ',
-                        hintText: 'Nhập họ của bạn',
-                        prefixIcon: Icon(Icons.person, color: iconColor),
-                        labelStyle: TextStyle(color: labelTextColor),
-                        hintStyle: TextStyle(color: hintTextColor),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: TextField(
+                    child: CustomTextField(
+                      label: 'Tên',
+                      hint: 'Nhập tên của bạn',
+                      icon: Icons.person,
                       controller: lastNameController,
-                      decoration: InputDecoration(
-                        labelText: 'Tên',
-                        hintText: 'Nhập tên của bạn',
-                        prefixIcon: Icon(Icons.person, color: iconColor),
-                        labelStyle: TextStyle(color: labelTextColor),
-                        hintStyle: TextStyle(color: hintTextColor),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -257,82 +236,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
               GestureDetector(
                 onTap: () => selectDate(context),
                 child: AbsorbPointer(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText:
-                          selectedDate == null
-                              ? 'Chọn ngày sinh'
-                              : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
-                      prefixIcon: Icon(Icons.calendar_today, color: iconColor),
-                      labelStyle: TextStyle(color: labelTextColor),
-                      hintStyle: TextStyle(color: hintTextColor),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                  child: CustomTextField(
+                    label: 'Ngày sinh',
+                    hint:
+                        selectedDate != null
+                            ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
+                            : 'Chọn ngày sinh',
+                    icon: Icons.calendar_today,
+                    controller: TextEditingController(
+                      text:
+                          selectedDate != null
+                              ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
+                              : '',
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
+              CustomTextField(
+                label: 'Email',
+                hint: 'Nhập email của bạn',
+                icon: Icons.email,
                 controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  hintText: 'Nhập email của bạn',
-                  prefixIcon: Icon(Icons.email, color: iconColor),
-                  labelStyle: TextStyle(color: labelTextColor),
-                  hintStyle: TextStyle(color: hintTextColor),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
-              TextField(
+              CustomTextField(
+                label: 'Mật khẩu',
+                hint: 'Nhập mật khẩu của bạn',
+                icon: Icons.lock,
                 controller: passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Mật khẩu',
-                  hintText: 'Nhập mật khẩu của bạn',
-                  prefixIcon: Icon(Icons.lock, color: iconColor),
-                  labelStyle: TextStyle(color: labelTextColor),
-                  hintStyle: TextStyle(color: hintTextColor),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                obscureText: true,
+                isPassword: true,
               ),
               const SizedBox(height: 16),
-              TextField(
+              CustomTextField(
+                label: 'Xác nhận mật khẩu',
+                hint: 'Nhập lại mật khẩu của bạn',
+                icon: Icons.lock,
                 controller: confirmPasswordController,
-                decoration: InputDecoration(
-                  labelText: 'Xác nhận mật khẩu',
-                  hintText: 'Xác nhận mật khẩu của bạn',
-                  prefixIcon: Icon(Icons.lock, color: iconColor),
-                  labelStyle: TextStyle(color: labelTextColor),
-                  hintStyle: TextStyle(color: hintTextColor),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                obscureText: true,
+                isPassword: true,
               ),
               const SizedBox(height: 16),
-              TextField(
+              CustomTextField(
+                label: 'Số điện thoại',
+                hint: 'Nhập số điện thoại của bạn',
+                icon: Icons.phone,
                 controller: phoneController,
-                decoration: InputDecoration(
-                  labelText: 'Số điện thoại',
-                  hintText: 'Nhập số điện thoại của bạn',
-                  prefixIcon: Icon(Icons.phone, color: iconColor),
-                  labelStyle: TextStyle(color: labelTextColor),
-                  hintStyle: TextStyle(color: hintTextColor),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                keyboardType: TextInputType.phone,
+                inputFormatter: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -371,6 +325,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class CustomTextField extends StatelessWidget {
+  const CustomTextField({
+    required this.label,
+    required this.hint,
+    required this.icon,
+    required this.controller,
+    super.key,
+    this.isPassword = false,
+    this.keyboardType = TextInputType.text,
+    this.inputFormatter,
+  });
+
+  final String label;
+  final String hint;
+  final IconData icon;
+  final TextEditingController controller;
+  final bool isPassword;
+  final TextInputType keyboardType;
+  final List<TextInputFormatter>? inputFormatter;
+
+  @override
+  Widget build(BuildContext context) {
+    final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle;
+    final iconColor = labelStyle?.color ?? Colors.black54;
+    final themeProvider = Provider.of<ThemeManage>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    final labelTextColor = isDarkMode ? Colors.white70 : Colors.grey[600];
+    final hintTextColor = isDarkMode ? Colors.white70 : Colors.grey[600];
+
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: Icon(icon, color: iconColor),
+        labelStyle: TextStyle(color: labelTextColor),
+        hintStyle: TextStyle(color: hintTextColor),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      obscureText: isPassword,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatter,
     );
   }
 }
