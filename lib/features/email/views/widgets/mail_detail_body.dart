@@ -37,7 +37,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
     final onSurface70 = onSurface.withOpacity(0.7);
     return Container(
       color: theme.scaffoldBackgroundColor,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
       child: Column(
         children: [
           Expanded(
@@ -88,12 +88,9 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                           final displayName =
                               (snapshot.connectionState ==
                                           ConnectionState.done &&
-                                      snapshot.hasData &&
-                                      snapshot.data != null &&
-                                      snapshot.data!.trim().isNotEmpty &&
-                                      snapshot.data != email.from)
+                                      snapshot.hasData)
                                   ? snapshot.data!
-                                  : email.from;
+                                  : '';
                           return Text(
                             displayName,
                             style: TextStyle(color: onSurface),
