@@ -47,6 +47,10 @@ class UserProfile {
       'photoUrl': photoUrl,
       'email': email,
       'twoStepEnabled': twoStepEnabled,
+      'autoReplyEnabled': false,
+      'autoReplyMessage':
+          'Cảm ơn bạn đã gửi email cho tôi. Tôi sẽ trả lời bạn sớm nhất có thể.',
+      'autoReplyTime': 5,
     };
   }
 }

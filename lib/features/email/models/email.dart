@@ -13,6 +13,7 @@ class Email {
     this.read = false,
     this.starred = false,
     this.labels = const [],
+    this.isDraft = false,
   });
 
   factory Email.fromMap(String id, Map<String, dynamic> data) {
@@ -28,6 +29,7 @@ class Email {
       read: data['read'] as bool? ?? false,
       starred: data['starred'] as bool? ?? false,
       labels: (data['labels'] as List<dynamic>? ?? []).cast<String>(),
+      isDraft: data['isDraft'] as bool? ?? false,
     );
   }
 
@@ -42,6 +44,7 @@ class Email {
   final bool read;
   final bool starred;
   final List<String> labels;
+  final bool isDraft;
 
   Map<String, dynamic> toMap() {
     return {
@@ -55,6 +58,7 @@ class Email {
       'read': read,
       'starred': starred,
       'labels': labels,
+      'isDraft': isDraft,
     };
   }
 
@@ -70,6 +74,7 @@ class Email {
     bool? read,
     bool? starred,
     List<String>? labels,
+    bool? isDraft,
   }) {
     return Email(
       id: id ?? this.id,
@@ -83,6 +88,7 @@ class Email {
       read: read ?? this.read,
       starred: starred ?? this.starred,
       labels: labels ?? this.labels,
+      isDraft: isDraft ?? this.isDraft,
     );
   }
 }
