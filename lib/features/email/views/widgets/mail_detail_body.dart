@@ -193,53 +193,48 @@ class _MailDetailBodyState extends State<MailDetailBody> {
   }
 
   Widget _unreadMailRemainingIcon(Color iconColor) {
+    final iconButton = IconButton(
+      icon: Icon(Icons.mail_outline, color: iconColor, size: 26),
+      onPressed: () {
+        Navigator.pop(context);
+        widget.onRefresh?.call();
+      },
+    );
+
     return FutureBuilder<int>(
       future: countUnreadMails(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Badge(
-            label: const Text('...'),
-            child: IconButton(
-              icon: Icon(Icons.mail_outline, color: iconColor),
-              onPressed: () {
-                Navigator.pop(context);
-                widget.onRefresh?.call();
-              },
-            ),
-          );
+          return mailBadge('...', iconButton);
         }
         if (snapshot.hasError) {
-          return Badge(
-            label: const Text('Err'),
-            child: IconButton(
-              icon: Icon(Icons.mail_outline, color: iconColor),
-              onPressed: () {
-                Navigator.pop(context);
-                widget.onRefresh?.call();
-              },
-            ),
-          );
+          return mailBadge('Error', iconButton);
         }
         if (snapshot.data != null && snapshot.data! > 0) {
-          return Badge(
-            label: Text(snapshot.data.toString()),
-            child: IconButton(
-              icon: Icon(Icons.mail_outline, color: iconColor),
-              onPressed: () {
-                Navigator.pop(context);
-                widget.onRefresh?.call();
-              },
-            ),
-          );
+          return mailBadge(snapshot.data.toString(), iconButton);
         }
-        return IconButton(
-          icon: Icon(Icons.mail, color: iconColor),
-          onPressed: () {
-            Navigator.pop(context);
-            widget.onRefresh?.call();
-          },
-        );
+        return iconButton;
       },
+    );
+  }
+
+  Widget mailBadge(String text, IconButton iconButton) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        iconButton,
+        Positioned(
+          right: 8,
+          top: 8,
+          child: Badge(
+            label: Text(
+              text,
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+            child: const SizedBox.shrink(),
+          ),
+        ),
+      ],
     );
   }
 }
