@@ -1,12 +1,14 @@
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/views/screens/compose_screen.dart';
 import 'package:email_application/features/email/views/widgets/compose_button.dart';
 import 'package:email_application/features/email/views/widgets/email_list.dart';
 import 'package:email_application/features/email/views/widgets/gmail_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/gmail_drawer.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class GmailScreen extends StatefulWidget {
   const GmailScreen({super.key});
@@ -48,8 +50,16 @@ class _GmailScreenState extends State<GmailScreen>
     });
   }
 
+  Future<int> countUnreadMails() {
+    return emailService.countUnreadEmails();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeManage>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    final textIconTheme = isDarkMode ? Colors.white70 : Colors.grey[800];
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
@@ -80,6 +90,11 @@ class _GmailScreenState extends State<GmailScreen>
                   onRefresh: _refreshStream,
                 ),
               ),
+              Container(
+                padding: const EdgeInsets.only(bottom: 16),
+                color: isDarkMode ? Colors.grey[900] : Colors.white70,
+                child: _unreadMailRemainingIcon(textIconTheme!),
+              ),
             ],
           ),
           if (isDrawerOpen)
@@ -104,6 +119,26 @@ class _GmailScreenState extends State<GmailScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _unreadMailRemainingIcon(Color iconColor) {
+    final icon = Icon(Icons.mail, color: iconColor, size: 26);
+
+    return FutureBuilder<int>(
+      future: countUnreadMails(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Badge(label: const Text('...'), child: icon);
+        }
+        if (snapshot.hasError) {
+          return Badge(label: const Text('Err'), child: icon);
+        }
+        if (snapshot.data != null && snapshot.data! > 0) {
+          return Badge(label: Text(snapshot.data.toString()), child: icon);
+        }
+        return icon;
+      },
     );
   }
 }
