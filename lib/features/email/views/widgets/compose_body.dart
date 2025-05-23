@@ -47,26 +47,30 @@ class _ComposeBodyState extends State<ComposeBody> {
 
     final labelColor = isDarkMode ? Colors.white70 : colorScheme.onSurface;
     final iconColor = isDarkMode ? Colors.white70 : colorScheme.onSurface;
-    final dividerColor =
-        isDarkMode
-            ? colorScheme.onSurface.withOpacity(0.3)
-            : colorScheme.onSurface.withOpacity(0.2);
+    final borderColor = isDarkMode ? Colors.white70 : Colors.grey;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16, left: 16),
-              child: Text(
-                AppStrings.to,
-                style: TextStyle(color: labelColor, fontSize: 16),
+        Container(
+          decoration: BoxDecoration(
+            border:
+                showCcBcc
+                    ? null
+                    : Border(
+                      bottom: BorderSide(color: borderColor, width: 0.75),
+                    ),
+          ),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16, left: 16),
+                child: Text(
+                  AppStrings.to,
+                  style: TextStyle(color: labelColor, fontSize: 16),
+                ),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8),
+              Expanded(
                 child: EmailTextField(
                   controller: widget.toController,
                   labelText: '',
@@ -86,10 +90,9 @@ class _ComposeBodyState extends State<ComposeBody> {
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        Divider(color: dividerColor, height: 1, thickness: 0.75),
         if (showCcBcc) ...[
           Row(
             children: [
@@ -101,76 +104,77 @@ class _ComposeBodyState extends State<ComposeBody> {
                 ),
               ),
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: EmailTextField(
-                    controller: widget.ccController,
-                    labelText: '',
-                    useLabelAsFixed: true,
-                  ),
+                child: EmailTextField(
+                  controller: widget.ccController,
+                  labelText: '',
+                  useLabelAsFixed: true,
                 ),
               ),
             ],
           ),
-          Divider(color: dividerColor, height: 1, thickness: 0.75),
-          Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16, left: 16),
-                child: Text(
-                  AppStrings.bcc,
-                  style: TextStyle(color: labelColor, fontSize: 16),
-                ),
+          Container(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: borderColor, width: 0.75),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8),
+            ),
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 16, left: 16),
+                  child: Text(
+                    AppStrings.bcc,
+                    style: TextStyle(color: labelColor, fontSize: 16),
+                  ),
+                ),
+                Expanded(
                   child: EmailTextField(
                     controller: widget.bccController,
                     labelText: '',
                     useLabelAsFixed: true,
                   ),
                 ),
-              ),
-            ],
-          ),
-          Divider(color: dividerColor, height: 1, thickness: 0.75),
-        ],
-        Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16, left: 16),
-              child: Text(
-                AppStrings.from,
-                style: TextStyle(color: labelColor, fontSize: 16),
-              ),
+              ],
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8),
+          ),
+        ],
+        Container(
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: borderColor, width: 0.75)),
+          ),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16, left: 16),
+                child: Text(
+                  AppStrings.from,
+                  style: TextStyle(color: labelColor, fontSize: 16),
+                ),
+              ),
+              Expanded(
                 child: EmailTextField(
                   controller: widget.fromController,
                   labelText: '',
                   useLabelAsFixed: true,
-                  suffixIcon: Icon(Icons.keyboard_arrow_down, color: iconColor),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        Divider(color: dividerColor, height: 1, thickness: 0.75),
-        EmailTextField(
-          controller: widget.subjectController,
-          labelText: AppStrings.subject,
-          labelStyle: TextStyle(color: labelColor),
+        Container(
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: borderColor, width: 0.75)),
+          ),
+          child: EmailTextField(
+            controller: widget.subjectController,
+            labelText: AppStrings.subject,
+          ),
         ),
-        Divider(color: dividerColor, height: 1, thickness: 0.75),
         Expanded(
           child: EmailTextField(
             controller: widget.bodyController,
             labelText: AppStrings.composeEmail,
             keyboardType: TextInputType.multiline,
-            labelStyle: TextStyle(color: labelColor),
           ),
         ),
       ],

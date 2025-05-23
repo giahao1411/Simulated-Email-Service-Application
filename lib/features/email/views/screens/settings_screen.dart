@@ -34,11 +34,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _controller.loadProfile().then((_) {
       if (mounted) {
         setState(() {
-          final twoStepProvider = Provider.of<TwoStepManage>(
-            context,
-            listen: false,
-          );
-          twoStepProvider.setTwoStepEnabled(_controller.isTwoStepEnabled);
+          final _ = Provider.of<TwoStepManage>(context, listen: false)
+            ..setTwoStepEnabled(_controller.isTwoStepEnabled);
         });
       }
     });
@@ -98,9 +95,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final twoStepProvider = Provider.of<TwoStepManage>(context, listen: false);
     try {
       await _controller.toggleTwoStep(context, value);
-      twoStepProvider.toggleTwoStep(
-        value,
-      ); 
+      twoStepProvider.toggleTwoStep(value);
     } on Exception catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),

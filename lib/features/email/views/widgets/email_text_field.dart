@@ -8,14 +8,10 @@ class EmailTextField extends StatelessWidget {
     required this.controller,
     required this.labelText,
     this.suffixIcon,
-    this.border,
-    this.focusedBorder,
     this.maxLines,
     this.keyboardType,
-    this.contentPadding,
     this.enable = true,
     this.useLabelAsFixed = false,
-    this.labelStyle,
     this.focusedBorderColor,
     super.key,
   });
@@ -23,54 +19,34 @@ class EmailTextField extends StatelessWidget {
   final TextEditingController controller;
   final String labelText;
   final Widget? suffixIcon;
-  final InputBorder? border;
-  final InputBorder? focusedBorder;
   final int? maxLines;
   final TextInputType? keyboardType;
-  final EdgeInsets? contentPadding;
   final bool enable;
   final bool useLabelAsFixed;
-  final TextStyle? labelStyle;
   final Color? focusedBorderColor;
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeManage>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    final colorScheme = Theme.of(context).colorScheme;
     AppFunctions.debugPrint('EmailTextField - isDarkMode: $isDarkMode');
 
-    final borderColor = isDarkMode ? Colors.white70 : Colors.grey;
     final hintColor = isDarkMode ? Colors.white70 : Colors.grey[600];
 
     return TextField(
       controller: controller,
       style: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black87),
+      textAlign: TextAlign.left,
+      textAlignVertical: TextAlignVertical.center,
       maxLines: maxLines,
       keyboardType: keyboardType,
       enabled: enable,
       decoration: InputDecoration(
-        labelText: null,
         hintText: useLabelAsFixed ? null : labelText,
         hintStyle: TextStyle(color: hintColor),
         suffixIcon: suffixIcon,
-        border:
-            border ??
-            UnderlineInputBorder(borderSide: BorderSide(color: borderColor)),
-        enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: borderColor),
-        ),
-        focusedBorder:
-            focusedBorder ??
-            UnderlineInputBorder(
-              borderSide: BorderSide(
-                color: focusedBorderColor ?? colorScheme.primary,
-                width: 2,
-              ),
-            ),
-        contentPadding:
-            contentPadding ??
-            const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        enabledBorder: const UnderlineInputBorder(borderSide: BorderSide.none),
+        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide.none),
         filled: true,
         fillColor: isDarkMode ? Colors.grey[900] : Colors.white,
       ),

@@ -1,4 +1,6 @@
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ComposeAppBar({
@@ -21,11 +23,12 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           icon: Icon(
-            Icons.attachment,
+            Icons.drafts,
             color: Theme.of(context).colorScheme.onSurface,
           ),
           onPressed: () {},
         ),
+        const SizedBox(width: 8),
         IconButton(
           icon: Icon(
             Icons.send,
@@ -34,14 +37,56 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           onPressed: onSendEmail,
         ),
-        IconButton(
-          icon: Icon(
-            Icons.more_horiz,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-          onPressed: () {},
-        ),
+        popUpMenuButton(context),
       ],
+    );
+  }
+
+  Widget popUpMenuButton(BuildContext context) {
+    final themeProvider = Provider.of<ThemeManage>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    final textIconTheme = isDarkMode ? Colors.white70 : Colors.grey[800];
+
+    return PopupMenuButton<String>(
+      icon: Icon(Icons.more_horiz, color: textIconTheme),
+      offset: const Offset(0, 40),
+      color: isDarkMode ? Colors.grey[800] : Colors.white,
+      onSelected: (String value) {
+        if (value == 'discard') {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Đã bỏ nháp!')));
+          Future.delayed(const Duration(milliseconds: 500), () {
+            Navigator.pop(context);
+          });
+        }
+      },
+      itemBuilder:
+          (BuildContext context) => <PopupMenuEntry<String>>[
+            PopupMenuItem<String>(
+              value: 'discard',
+              child: ListTile(
+                leading: Text(
+                  'Discard',
+                  style: TextStyle(fontSize: 16, color: textIconTheme),
+                ),
+                trailing: Icon(Icons.delete, color: textIconTheme),
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'schedule-send',
+              child: ListTile(
+                leading: Text(
+                  'Schedule send',
+                  style: TextStyle(fontSize: 16, color: textIconTheme),
+                ),
+                trailing: Icon(
+                  Icons.schedule_send_outlined,
+                  color: textIconTheme,
+                ),
+              ),
+            ),
+          ],
     );
   }
 

@@ -133,6 +133,7 @@ class SettingsController {
     isLoading = true;
     try {
       await authService.signOut();
+
       if (Navigator.of(context).mounted) {
         _showSnackBar('Đăng xuất thành công', true, context);
         await Navigator.pushReplacement(
