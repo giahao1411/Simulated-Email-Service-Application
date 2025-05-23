@@ -123,7 +123,7 @@ class _GmailScreenState extends State<GmailScreen>
   }
 
   Widget _unreadMailRemainingIcon(Color iconColor) {
-    final icon = Icon(Icons.mail, color: iconColor, size: 26);
+    final icon = Icon(Icons.mail_outline, color: iconColor, size: 26);
 
     return FutureBuilder<int>(
       future: countUnreadMails(),
