@@ -3,6 +3,8 @@ import 'package:email_application/features/email/controllers/email_service.dart'
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/views/screens/compose_screen.dart';
+import 'package:email_application/features/email/views/screens/meet_screen.dart';
+import 'package:email_application/features/email/views/widgets/bottom_navigation_bar.dart';
 import 'package:email_application/features/email/views/widgets/compose_button.dart';
 import 'package:email_application/features/email/views/widgets/email_list.dart';
 import 'package:email_application/features/email/views/widgets/gmail_app_bar.dart';
@@ -23,6 +25,7 @@ class _GmailScreenState extends State<GmailScreen>
   String currentCategory = AppStrings.inbox;
   final EmailService emailService = EmailService();
   late Stream<List<Email>> emailStream;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -50,21 +53,25 @@ class _GmailScreenState extends State<GmailScreen>
     });
   }
 
-  Future<int> countUnreadMails() {
-    return emailService.countUnreadEmails();
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (context) => const MeetScreen()),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeManage>(context);
-    final isDarkMode = themeProvider.isDarkMode;
-    final textIconTheme = isDarkMode ? Colors.white70 : Colors.grey[800];
-
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          Column(
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: Column(
             children: [
               GmailAppBar(onMenuPressed: toggleDrawer),
               Padding(
@@ -83,62 +90,64 @@ class _GmailScreenState extends State<GmailScreen>
                 ),
               ),
               Expanded(
-                child: EmailList(
-                  emailService: emailService,
-                  currentCategory: currentCategory,
-                  emailStream: emailStream,
-                  onRefresh: _refreshStream,
+                child: Stack(
+                  children: [
+                    EmailList(
+                      emailService: emailService,
+                      currentCategory: currentCategory,
+                      emailStream: emailStream,
+                      onRefresh: _refreshStream,
+                    ),
+                    ComposeButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) => const ComposeScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.only(bottom: 16),
-                color: isDarkMode ? Colors.grey[900] : Colors.white70,
-                child: _unreadMailRemainingIcon(textIconTheme!),
               ),
             ],
           ),
-          if (isDrawerOpen)
-            GestureDetector(
-              onTap: toggleDrawer,
-              child: Container(color: Colors.black54),
+          bottomNavigationBar: BottomNavigationBarWidget(
+            selectedIndex: _selectedIndex,
+            emailService: emailService,
+            onItemTapped: _onItemTapped,
+          ),
+        ),
+        // Overlay drawer that covers everything including bottom navigation
+        if (isDrawerOpen) ...[
+          // Background overlay
+          GestureDetector(
+            onTap: toggleDrawer,
+            child: Container(
+              color: Colors.black54,
+              width: double.infinity,
+              height: double.infinity,
             ),
-          if (isDrawerOpen)
-            GmailDrawer(
-              currentCategory: currentCategory,
-              onCategorySelected: setCategory,
-            ),
-          ComposeButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (context) => const ComposeScreen(),
+          ),
+          // Drawer widget positioned above everything
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            child: Material(
+              elevation: 16,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.7,
+                child: GmailDrawer(
+                  currentCategory: currentCategory,
+                  onCategorySelected: setCategory,
                 ),
-              );
-            },
+              ),
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _unreadMailRemainingIcon(Color iconColor) {
-    final icon = Icon(Icons.mail_outline, color: iconColor, size: 26);
-
-    return FutureBuilder<int>(
-      future: countUnreadMails(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Badge(label: const Text('...'), child: icon);
-        }
-        if (snapshot.hasError) {
-          return Badge(label: const Text('Err'), child: icon);
-        }
-        if (snapshot.data != null && snapshot.data! > 0) {
-          return Badge(label: Text(snapshot.data.toString()), child: icon);
-        }
-        return icon;
-      },
+      ],
     );
   }
 }
