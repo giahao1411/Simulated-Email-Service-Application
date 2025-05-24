@@ -7,7 +7,6 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Định dạng số điện thoại
   String _formatPhoneNumber(String phoneNumber) {
     if (!phoneNumber.startsWith('+')) {
       if (phoneNumber.startsWith('0')) {
@@ -90,7 +89,7 @@ class AuthService {
             'Hết thời gian tự động lấy mã OTP, verificationId: $verificationId',
           );
         },
-        timeout: const Duration(seconds: 60),
+        timeout: const Duration(seconds: 30), 
       );
     } on Exception catch (e) {
       AppFunctions.debugPrint('Lỗi gửi OTP: $e');
@@ -150,7 +149,7 @@ class AuthService {
       final userCredential = await _auth
           .createUserWithEmailAndPassword(email: email, password: password)
           .timeout(
-            const Duration(seconds: 10),
+            const Duration(seconds: 5),
             onTimeout: () {
               throw Exception('Hết thời gian chờ khi tạo tài khoản');
             },
@@ -168,7 +167,6 @@ class AuthService {
         await user.linkWithCredential(credential);
         AppFunctions.debugPrint('Liên kết số điện thoại thành công');
 
-        // Định dạng số điện thoại
         final formattedPhoneNumber = _formatPhoneNumber(phoneNumber);
 
         // Tạo hồ sơ người dùng
@@ -183,7 +181,6 @@ class AuthService {
           twoStepEnabled: false,
         );
 
-        // Lưu vào Firestore
         try {
           AppFunctions.debugPrint('Đang lưu hồ sơ vào Firestore...');
           await _firestore
@@ -191,7 +188,7 @@ class AuthService {
               .doc(user.uid)
               .set(userProfile.toMap(), SetOptions(merge: true))
               .timeout(
-                const Duration(seconds: 30),
+                const Duration(seconds: 15),  
                 onTimeout: () {
                   throw Exception(
                     'Hết thời gian chờ khi lưu hồ sơ vào Firestore',
@@ -235,7 +232,7 @@ class AuthService {
       final userCredential = await _auth
           .signInWithEmailAndPassword(email: email, password: password)
           .timeout(
-            const Duration(seconds: 10),
+            const Duration(seconds: 5), 
             onTimeout: () {
               throw Exception('Hết thời gian chờ khi đăng nhập');
             },
@@ -251,7 +248,7 @@ class AuthService {
             .doc(user.uid)
             .get()
             .timeout(
-              const Duration(seconds: 10),
+              const Duration(seconds: 5),
               onTimeout: () {
                 throw Exception('Hết thời gian chờ khi lấy hồ sơ từ Firestore');
               },
@@ -439,7 +436,7 @@ class AuthService {
             .doc(user.uid)
             .get()
             .timeout(
-              const Duration(seconds: 10),
+              const Duration(seconds: 5), // Giảm từ 10s xuống 5s
               onTimeout: () {
                 throw Exception('Hết thời gian chờ khi lấy hồ sơ từ Firestore');
               },

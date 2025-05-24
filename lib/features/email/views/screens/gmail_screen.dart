@@ -1,7 +1,6 @@
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
-import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/views/screens/compose_screen.dart';
 import 'package:email_application/features/email/views/screens/meet_screen.dart';
 import 'package:email_application/features/email/views/widgets/bottom_navigation_bar.dart';
@@ -10,7 +9,6 @@ import 'package:email_application/features/email/views/widgets/email_list.dart';
 import 'package:email_application/features/email/views/widgets/gmail_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/gmail_drawer.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class GmailScreen extends StatefulWidget {
   const GmailScreen({super.key});
@@ -119,9 +117,7 @@ class _GmailScreenState extends State<GmailScreen>
             onItemTapped: _onItemTapped,
           ),
         ),
-        // Overlay drawer that covers everything including bottom navigation
         if (isDrawerOpen) ...[
-          // Background overlay
           GestureDetector(
             onTap: toggleDrawer,
             child: Container(
@@ -130,7 +126,6 @@ class _GmailScreenState extends State<GmailScreen>
               height: double.infinity,
             ),
           ),
-          // Drawer widget positioned above everything
           Positioned(
             left: 0,
             top: 0,
