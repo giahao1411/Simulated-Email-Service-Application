@@ -71,7 +71,10 @@ class _GmailScreenState extends State<GmailScreen>
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
-              GmailAppBar(onMenuPressed: toggleDrawer),
+              GmailAppBar(
+                onMenuPressed: toggleDrawer,
+                currentCategory: currentCategory,
+              ),
               Padding(
                 padding: const EdgeInsets.only(left: 16, top: 8),
                 child: Align(

@@ -2,11 +2,18 @@ import 'dart:io';
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/models/user_profile.dart';
+import 'package:email_application/features/email/views/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 
 class GmailAppBar extends StatelessWidget {
-  const GmailAppBar({required this.onMenuPressed, super.key});
+  const GmailAppBar({
+    required this.onMenuPressed,
+    required this.currentCategory,
+    super.key,
+  });
+
   final VoidCallback onMenuPressed;
+  final String currentCategory;
 
   @override
   Widget build(BuildContext context) {
@@ -37,14 +44,34 @@ class GmailAppBar extends StatelessWidget {
               onPressed: onMenuPressed,
             ),
             const SizedBox(width: 8),
-            Text(
-              AppStrings.searchInMail,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<SearchScreen>(
+                      builder:
+                          (context) =>
+                              SearchScreen(currentCategory: currentCategory),
+                    ),
+                  );
+                },
+                child: Container(
+                  height: double.infinity,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    AppStrings.searchInMail,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 16,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                ),
               ),
             ),
-            const Spacer(),
+            const SizedBox(width: 8),
             FutureBuilder<UserProfile?>(
               future: AuthService().currentUser,
               builder: (context, snapshot) {
@@ -56,6 +83,7 @@ class GmailAppBar extends StatelessWidget {
                       backgroundColor: Theme.of(context).colorScheme.secondary,
                       child: CircularProgressIndicator(
                         color: Theme.of(context).colorScheme.onSecondary,
+                        strokeWidth: 2,
                       ),
                     ),
                   );
@@ -76,7 +104,6 @@ class GmailAppBar extends StatelessWidget {
                     ),
                   );
                 }
-
                 final userProfile = snapshot.data!;
                 return Padding(
                   padding: const EdgeInsets.only(right: 12),

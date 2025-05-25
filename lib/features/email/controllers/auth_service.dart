@@ -89,7 +89,7 @@ class AuthService {
             'Hết thời gian tự động lấy mã OTP, verificationId: $verificationId',
           );
         },
-        timeout: const Duration(seconds: 30), 
+        timeout: const Duration(seconds: 30),
       );
     } on Exception catch (e) {
       AppFunctions.debugPrint('Lỗi gửi OTP: $e');
@@ -188,7 +188,7 @@ class AuthService {
               .doc(user.uid)
               .set(userProfile.toMap(), SetOptions(merge: true))
               .timeout(
-                const Duration(seconds: 15),  
+                const Duration(seconds: 15),
                 onTimeout: () {
                   throw Exception(
                     'Hết thời gian chờ khi lưu hồ sơ vào Firestore',
@@ -232,7 +232,7 @@ class AuthService {
       final userCredential = await _auth
           .signInWithEmailAndPassword(email: email, password: password)
           .timeout(
-            const Duration(seconds: 5), 
+            const Duration(seconds: 5),
             onTimeout: () {
               throw Exception('Hết thời gian chờ khi đăng nhập');
             },
