@@ -43,7 +43,7 @@ class EmailTile extends StatelessWidget {
               snapshot.connectionState == ConnectionState.done &&
                       snapshot.hasData
                   ? snapshot.data!
-                  : email.from; 
+                  : email.from;
           return Text(
             displayName,
             overflow: TextOverflow.ellipsis,
@@ -93,7 +93,6 @@ class EmailTile extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2),
                   Text(
                     email.subject,
                     maxLines: 1,
@@ -124,13 +123,14 @@ class EmailTile extends StatelessWidget {
                       const SizedBox(width: 2),
                       SizedBox(
                         width: 22,
+                        height: 26,
                         child: Align(
-                          alignment: Alignment.centerRight,
+                          alignment: Alignment.topCenter,
                           child: IconButton(
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                             icon: Icon(
-                              email.starred ? Icons.star : Icons.star_border,
+                              email.starred ? Icons.star : Icons.star_outline,
                               color:
                                   email.starred
                                       ? Colors.amber
