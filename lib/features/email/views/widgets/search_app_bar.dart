@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:email_application/features/email/models/search_filters.dart';
+import 'package:email_application/features/email/views/widgets/advanced_search_filters.dart';
 
 class SearchAppBar extends StatefulWidget {
   const SearchAppBar({
     required this.onSearchChanged,
     required this.onSearchSubmitted,
     required this.onBackPressed,
+    required this.onFiltersChanged,
     super.key,
   });
 
   final void Function(String) onSearchChanged;
   final void Function(String) onSearchSubmitted;
   final VoidCallback onBackPressed;
+  final void Function(SearchFilters) onFiltersChanged;
 
   @override
   State<SearchAppBar> createState() => _SearchAppBarState();
@@ -63,64 +67,70 @@ class _SearchAppBarState extends State<SearchAppBar> {
 
     return Container(
       color: surfaceColor,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              IconButton(
-                icon: Icon(Icons.arrow_back, color: iconColor),
-                onPressed: widget.onBackPressed,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  autofocus: true,
-                  keyboardType: TextInputType.text,
-                  textInputAction: TextInputAction.search,
-                  enableInteractiveSelection: true,
-                  showCursor: true,
-                  style: TextStyle(color: textColor, fontSize: 16),
-                  decoration: InputDecoration(
-                    hintText: 'Tìm trong thư',
-                    hintStyle: TextStyle(color: hintTextColor, fontSize: 16),
-                    border: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  color: iconColor,
+                  onPressed: widget.onBackPressed,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    autofocus: true,
+                    keyboardType: TextInputType.text,
+                    textInputAction: TextInputAction.search,
+                    enableInteractiveSelection: true,
+                    showCursor: true,
+                    style: TextStyle(color: textColor, fontSize: 16),
+                    decoration: InputDecoration(
+                      hintText: 'Tìm trong thư',
+                      hintStyle: TextStyle(color: hintTextColor, fontSize: 16),
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      filled: true,
+                      fillColor: surfaceColor,
                     ),
-                    filled: true,
-                    fillColor: surfaceColor,
+                    onChanged: widget.onSearchChanged,
+                    onSubmitted: widget.onSearchSubmitted,
+                    onTap: _requestFocus,
                   ),
-                  onChanged: widget.onSearchChanged,
-                  onSubmitted: widget.onSearchSubmitted,
-                  onTap: _requestFocus,
                 ),
-              ),
-              if (_controller.text.isNotEmpty)
-                IconButton(
-                  icon: Icon(Icons.close, color: iconColor),
-                  onPressed: () {
-                    _controller.clear();
-                    widget.onSearchChanged('');
-                    FocusScope.of(context).requestFocus(_focusNode);
-                  },
-                )
-              else
-                IconButton(
-                  icon: Icon(Icons.mic, color: iconColor),
-                  onPressed: () {
-                    print('Voice search pressed');
-                  },
-                ),
-            ],
+                if (_controller.text.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    color: iconColor,
+                    onPressed: () {
+                      _controller.clear();
+                      widget.onSearchChanged('');
+                      FocusScope.of(context).requestFocus(_focusNode);
+                    },
+                  )
+                else
+                  IconButton(
+                    icon: const Icon(Icons.mic),
+                    color: iconColor,
+                    onPressed: () {
+                      print('Voice search pressed');
+                    },
+                  ),
+              ],
+            ),
           ),
           const Divider(height: 1, thickness: 0.5),
+          AdvancedSearchFilters(onFiltersChanged: widget.onFiltersChanged),
         ],
       ),
     );

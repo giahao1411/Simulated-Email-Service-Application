@@ -27,6 +27,7 @@ class UserProfile {
       twoStepEnabled: data['twoStepEnabled'] as bool? ?? false,
     );
   }
+
   final String uid;
   final String phoneNumber;
   final String? firstName;

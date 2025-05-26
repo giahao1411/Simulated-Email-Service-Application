@@ -14,6 +14,7 @@ class Email {
     this.starred = false,
     this.labels = const [],
     this.isDraft = false,
+    this.hasAttachments = false, // Thêm trường hasAttachments
   });
 
   factory Email.fromMap(String id, Map<String, dynamic> data) {
@@ -30,6 +31,8 @@ class Email {
       starred: data['starred'] as bool? ?? false,
       labels: (data['labels'] as List<dynamic>? ?? []).cast<String>(),
       isDraft: data['isDraft'] as bool? ?? false,
+      hasAttachments:
+          data['hasAttachments'] as bool? ?? false, // Thêm deserialization
     );
   }
 
@@ -45,6 +48,7 @@ class Email {
   final bool starred;
   final List<String> labels;
   final bool isDraft;
+  final bool hasAttachments; // Thêm trường này
 
   Map<String, dynamic> toMap() {
     return {
@@ -59,6 +63,7 @@ class Email {
       'starred': starred,
       'labels': labels,
       'isDraft': isDraft,
+      'hasAttachments': hasAttachments, // Thêm serialization
     };
   }
 
@@ -75,6 +80,7 @@ class Email {
     bool? starred,
     List<String>? labels,
     bool? isDraft,
+    bool? hasAttachments,
   }) {
     return Email(
       id: id ?? this.id,
@@ -89,6 +95,8 @@ class Email {
       starred: starred ?? this.starred,
       labels: labels ?? this.labels,
       isDraft: isDraft ?? this.isDraft,
+      hasAttachments:
+          hasAttachments ?? this.hasAttachments, // Thêm trong copyWith
     );
   }
 }
