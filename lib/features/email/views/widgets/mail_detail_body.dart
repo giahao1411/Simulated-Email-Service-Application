@@ -52,12 +52,14 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      email.subject,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: onSurface,
+                    Expanded(
+                      child: Text(
+                        email.subject,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: onSurface,
+                        ),
                       ),
                     ),
                     IconButton(
@@ -313,7 +315,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                   ),
                   Expanded(
                     child: Wrap(
-                      spacing: 100,
+                      spacing: 1000,
                       runSpacing: 2,
                       children:
                           email.to
@@ -349,10 +351,18 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                     ),
                   ),
                   Expanded(
-                    child: Text(
-                      email.cc.join(', '),
-                      style: TextStyle(color: onSurface70),
-                      overflow: TextOverflow.ellipsis,
+                    child: Wrap(
+                      spacing: 1000,
+                      runSpacing: 2,
+                      children:
+                          email.cc
+                              .map(
+                                (emailAddress) => Text(
+                                  emailAddress,
+                                  style: TextStyle(color: onSurface70),
+                                ),
+                              )
+                              .toList(),
                     ),
                   ),
                 ],
@@ -378,10 +388,18 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                     ),
                   ),
                   Expanded(
-                    child: Text(
-                      email.bcc.join(', '),
-                      style: TextStyle(color: onSurface70),
-                      overflow: TextOverflow.ellipsis,
+                    child: Wrap(
+                      spacing: 1000,
+                      runSpacing: 2,
+                      children:
+                          email.bcc
+                              .map(
+                                (emailAddress) => Text(
+                                  emailAddress,
+                                  style: TextStyle(color: onSurface70),
+                                ),
+                              )
+                              .toList(),
                     ),
                   ),
                 ],
