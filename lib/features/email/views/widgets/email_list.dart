@@ -11,6 +11,7 @@ class EmailList extends StatelessWidget {
     required this.currentCategory,
     required this.emailStream,
     this.onRefresh,
+    this.refreshStream, // Thêm refreshStream
     super.key,
   });
 
@@ -18,6 +19,7 @@ class EmailList extends StatelessWidget {
   final String currentCategory;
   final Stream<List<Email>>? emailStream;
   final VoidCallback? onRefresh;
+  final VoidCallback? refreshStream; // Thêm tham số
 
   @override
   Widget build(BuildContext context) {
@@ -70,8 +72,12 @@ class EmailList extends StatelessWidget {
                     context,
                     MaterialPageRoute<void>(
                       builder:
-                          (context) =>
-                              MailDetail(email: email, onRefresh: onRefresh),
+                          (context) => MailDetail(
+                            email: email,
+                            onRefresh: onRefresh,
+                            refreshStream:
+                                refreshStream, // Truyền refreshStream vào MailDetail
+                          ),
                     ),
                   );
                 },

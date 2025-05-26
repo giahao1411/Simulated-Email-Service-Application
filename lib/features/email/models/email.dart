@@ -14,7 +14,11 @@ class Email {
     this.starred = false,
     this.labels = const [],
     this.isDraft = false,
-    this.hasAttachments = false, // Thêm trường hasAttachments
+    this.hasAttachments = false,
+    this.hidden = false,
+    this.important = false,
+    this.spam = false,
+    this.trashed = false, // Thêm trường trashed
   });
 
   factory Email.fromMap(String id, Map<String, dynamic> data) {
@@ -26,13 +30,17 @@ class Email {
       bcc: (data['bcc'] as List<dynamic>? ?? []).cast<String>(),
       subject: data['subject'] as String? ?? '',
       body: data['body'] as String? ?? '',
-      timestamp: (data['timestamp'] as Timestamp).toDate(),
+      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       read: data['read'] as bool? ?? false,
       starred: data['starred'] as bool? ?? false,
       labels: (data['labels'] as List<dynamic>? ?? []).cast<String>(),
       isDraft: data['isDraft'] as bool? ?? false,
-      hasAttachments:
-          data['hasAttachments'] as bool? ?? false, // Thêm deserialization
+      hasAttachments: data['hasAttachments'] as bool? ?? false,
+      hidden: data['hidden'] as bool? ?? false,
+      important: data['important'] as bool? ?? false,
+      spam: data['spam'] as bool? ?? false,
+      trashed:
+          data['trashed'] as bool? ?? false, // Thêm deserialization cho trashed
     );
   }
 
@@ -48,7 +56,11 @@ class Email {
   final bool starred;
   final List<String> labels;
   final bool isDraft;
-  final bool hasAttachments; // Thêm trường này
+  final bool hasAttachments;
+  final bool hidden;
+  final bool important;
+  final bool spam;
+  final bool trashed; // Thêm trường trashed
 
   Map<String, dynamic> toMap() {
     return {
@@ -63,7 +75,11 @@ class Email {
       'starred': starred,
       'labels': labels,
       'isDraft': isDraft,
-      'hasAttachments': hasAttachments, // Thêm serialization
+      'hasAttachments': hasAttachments,
+      'hidden': hidden,
+      'important': important,
+      'spam': spam,
+      'trashed': trashed, // Thêm serialization cho trashed
     };
   }
 
@@ -81,6 +97,10 @@ class Email {
     List<String>? labels,
     bool? isDraft,
     bool? hasAttachments,
+    bool? hidden,
+    bool? important,
+    bool? spam,
+    bool? trashed,
   }) {
     return Email(
       id: id ?? this.id,
@@ -95,8 +115,11 @@ class Email {
       starred: starred ?? this.starred,
       labels: labels ?? this.labels,
       isDraft: isDraft ?? this.isDraft,
-      hasAttachments:
-          hasAttachments ?? this.hasAttachments, // Thêm trong copyWith
+      hasAttachments: hasAttachments ?? this.hasAttachments,
+      hidden: hidden ?? this.hidden,
+      important: important ?? this.important,
+      spam: spam ?? this.spam,
+      trashed: trashed ?? this.trashed, // Thêm trong copyWith
     );
   }
 }

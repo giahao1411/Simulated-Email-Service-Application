@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
@@ -61,20 +60,22 @@ class _GmailDrawerState extends State<GmailDrawer> {
     AppFunctions.debugPrint(
       'Initialized LabelController with UID: ${userProfile?.uid ?? "No UID"}, Email: ${userProfile?.email ?? "No email"}',
     );
-    final loadedLabels = await _labelController.loadLabels();
-    LabelSorter.sortLabels(loadedLabels);
-    setState(() {
-      labels = loadedLabels;
-    });
+    await _loadLabels();
   }
 
   Future<void> _loadLabels() async {
-    final loadedLabels = await _labelController.loadLabels();
-    // Sắp xếp danh sách nhãn
-    LabelSorter.sortLabels(loadedLabels);
-    setState(() {
-      labels = loadedLabels;
-    });
+    try {
+      final loadedLabels = await _labelController.loadLabels();
+      LabelSorter.sortLabels(loadedLabels);
+      setState(() {
+        labels = loadedLabels;
+      });
+    } catch (e) {
+      AppFunctions.debugPrint('Error loading labels: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi khi tải nhãn: $e')));
+    }
   }
 
   @override
@@ -135,7 +136,6 @@ class _GmailDrawerState extends State<GmailDrawer> {
                   ],
                 ),
               ),
-
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.zero,
@@ -154,6 +154,20 @@ class _GmailDrawerState extends State<GmailDrawer> {
                           () => widget.onCategorySelected(AppStrings.starred),
                     ),
                     DrawerItem(
+                      title: AppStrings.important,
+                      icon: Icons.label_important_outline,
+                      isSelected:
+                          widget.currentCategory == AppStrings.important,
+                      onTap:
+                          () => widget.onCategorySelected(AppStrings.important),
+                    ),
+                    DrawerItem(
+                      title: AppStrings.hidden,
+                      icon: Icons.visibility_off,
+                      isSelected: widget.currentCategory == AppStrings.hidden,
+                      onTap: () => widget.onCategorySelected(AppStrings.hidden),
+                    ),
+                    DrawerItem(
                       title: AppStrings.sent,
                       icon: Icons.send,
                       isSelected: widget.currentCategory == AppStrings.sent,
@@ -166,12 +180,17 @@ class _GmailDrawerState extends State<GmailDrawer> {
                       onTap: () => widget.onCategorySelected(AppStrings.drafts),
                     ),
                     DrawerItem(
+                      title: AppStrings.spam,
+                      icon: Icons.report_gmailerrorred,
+                      isSelected: widget.currentCategory == AppStrings.spam,
+                      onTap: () => widget.onCategorySelected(AppStrings.spam),
+                    ),
+                    DrawerItem(
                       title: AppStrings.trash,
                       icon: Icons.delete,
                       isSelected: widget.currentCategory == AppStrings.trash,
                       onTap: () => widget.onCategorySelected(AppStrings.trash),
                     ),
-
                     if (labels.isNotEmpty) ...[
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -200,7 +219,6 @@ class _GmailDrawerState extends State<GmailDrawer> {
                           ),
                         ),
                       ),
-
                       ...labels.map(
                         (label) => GestureDetector(
                           onLongPress:
@@ -240,7 +258,6 @@ class _GmailDrawerState extends State<GmailDrawer> {
                         endIndent: 16,
                       ),
                     ),
-                    // Tùy chọn "Tạo mới" luôn hiển thị
                     DrawerItem(
                       title: 'Tạo mới',
                       icon: Icons.add,
@@ -251,7 +268,6 @@ class _GmailDrawerState extends State<GmailDrawer> {
                             onLoadLabels: _loadLabels,
                           ),
                     ),
-                    // Dòng phân cách
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Divider(
@@ -264,7 +280,6 @@ class _GmailDrawerState extends State<GmailDrawer> {
                         endIndent: 16,
                       ),
                     ),
-                    // Cài đặt
                     DrawerItem(
                       title: AppStrings.settings,
                       icon: Icons.settings,

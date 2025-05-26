@@ -3,32 +3,24 @@ import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
 
 class LabelController {
-  // Email của người dùng hiện tại (vẫn giữ để tham khảo)
-
-  LabelController() {
-    // Không gọi _initializeUserData trong constructor nữa
-  }
   final CollectionReference _labelsRef = FirebaseFirestore.instance.collection(
     'labels',
   );
   final AuthService _authService = AuthService();
-  String? uid; // UID của người dùng hiện tại
+  String? uid;
   String? email;
 
   Future<void> initializeUserData() async {
     final userProfile = await _authService.currentUser;
-    uid = userProfile?.uid ?? 'default_uid'; // Fallback nếu không có UID
-    email =
-        userProfile?.email ??
-        'default@example.com'; // Fallback nếu không có emai
+    uid = userProfile?.uid ?? 'default_uid';
+    email = userProfile?.email ?? 'default@example.com';
     AppFunctions.debugPrint(
       'Initialized user data for labels: UID=$uid, Email=$email',
     );
   }
 
-  // Tải danh sách nhãn từ Firestore, chỉ lấy nhãn của UID hiện tại
   Future<List<String>> loadLabels() async {
-    await initializeUserData(); // Đảm bảo UID được khởi tạo
+    await initializeUserData();
     if (uid == 'default_uid') {
       AppFunctions.debugPrint('No user logged in, returning empty labels');
       return [];
@@ -39,25 +31,28 @@ class LabelController {
       AppFunctions.debugPrint('Loaded labels for UID $uid: $labels');
       return labels;
     } catch (e) {
-      AppFunctions.debugPrint('Lỗi khi tải nhãn: $e');
+      AppFunctions.debugPrint('Error loading labels: $e');
       return [];
     }
   }
 
-  // Kiểm tra xem nhãn đã tồn tại chưa cho UID hiện tại
   Future<bool> doesLabelExist(String labelName) async {
     await initializeUserData();
     if (uid == 'default_uid') return false;
-    final snapshot =
-        await _labelsRef
-            .where('uid', isEqualTo: uid)
-            .where('name', isEqualTo: labelName)
-            .limit(1)
-            .get();
-    return snapshot.docs.isNotEmpty;
+    try {
+      final snapshot =
+          await _labelsRef
+              .where('uid', isEqualTo: uid)
+              .where('name', isEqualTo: labelName)
+              .limit(1)
+              .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      AppFunctions.debugPrint('Error checking label existence: $e');
+      return false;
+    }
   }
 
-  // Lưu nhãn mới vào Firestore
   Future<bool> saveLabel(String label) async {
     await initializeUserData();
     if (uid == 'default_uid') {
@@ -67,29 +62,24 @@ class LabelController {
     try {
       if (await doesLabelExist(label)) {
         AppFunctions.debugPrint('Label already exists: $label');
-        return false; // Nhãn đã tồn tại
+        return false;
       }
-      await _labelsRef.add({
-        'name': label,
-        'uid': uid, // Sử dụng UID để phân quyền
-        'email': email, // Lưu email để tham khảo (tùy chọn)
-      });
+      await _labelsRef.add({'name': label, 'uid': uid, 'email': email});
       AppFunctions.debugPrint('Saved label: $label for UID: $uid');
       return true;
     } catch (e) {
-      AppFunctions.debugPrint('Lỗi khi lưu nhãn: $e');
+      AppFunctions.debugPrint('Error saving label: $e');
       return false;
     }
   }
 
-  // Cập nhật nhãn trong Firestore
   Future<bool> updateLabel(String oldLabel, String newLabel) async {
     await initializeUserData();
     if (uid == 'default_uid') return false;
     try {
       if (await doesLabelExist(newLabel)) {
         AppFunctions.debugPrint('New label already exists: $newLabel');
-        return false; // Nhãn mới đã tồn tại
+        return false;
       }
       final snapshot =
           await _labelsRef
@@ -106,13 +96,12 @@ class LabelController {
       }
       AppFunctions.debugPrint('Label not found: $oldLabel');
       return false;
-    } on Exception catch (e) {
-      AppFunctions.debugPrint('Lỗi khi cập nhật nhãn: $e');
+    } catch (e) {
+      AppFunctions.debugPrint('Error updating label: $e');
       return false;
     }
   }
 
-  // Xóa nhãn khỏi Firestore
   Future<bool> deleteLabel(String label) async {
     await initializeUserData();
     if (uid == 'default_uid') return false;
@@ -130,8 +119,8 @@ class LabelController {
       }
       AppFunctions.debugPrint('Label not found: $label');
       return false;
-    } on Exception catch (e) {
-      AppFunctions.debugPrint('Lỗi khi xóa nhãn: $e');
+    } catch (e) {
+      AppFunctions.debugPrint('Error deleting label: $e');
       return false;
     }
   }
