@@ -19,6 +19,7 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AppBar(
+      actionsPadding: const EdgeInsets.only(left: 16, right: 8),
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
         onPressed: () {

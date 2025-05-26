@@ -76,7 +76,7 @@ class _GmailScreenState extends State<GmailScreen>
                 currentCategory: currentCategory,
               ),
               Padding(
-                padding: const EdgeInsets.only(left: 16, top: 8),
+                padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -135,7 +135,7 @@ class _GmailScreenState extends State<GmailScreen>
             bottom: 0,
             child: Material(
               elevation: 16,
-              child: Container(
+              child: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.7,
                 child: GmailDrawer(
                   currentCategory: currentCategory,

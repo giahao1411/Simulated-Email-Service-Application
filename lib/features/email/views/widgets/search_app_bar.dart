@@ -83,16 +83,10 @@ class _SearchAppBarState extends State<SearchAppBar> {
                   textInputAction: TextInputAction.search,
                   enableInteractiveSelection: true,
                   showCursor: true,
-                  style: TextStyle(
-                    color: textColor,  
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: textColor, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: 'Tìm trong thư',
-                    hintStyle: TextStyle(
-                      color: hintTextColor, 
-                      fontSize: 16,
-                    ),
+                    hintStyle: TextStyle(color: hintTextColor, fontSize: 16),
                     border: InputBorder.none,
                     focusedBorder: InputBorder.none,
                     enabledBorder: InputBorder.none,
@@ -101,8 +95,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
                       vertical: 10,
                     ),
                     filled: true,
-                    fillColor:
-                        surfaceColor, 
+                    fillColor: surfaceColor,
                   ),
                   onChanged: widget.onSearchChanged,
                   onSubmitted: widget.onSearchSubmitted,
@@ -127,7 +120,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
                 ),
             ],
           ),
-          Divider(height: 1, thickness: 0.5),
+          const Divider(height: 1, thickness: 0.5),
         ],
       ),
     );

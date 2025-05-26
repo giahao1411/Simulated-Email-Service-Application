@@ -1,11 +1,12 @@
+import 'package:email_application/core/constants/app_functions.dart';
+import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email_search_result.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
+import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:email_application/features/email/views/screens/mail_detail_screen.dart';
 import 'package:email_application/features/email/views/widgets/email_search_item.dart';
 import 'package:flutter/material.dart';
-import 'package:email_application/features/email/controllers/email_service.dart';
-import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:provider/provider.dart';
-import 'package:email_application/features/email/providers/theme_manage.dart';
 
 class SearchResults extends StatefulWidget {
   const SearchResults({
@@ -86,7 +87,6 @@ class _SearchResultsState extends State<SearchResults> {
             time: DateFormat.formatTimestamp(email.timestamp),
             avatarUrl: '',
             isStarred: email.starred,
-            isImportant: false,
             avatarText: senderName.isNotEmpty ? senderName[0] : 'A',
             backgroundColor: Colors.blue,
             email: email,
@@ -98,12 +98,12 @@ class _SearchResultsState extends State<SearchResults> {
         _results = searchResults;
         _isLoading = false;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         _results = [];
         _isLoading = false;
       });
-      print('Error searching emails: $e');
+      AppFunctions.debugPrint('Error searching emails: $e');
     }
   }
 
@@ -162,7 +162,7 @@ class _SearchResultsState extends State<SearchResults> {
                       builder:
                           (context) => MailDetail(
                             email: _results[index].email!,
-                            onRefresh: () => _performSearch(),
+                            onRefresh: _performSearch,
                           ),
                     ),
                   );

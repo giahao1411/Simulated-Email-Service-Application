@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/views/widgets/search_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/search_results.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({required this.currentCategory, super.key});
@@ -29,7 +30,7 @@ class _SearchScreenState extends State<SearchScreen> {
       _searchQuery = query;
       _isSearching = query.isNotEmpty;
     });
-    print('Đang tìm kiếm: $query');
+    AppFunctions.debugPrint('Đang tìm kiếm: $query');
   }
 
   @override

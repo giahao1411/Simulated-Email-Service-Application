@@ -18,4 +18,5 @@ class AppStrings {
   static const String errorLoadingEmails = 'Lỗi khi tải email';
   static const String errorLoadingDrafts = 'Lỗi khi tải thư nháp';
   static const String meet = 'Meet';
+  static const String date = 'Ngày';
 }
