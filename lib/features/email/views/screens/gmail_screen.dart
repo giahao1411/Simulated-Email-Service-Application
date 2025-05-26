@@ -46,8 +46,8 @@ class _GmailScreenState extends State<GmailScreen>
   void setCategory(String category) {
     setState(() {
       currentCategory = category;
-      isDrawerOpen = false;
       _refreshStream();
+      isDrawerOpen = false;
     });
   }
 
@@ -98,6 +98,7 @@ class _GmailScreenState extends State<GmailScreen>
                       currentCategory: currentCategory,
                       emailStream: emailStream,
                       onRefresh: _refreshStream,
+                      refreshStream: _refreshStream,
                     ),
                     ComposeButton(
                       onPressed: () {

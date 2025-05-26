@@ -18,7 +18,8 @@ class EmailService {
     AppFunctions.debugPrint('Lấy email cho danh mục: $category');
     var query = _firestore
         .collection(category == 'Thư nháp' ? 'drafts' : 'emails')
-        .orderBy('timestamp', descending: true);
+        .orderBy('timestamp', descending: true)
+        .limit(50);
 
     if (category == AppStrings.inbox) {
       query = query.where('to', arrayContains: userEmail);
@@ -37,10 +38,20 @@ class EmailService {
       query = query
           .where('to', arrayContains: userEmail)
           .where('trashed', isEqualTo: true);
-    } else {
+    } else if (category == AppStrings.spam) {
       query = query
-          .where('labels', arrayContains: category)
-          .where('to', arrayContains: userEmail);
+          .where('to', arrayContains: userEmail)
+          .where('spam', isEqualTo: true);
+    } else if (category == AppStrings.important) {
+      query = query
+          .where('to', arrayContains: userEmail)
+          .where('important', isEqualTo: true);
+    } else if (category == AppStrings.hidden) {
+      query = query
+          .where('to', arrayContains: userEmail)
+          .where('hidden', isEqualTo: true);
+    } else {
+      query = query.where('labels', arrayContains: category);
     }
 
     return query.snapshots().map((snapshot) {
@@ -77,6 +88,9 @@ class EmailService {
         'timestamp': FieldValue.serverTimestamp(),
         'read': false,
         'starred': false,
+        'important': false,
+        'hidden': false,
+        'spam': false,
         'labels': <String>[],
       });
     } on Exception catch (e) {
@@ -175,12 +189,59 @@ class EmailService {
     }
   }
 
-  Future<void> deleteEmail(String email) async {
+  Future<void> deleteEmail(String emailId) async {
     try {
-      await _firestore.collection('emails').doc(email).delete();
+      await _firestore.collection('emails').doc(emailId).delete();
     } catch (e) {
       AppFunctions.debugPrint('Lỗi khi xóa email: $e');
       throw Exception('Không thể xóa email: $e');
+    }
+  }
+
+  Future<void> markAsImportant(String emailId, bool currentStatus) async {
+    try {
+      await _firestore.collection('emails').doc(emailId).update({
+        'important': !currentStatus,
+      });
+    } catch (e) {
+      AppFunctions.debugPrint('Lỗi khi đánh dấu quan trọng: $e');
+      throw Exception('Không thể đánh dấu quan trọng: $e');
+    }
+  }
+
+  Future<void> markAsSpam(String emailId, bool currentStatus) async {
+    try {
+      await _firestore.collection('emails').doc(emailId).update({
+        'spam': !currentStatus,
+      });
+    } catch (e) {
+      AppFunctions.debugPrint('Lỗi khi báo cáo thư rác: $e');
+      throw Exception('Không thể báo cáo thư rác: $e');
+    }
+  }
+
+  Future<void> markAsHidden(String emailId, bool currentStatus) async {
+    try {
+      await _firestore.collection('emails').doc(emailId).update({
+        'hidden': !currentStatus,
+      });
+    } catch (e) {
+      AppFunctions.debugPrint('Lỗi khi tạm ẩn: $e');
+      throw Exception('Không thể tạm ẩn: $e');
+    }
+  }
+
+  // Thêm phương thức updateEmailStatus để cập nhật nhiều trường cùng lúc
+  Future<void> updateEmailStatus(
+    String emailId,
+    Map<String, dynamic> updates,
+  ) async {
+    try {
+      await _firestore.collection('emails').doc(emailId).update(updates);
+      AppFunctions.debugPrint('Đã cập nhật trạng thái email: $updates');
+    } catch (e) {
+      AppFunctions.debugPrint('Lỗi khi cập nhật trạng thái email: $e');
+      throw Exception('Không thể cập nhật trạng thái email: $e');
     }
   }
 }

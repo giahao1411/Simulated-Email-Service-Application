@@ -9,10 +9,16 @@ import 'package:email_application/features/email/views/widgets/mail_detail_body.
 import 'package:flutter/material.dart';
 
 class MailDetail extends StatefulWidget {
-  const MailDetail({required this.email, this.onRefresh, super.key});
+  const MailDetail({
+    required this.email,
+    this.onRefresh,
+    this.refreshStream, // Thêm refreshStream từ GmailScreen
+    super.key,
+  });
 
   final Email email;
   final VoidCallback? onRefresh;
+  final VoidCallback? refreshStream; // Callback để làm mới stream
 
   @override
   State<MailDetail> createState() => _MailDetailState();
@@ -38,6 +44,7 @@ class _MailDetailState extends State<MailDetail>
         setState(() {
           email = email.copyWith(read: true);
         });
+        widget.refreshStream?.call();
       }
     } on Exception catch (e) {
       AppFunctions.debugPrint('Lỗi khi chuyển trạng thái đã đọc: $e');
@@ -71,10 +78,11 @@ class _MailDetailState extends State<MailDetail>
             email: email,
             emailService: emailService,
             onRefresh: widget.onRefresh,
+            refreshStream:
+                widget.refreshStream, // Truyền refreshStream vào AppBar
           ),
           body: Column(
             children: [
-              // Không cần danh sách email như GmailScreen, chỉ hiển thị chi tiết
               Expanded(
                 child: MailDetailBody(
                   email: email,
