@@ -1,9 +1,7 @@
-import 'package:email_application/core/constants/app_functions.dart';
-import 'package:email_application/features/email/providers/theme_manage.dart';
+import 'package:flutter/material.dart';
+import 'package:email_application/features/email/models/search_filters.dart';
 import 'package:email_application/features/email/views/widgets/search_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/search_results.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({required this.currentCategory, super.key});
@@ -16,64 +14,95 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   String _searchQuery = '';
-  bool _isSearching = false;
+  SearchFilters _filters = const SearchFilters();
+  bool _hasSearched = false;
 
   void _onSearchChanged(String query) {
     setState(() {
       _searchQuery = query;
-      _isSearching = query.isNotEmpty;
+      if (query.isNotEmpty) {
+        _hasSearched = true;
+      }
     });
   }
 
   void _onSearchSubmitted(String query) {
     setState(() {
       _searchQuery = query;
-      _isSearching = query.isNotEmpty;
+      _hasSearched = true;
     });
-    AppFunctions.debugPrint('Đang tìm kiếm: $query');
+  }
+
+  void _onFiltersChanged(SearchFilters filters) {
+    setState(() {
+      _filters = filters;
+      if (filters.hasActiveFilters) {
+        _hasSearched = true;
+      }
+    });
+  }
+
+  void _onBackPressed() {
+    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
-    final isDarkMode = themeProvider.isDarkMode;
-    final surfaceColor = Theme.of(context).colorScheme.surface;
-    final iconColor = isDarkMode ? Colors.white38 : Colors.grey;
-    final textColor = isDarkMode ? Colors.white70 : Colors.grey;
-
     return Scaffold(
-      backgroundColor: surfaceColor,
       body: SafeArea(
         child: Column(
           children: [
             SearchAppBar(
               onSearchChanged: _onSearchChanged,
               onSearchSubmitted: _onSearchSubmitted,
-              onBackPressed: () => Navigator.pop(context),
+              onBackPressed: _onBackPressed,
+              onFiltersChanged: _onFiltersChanged,
             ),
             Expanded(
               child:
-                  _isSearching
+                  _hasSearched
                       ? SearchResults(
                         searchQuery: _searchQuery,
                         currentCategory: widget.currentCategory,
+                        filters: _filters,
                       )
-                      : Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.search, size: 64, color: iconColor),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Nhập từ khóa để tìm kiếm trong thư',
-                              style: TextStyle(color: textColor, fontSize: 16),
-                            ),
-                          ],
-                        ),
-                      ),
+                      : _buildInitialState(),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInitialState() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white70 : Colors.grey[600];
+    final iconColor = isDarkMode ? Colors.white38 : Colors.grey[400];
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search, size: 80, color: iconColor),
+          const SizedBox(height: 24),
+          Text(
+            'Tìm kiếm trong ${widget.currentCategory}',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              'Nhập từ khóa hoặc sử dụng bộ lọc để tìm kiếm email',
+              style: TextStyle(color: textColor, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
       ),
     );
   }
