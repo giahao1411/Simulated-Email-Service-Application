@@ -1,6 +1,9 @@
+import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
+import 'package:email_application/features/email/utils/email_recipients.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class MailDetailBody extends StatefulWidget {
@@ -18,6 +21,7 @@ class MailDetailBody extends StatefulWidget {
 class _MailDetailBodyState extends State<MailDetailBody> {
   late Email email;
   final EmailService emailService = EmailService();
+  bool isShowSendingDetail = false;
 
   @override
   void initState() {
@@ -35,9 +39,10 @@ class _MailDetailBodyState extends State<MailDetailBody> {
     final onSurface = theme.colorScheme.onSurface;
     final onSurface60 = onSurface.withOpacity(0.6);
     final onSurface70 = onSurface.withOpacity(0.7);
+
     return Container(
       color: theme.scaffoldBackgroundColor,
-      padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
+      padding: const EdgeInsets.only(left: 16, right: 8),
       child: Column(
         children: [
           Expanded(
@@ -70,11 +75,10 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
 
                 // sender information
                 ListTile(
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.only(right: -16),
                   leading: const CircleAvatar(
                     backgroundImage: NetworkImage(
                       'https://via.placeholder.com/40',
@@ -104,9 +108,9 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                       ),
                     ],
                   ),
-                  subtitle: Text(
-                    'to bcc: ${email.bcc}',
-                    style: TextStyle(color: onSurface70),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [buildSendingDetail(email, onSurface70)],
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -123,6 +127,18 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                   ),
                   onTap: () {},
                 ),
+
+                // sender container details
+                if (isShowSendingDetail)
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    margin: const EdgeInsets.only(top: 4, bottom: 20, right: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: onSurface60.withOpacity(0.2)),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: buildSendingDetailContainer(email, onSurface70),
+                  ),
 
                 // mail body
                 Text(
@@ -160,6 +176,28 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                       ),
                     ),
                     const SizedBox(width: 8),
+                    if (email.cc.isNotEmpty)
+                      OutlinedButton(
+                        onPressed: () {},
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: onSurface60),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.reply_all, color: onSurface60),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Reply all',
+                              style: TextStyle(color: onSurface60),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(width: 8),
                     OutlinedButton(
                       onPressed: () {},
                       style: OutlinedButton.styleFrom(
@@ -189,6 +227,191 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget buildSendingDetail(Email email, Color onSurface70) {
+    final currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+    final recipientText = EmailRecipient.formatRecipient(
+      email.to,
+      email.bcc,
+      currentUserEmail,
+    );
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          isShowSendingDetail = !isShowSendingDetail;
+        });
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Expanded(
+            child: Text(
+              recipientText,
+              style: TextStyle(color: onSurface70),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(
+            isShowSendingDetail ? Icons.expand_less : Icons.expand_more,
+            color: onSurface70,
+            size: 20,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildSendingDetailContainer(Email email, Color onSurface70) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 60,
+              child: Text(
+                AppStrings.from,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: onSurface70,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                email.from,
+                style: TextStyle(color: onSurface70),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (email.to.isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 60,
+                    child: Text(
+                      AppStrings.to,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: onSurface70,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Wrap(
+                      spacing: 100,
+                      runSpacing: 2,
+                      children:
+                          email.to
+                              .map(
+                                (emailAddress) => Text(
+                                  emailAddress,
+                                  style: TextStyle(color: onSurface70),
+                                ),
+                              )
+                              .toList(),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        if (email.cc.isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 60,
+                    child: Text(
+                      AppStrings.cc,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: onSurface70,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      email.cc.join(', '),
+                      style: TextStyle(color: onSurface70),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        if (email.bcc.isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 60,
+                    child: Text(
+                      AppStrings.bcc,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: onSurface70,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      email.bcc.join(', '),
+                      style: TextStyle(color: onSurface70),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 60,
+              child: Text(
+                AppStrings.date,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: onSurface70,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                DateFormat.formatDetailedTimestamp(email.timestamp),
+                style: TextStyle(color: onSurface70),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -2,17 +2,6 @@ import 'package:email_application/features/email/models/email.dart';
 import 'package:flutter/material.dart';
 
 class EmailSearchResult {
-  final String senderName;
-  final String subject;
-  final String preview;
-  final String time;
-  final String? avatarUrl;
-  final String? avatarText;
-  final Color? backgroundColor;
-  final bool isStarred;
-  final bool isImportant;
-  final Email? email;
-
   EmailSearchResult({
     required this.senderName,
     required this.subject,
@@ -43,6 +32,17 @@ class EmailSearchResult {
     );
   }
 
+  final String senderName;
+  final String subject;
+  final String preview;
+  final String time;
+  final String? avatarUrl;
+  final String? avatarText;
+  final Color? backgroundColor;
+  final bool isStarred;
+  final bool isImportant;
+  final Email? email;
+
   Map<String, dynamic> toJson() {
     return {
       'senderName': senderName,
@@ -51,7 +51,7 @@ class EmailSearchResult {
       'time': time,
       'avatarUrl': avatarUrl,
       'avatarText': avatarText,
-      'backgroundColor': backgroundColor?.value,
+      'backgroundColor': backgroundColor,
       'isStarred': isStarred,
       'isImportant': isImportant,
     };
