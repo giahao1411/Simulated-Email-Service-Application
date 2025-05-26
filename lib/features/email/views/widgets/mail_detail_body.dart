@@ -180,61 +180,15 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [_unreadMailRemainingIcon(onSurface)],
+                  children: [SizedBox.shrink()],
                 ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _unreadMailRemainingIcon(Color iconColor) {
-    final iconButton = IconButton(
-      icon: Icon(Icons.mail_outline, color: iconColor, size: 26),
-      onPressed: () {
-        Navigator.pop(context);
-        widget.onRefresh?.call();
-      },
-    );
-
-    return FutureBuilder<int>(
-      future: countUnreadMails(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return mailBadge('...', iconButton);
-        }
-        if (snapshot.hasError) {
-          return mailBadge('Error', iconButton);
-        }
-        if (snapshot.data != null && snapshot.data! > 0) {
-          return mailBadge(snapshot.data.toString(), iconButton);
-        }
-        return iconButton;
-      },
-    );
-  }
-
-  Widget mailBadge(String text, IconButton iconButton) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        iconButton,
-        Positioned(
-          right: 8,
-          top: 8,
-          child: Badge(
-            label: Text(
-              text,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
-            ),
-            child: const SizedBox.shrink(),
-          ),
-        ),
-      ],
     );
   }
 }

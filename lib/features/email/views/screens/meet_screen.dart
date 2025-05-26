@@ -20,24 +20,6 @@ class _MeetScreenState extends State<MeetScreen> {
   String currentCategory = AppStrings.meet;
   final EmailService emailService = EmailService();
   int _selectedIndex = 1;
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController.addListener(() {
-      setState(() {
-        _currentPage = _pageController.page!.round();
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
 
   void toggleDrawer() {
     setState(() {
@@ -192,7 +174,7 @@ class _MeetScreenState extends State<MeetScreen> {
                             ),
                             elevation: 0,
                           ),
-                          child: Text(
+                          child: const Text(
                             'Cuộc họp mới',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
@@ -219,7 +201,7 @@ class _MeetScreenState extends State<MeetScreen> {
                               borderRadius: BorderRadius.circular(25),
                             ),
                           ),
-                          child: Text(
+                          child: const Text(
                             'Tham gia bằng mã',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
@@ -235,48 +217,13 @@ class _MeetScreenState extends State<MeetScreen> {
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        _buildPage(
-                          context,
-                          imagePath: 'assets/images/meet_link.png',
-                          title: 'Nhận đường liên kết bạn có thể chia sẻ',
-                          description:
-                              'Nhấn vào Cuộc họp mới để nhận một đường liên kết mà bạn có thể gửi cho những người mà bạn muốn họp cùng',
-                        ),
-                        _buildPage(
-                          context,
-                          imagePath: 'assets/images/meet_private.png',
-                          title: 'Cuộc họp luôn an toàn',
-                          description:
-                              'Không ai có thể tham gia cuộc họp trừ phi được người tổ chức mời hoặc cho phép',
-                        ),
-                      ],
+                    child: _buildPage(
+                      context,
+                      imagePath: 'assets/images/meet_private.png',
+                      title: 'Cuộc họp luôn an toàn',
+                      description:
+                          'Không ai có thể tham gia cuộc họp trừ phi được người tổ chức mời hoặc cho phép',
                     ),
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(2, (index) {
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                        width: _currentPage == index ? 12.0 : 8.0,
-                        height: 8.0,
-                        decoration: BoxDecoration(
-                          color:
-                              _currentPage == index
-                                  ? Colors.blue
-                                  : Colors.grey.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(4.0),
-                        ),
-                      );
-                    }),
                   ),
                 ),
               ],
@@ -288,9 +235,7 @@ class _MeetScreenState extends State<MeetScreen> {
             onItemTapped: _onItemTapped,
           ),
         ),
-        // Overlay drawer that covers everything including bottom navigation
         if (isDrawerOpen) ...[
-          // Background overlay
           GestureDetector(
             onTap: toggleDrawer,
             child: Container(
@@ -299,7 +244,6 @@ class _MeetScreenState extends State<MeetScreen> {
               height: double.infinity,
             ),
           ),
-          // Drawer widget positioned above everything
           Positioned(
             left: 0,
             top: 0,
@@ -349,7 +293,11 @@ class _MeetScreenState extends State<MeetScreen> {
                       shape: BoxShape.circle,
                       color: Colors.blue.withOpacity(0.2),
                     ),
-                    child: Icon(Icons.video_call, size: 80, color: Colors.blue),
+                    child: const Icon(
+                      Icons.video_call,
+                      size: 80,
+                      color: Colors.blue,
+                    ),
                   );
                 },
               ),

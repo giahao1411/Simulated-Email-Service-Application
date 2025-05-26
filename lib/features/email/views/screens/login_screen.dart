@@ -24,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? errorMessage;
   bool isLoading = false;
   UserProfile? userProfile;
+  bool _obscurePassword = true;
 
   Future<void> handleLogin() async {
     setState(() {
@@ -104,15 +105,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               verificationId: verificationId,
                             );
                             if (isVerified) {
-                              _showSnackBar('Đăng nhập thành công!', true);
-                              if (mounted) {
-                                await Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute<void>(
-                                    builder: (context) => const GmailScreen(),
-                                  ),
-                                );
-                              }
+                              _showSnackBarAndNavigate(
+                                'Đăng nhập thành công!',
+                                true,
+                              );
                             }
                           } on Exception catch (e) {
                             _showSnackBar('Xác minh OTP thất bại: $e', false);
@@ -138,13 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
         AppFunctions.debugPrint(
           'Xác minh hai bước không được bật, đăng nhập bình thường...',
         );
-        _showSnackBar('Đăng nhập thành công!', true);
-        if (mounted) {
-          await Navigator.pushReplacement(
-            context,
-            MaterialPageRoute<void>(builder: (context) => const GmailScreen()),
-          );
-        }
+        _showSnackBarAndNavigate('Đăng nhập thành công!', true);
       }
     } on Exception catch (e) {
       setState(() {
@@ -166,6 +156,46 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _showSnackBarAndNavigate(String message, bool isSuccess) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  isSuccess ? Icons.check_circle : Icons.error,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: isSuccess ? Colors.green : Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        )
+        .closed
+        .then((_) {
+          if (isSuccess && mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute<void>(
+                builder: (context) => const GmailScreen(),
+              ),
+            );
+          }
+        });
+  }
+
   void _showSnackBar(String message, bool isSuccess) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -184,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: isSuccess ? Colors.green : Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 6),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -243,13 +273,27 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelText: 'Mật khẩu',
                   hintText: 'Nhập mật khẩu của bạn',
                   prefixIcon: Icon(Icons.lock, color: iconColor),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: iconColor,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
                   labelStyle: TextStyle(color: labelTextColor),
                   hintStyle: TextStyle(color: hintTextColor),
+                  errorText: errorMessage,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                obscureText: true,
+                obscureText: _obscurePassword,
               ),
               const SizedBox(height: 24),
               SizedBox(

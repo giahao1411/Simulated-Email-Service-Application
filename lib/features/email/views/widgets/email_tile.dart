@@ -36,14 +36,24 @@ class EmailTile extends StatelessWidget {
         ),
       );
     } else {
-      senderNameWidget = Text(
-        email.from,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-          fontSize: 16,
-          color: Theme.of(context).colorScheme.onSurface,
-          fontWeight: email.read ? FontWeight.normal : FontWeight.bold,
-        ),
+      senderNameWidget = FutureBuilder<String>(
+        future: emailService.getUserFullNameByEmail(email.from),
+        builder: (context, snapshot) {
+          final displayName =
+              snapshot.connectionState == ConnectionState.done &&
+                      snapshot.hasData
+                  ? snapshot.data!
+                  : email.from; 
+          return Text(
+            displayName,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onSurface,
+              fontWeight: email.read ? FontWeight.normal : FontWeight.bold,
+            ),
+          );
+        },
       );
     }
 

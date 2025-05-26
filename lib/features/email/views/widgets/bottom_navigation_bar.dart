@@ -1,14 +1,12 @@
-import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
-import 'package:email_application/features/email/views/screens/gmail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class BottomNavigationBarWidget extends StatefulWidget {
   final int selectedIndex;
   final EmailService emailService;
-  final Function(int) onItemTapped;
+  final void Function(int) onItemTapped;
 
   const BottomNavigationBarWidget({
     super.key,
@@ -94,7 +92,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
       type: BottomNavigationBarType.fixed,
       showSelectedLabels: false,
       showUnselectedLabels: false,
-      elevation: 8, // Thêm độ nâng để tạo bóng nhẹ
+      elevation: 8, 
     );
   }
 }

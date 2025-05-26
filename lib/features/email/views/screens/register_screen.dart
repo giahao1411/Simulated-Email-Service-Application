@@ -62,7 +62,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _showSnackBar(errorMessage!, false);
         return;
       }
-
       // Gửi OTP
       await authService.sendOtp(
         phoneNumber: phone,
@@ -329,7 +328,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
-class CustomTextField extends StatelessWidget {
+class CustomTextField extends StatefulWidget {
   const CustomTextField({
     required this.label,
     required this.hint,
@@ -350,6 +349,13 @@ class CustomTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatter;
 
   @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  bool _obscureText = true;
+
+  @override
   Widget build(BuildContext context) {
     final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle;
     final iconColor = labelStyle?.color ?? Colors.black54;
@@ -359,18 +365,32 @@ class CustomTextField extends StatelessWidget {
     final hintTextColor = isDarkMode ? Colors.white70 : Colors.grey[600];
 
     return TextField(
-      controller: controller,
+      controller: widget.controller,
       decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: Icon(icon, color: iconColor),
+        labelText: widget.label,
+        hintText: widget.hint,
+        prefixIcon: Icon(widget.icon, color: iconColor),
+        suffixIcon:
+            widget.isPassword
+                ? IconButton(
+                  icon: Icon(
+                    _obscureText ? Icons.visibility : Icons.visibility_off,
+                    color: iconColor,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscureText = !_obscureText;
+                    });
+                  },
+                )
+                : null,
         labelStyle: TextStyle(color: labelTextColor),
         hintStyle: TextStyle(color: hintTextColor),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      obscureText: isPassword,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatter,
+      obscureText: widget.isPassword ? _obscureText : false,
+      keyboardType: widget.keyboardType,
+      inputFormatters: widget.inputFormatter,
     );
   }
 }

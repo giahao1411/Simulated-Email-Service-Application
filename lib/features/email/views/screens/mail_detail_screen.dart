@@ -1,6 +1,9 @@
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
+import 'package:email_application/features/email/views/screens/gmail_screen.dart';
+import 'package:email_application/features/email/views/screens/meet_screen.dart';
+import 'package:email_application/features/email/views/widgets/bottom_navigation_bar.dart';
 import 'package:email_application/features/email/views/widgets/mail_detail_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/mail_detail_body.dart';
 import 'package:flutter/material.dart';
@@ -15,9 +18,11 @@ class MailDetail extends StatefulWidget {
   State<MailDetail> createState() => _MailDetailState();
 }
 
-class _MailDetailState extends State<MailDetail> {
+class _MailDetailState extends State<MailDetail>
+    with SingleTickerProviderStateMixin {
   late Email email;
   final EmailService emailService = EmailService();
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -39,15 +44,52 @@ class _MailDetailState extends State<MailDetail> {
     }
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute<void>(builder: (context) => const GmailScreen()),
+      );
+    } else if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute<void>(builder: (context) => const MeetScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: MailDetailAppBar(
-        email: email,
-        emailService: emailService,
-        onRefresh: widget.onRefresh,
-      ),
-      body: MailDetailBody(email: email, onRefresh: widget.onRefresh),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: MailDetailAppBar(
+            email: email,
+            emailService: emailService,
+            onRefresh: widget.onRefresh,
+          ),
+          body: Column(
+            children: [
+              // Không cần danh sách email như GmailScreen, chỉ hiển thị chi tiết
+              Expanded(
+                child: MailDetailBody(
+                  email: email,
+                  onRefresh: widget.onRefresh,
+                ),
+              ),
+            ],
+          ),
+          bottomNavigationBar: BottomNavigationBarWidget(
+            selectedIndex: _selectedIndex,
+            emailService: emailService,
+            onItemTapped: _onItemTapped,
+          ),
+        ),
+      ],
     );
   }
 }
