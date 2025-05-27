@@ -18,18 +18,21 @@ class EmailService {
     }
 
     AppFunctions.debugPrint('Lấy email cho danh mục: $category');
+
+    if (category == AppStrings.inbox) {
+      return _getInboxEmails();
+    }
+
     var query = _firestore
         .collection(category == AppStrings.drafts ? 'drafts' : 'emails')
         .orderBy('timestamp', descending: true);
 
-    if (category == AppStrings.inbox) {
-      query = query.where('to', arrayContains: userEmail);
-    } else if (category == AppStrings.sent) {
+    if (category == AppStrings.sent) {
       query = query.where('from', isEqualTo: userEmail);
     } else if (category == AppStrings.drafts) {
       query = query.where(
         'userId',
-        isEqualTo: FirebaseAuth.instance.currentUser?.uid,
+        isEqualTo: FirebaseAuth.instance.currentUser!.uid,
       );
     }
 
@@ -37,7 +40,10 @@ class EmailService {
       try {
         final emailsWithState = <Map<String, dynamic>>[];
         for (final doc in snapshot.docs) {
-          final email = Email.fromMap(doc.id, doc.data());
+          final data = doc.data();
+          if (data.isEmpty) continue;
+
+          final email = Email.fromMap(doc.id, data);
           final stateDoc =
               await _firestore
                   .collection('users')
@@ -66,6 +72,80 @@ class EmailService {
         return emailsWithState;
       } on Exception catch (e) {
         AppFunctions.debugPrint('Lỗi khi ánh xạ dữ liệu email: $e');
+        return <Map<String, dynamic>>[];
+      }
+    });
+  }
+
+  Stream<List<Map<String, dynamic>>> _getInboxEmails() {
+    if (userEmail == null) {
+      AppFunctions.debugPrint('Không lấy email inbox vì userEmail null');
+      return Stream.value([]);
+    }
+
+    return Stream<void>.periodic(const Duration(seconds: 5)).asyncMap((
+      _,
+    ) async {
+      try {
+        final toSnapshot =
+            await _firestore
+                .collection('emails')
+                .where('to', arrayContains: userEmail)
+                .orderBy('timestamp', descending: true)
+                .get();
+        final ccSnapshot =
+            await _firestore
+                .collection('emails')
+                .where('cc', arrayContains: userEmail)
+                .orderBy('timestamp', descending: true)
+                .get();
+        final bccSnapshot =
+            await _firestore
+                .collection('emails')
+                .where('bcc', arrayContains: userEmail)
+                .orderBy('timestamp', descending: true)
+                .get();
+
+        final emailsWithState = <Map<String, dynamic>>[];
+        final seenIds = <String>{};
+
+        for (final snapshot in [toSnapshot, ccSnapshot, bccSnapshot]) {
+          for (final doc in snapshot.docs) {
+            if (seenIds.contains(doc.id)) continue;
+            seenIds.add(doc.id);
+
+            final data = doc.data();
+            if (data.isEmpty) continue;
+
+            final email = Email.fromMap(doc.id, data);
+            final stateDoc =
+                await _firestore
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .collection('email_states')
+                    .doc(email.id)
+                    .get();
+            final emailState =
+                stateDoc.exists
+                    ? EmailState.fromMap(stateDoc.data()!)
+                    : EmailState(emailId: email.id);
+
+            emailsWithState.add({'email': email, 'state': emailState});
+          }
+        }
+
+        emailsWithState.sort((a, b) {
+          final aTimestamp = (a['email'] as Email).timestamp;
+          final bTimestamp = (b['email'] as Email).timestamp;
+          return bTimestamp.compareTo(aTimestamp);
+        });
+
+        AppFunctions.debugPrint(
+          'Trả về ${emailsWithState.length} email cho inbox',
+        );
+        return emailsWithState;
+      } on Exception catch (e) {
+        AppFunctions.debugPrint('Lỗi khi ánh xạ dữ liệu inbox: $e');
         return <Map<String, dynamic>>[];
       }
     });
@@ -134,7 +214,8 @@ class EmailService {
     required List<String> cc,
     required List<String> bcc,
     required String subject,
-    required String body, String? id,
+    required String body,
+    String? id,
   }) async {
     try {
       if (FirebaseAuth.instance.currentUser == null) {
