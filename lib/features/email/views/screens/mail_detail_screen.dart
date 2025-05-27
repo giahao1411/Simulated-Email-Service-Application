@@ -1,6 +1,7 @@
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
+import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/views/screens/gmail_screen.dart';
 import 'package:email_application/features/email/views/screens/meet_screen.dart';
 import 'package:email_application/features/email/views/widgets/bottom_navigation_bar.dart';
@@ -11,12 +12,13 @@ import 'package:flutter/material.dart';
 class MailDetail extends StatefulWidget {
   const MailDetail({
     required this.email,
+    required this.state,
     this.onRefresh,
-    this.refreshStream, // Thêm refreshStream từ GmailScreen
     super.key,
   });
 
   final Email email;
+  final EmailState state;
   final VoidCallback? onRefresh;
   final VoidCallback? refreshStream; // Callback để làm mới stream
 
@@ -39,12 +41,9 @@ class _MailDetailState extends State<MailDetail>
 
   Future<void> _markMailAsRead() async {
     try {
-      if (!email.read) {
-        await emailService.toggleRead(email.id, email.read);
-        setState(() {
-          email = email.copyWith(read: true);
-        });
-        widget.refreshStream?.call();
+      if (!widget.state.read) {
+        await emailService.toggleRead(email.id, widget.state.read);
+        widget.onRefresh?.call();
       }
     } on Exception catch (e) {
       AppFunctions.debugPrint('Lỗi khi chuyển trạng thái đã đọc: $e');
@@ -55,6 +54,7 @@ class _MailDetailState extends State<MailDetail>
     setState(() {
       _selectedIndex = index;
     });
+
     if (index == 0) {
       Navigator.pushReplacement(
         context,
@@ -76,6 +76,7 @@ class _MailDetailState extends State<MailDetail>
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: MailDetailAppBar(
             email: email,
+            state: widget.state,
             emailService: emailService,
             onRefresh: widget.onRefresh,
             refreshStream:
@@ -86,6 +87,7 @@ class _MailDetailState extends State<MailDetail>
               Expanded(
                 child: MailDetailBody(
                   email: email,
+                  state: widget.state,
                   onRefresh: widget.onRefresh,
                 ),
               ),

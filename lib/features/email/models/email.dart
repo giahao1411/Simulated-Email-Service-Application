@@ -10,9 +10,6 @@ class Email {
     required this.timestamp,
     this.cc = const [],
     this.bcc = const [],
-    this.read = false,
-    this.starred = false,
-    this.labels = const [],
     this.isDraft = false,
     this.hasAttachments = false,
     this.hidden = false,
@@ -30,10 +27,7 @@ class Email {
       bcc: (data['bcc'] as List<dynamic>? ?? []).cast<String>(),
       subject: data['subject'] as String? ?? '',
       body: data['body'] as String? ?? '',
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      read: data['read'] as bool? ?? false,
-      starred: data['starred'] as bool? ?? false,
-      labels: (data['labels'] as List<dynamic>? ?? []).cast<String>(),
+      timestamp: (data['timestamp'] as Timestamp).toDate(),
       isDraft: data['isDraft'] as bool? ?? false,
       hasAttachments: data['hasAttachments'] as bool? ?? false,
       hidden: data['hidden'] as bool? ?? false,
@@ -52,9 +46,6 @@ class Email {
   final String subject;
   final String body;
   final DateTime timestamp;
-  final bool read;
-  final bool starred;
-  final List<String> labels;
   final bool isDraft;
   final bool hasAttachments;
   final bool hidden;
@@ -71,9 +62,6 @@ class Email {
       'subject': subject,
       'body': body,
       'timestamp': timestamp.toIso8601String(),
-      'read': read,
-      'starred': starred,
-      'labels': labels,
       'isDraft': isDraft,
       'hasAttachments': hasAttachments,
       'hidden': hidden,
@@ -92,9 +80,6 @@ class Email {
     String? subject,
     String? body,
     DateTime? timestamp,
-    bool? read,
-    bool? starred,
-    List<String>? labels,
     bool? isDraft,
     bool? hasAttachments,
     bool? hidden,
@@ -111,9 +96,6 @@ class Email {
       subject: subject ?? this.subject,
       body: body ?? this.body,
       timestamp: timestamp ?? this.timestamp,
-      read: read ?? this.read,
-      starred: starred ?? this.starred,
-      labels: labels ?? this.labels,
       isDraft: isDraft ?? this.isDraft,
       hasAttachments: hasAttachments ?? this.hasAttachments,
       hidden: hidden ?? this.hidden,
