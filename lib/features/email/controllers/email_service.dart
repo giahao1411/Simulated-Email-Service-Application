@@ -272,7 +272,13 @@ class EmailService {
           .doc(FirebaseAuth.instance.currentUser!.uid)
           .collection('email_states')
           .doc(emailRef.id)
-          .set(EmailState(emailId: emailRef.id).toMap());
+          .set({
+            'emailId': emailRef.id,
+            'read': true,
+            'starred': false,
+            'trashed': false,
+            'labels': <String>[],
+          }, SetOptions(merge: true));
 
       // create email for each recipient
       final allRecipients =
