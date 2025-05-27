@@ -12,12 +12,14 @@ class MailDetailBody extends StatefulWidget {
     required this.email,
     required this.state,
     this.onRefresh,
+    this.markMailAsRead,
     super.key,
   });
 
   final Email email;
   final EmailState state;
   final VoidCallback? onRefresh;
+  final VoidCallback? markMailAsRead;
 
   final EmailService emailService = EmailService();
 

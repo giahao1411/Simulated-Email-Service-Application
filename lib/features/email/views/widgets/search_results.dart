@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
@@ -9,7 +8,6 @@ import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:email_application/features/email/views/screens/mail_detail_screen.dart';
 import 'package:email_application/features/email/views/widgets/email_search_item.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -74,44 +72,18 @@ class _SearchResultsState extends State<SearchResults> {
     });
 
     try {
-      final FirebaseFirestore firestore = FirebaseFirestore.instance;
-      final String currentUserEmail =
-          FirebaseAuth.instance.currentUser?.email ?? 'current_user_email';
-      List<Email> allEmails = [];
+      final emailStream =
+          _emailService.getEmails(widget.currentCategory).asBroadcastStream();
+      final emailData = await emailStream.first;
 
-      // Lấy email đã nhận (inbox)
-      QuerySnapshot inboxSnapshot =
-          await firestore
-              .collection('emails')
-              .where('to', arrayContains: currentUserEmail)
-              .get();
-      List<Email> inboxEmails =
-          inboxSnapshot.docs.map((doc) {
-            return Email.fromMap(doc.id, doc.data() as Map<String, dynamic>);
-          }).toList();
-      allEmails.addAll(inboxEmails);
-
-      // Lấy email đã gửi (sent)
-      QuerySnapshot sentSnapshot =
-          await firestore
-              .collection('emails')
-              .where('from', isEqualTo: currentUserEmail)
-              .get();
-      List<Email> sentEmails =
-          sentSnapshot.docs.map((doc) {
-            return Email.fromMap(doc.id, doc.data() as Map<String, dynamic>);
-          }).toList();
-      allEmails.addAll(sentEmails);
-
-      // Loại bỏ email trùng lặp (nếu có)
-      allEmails = allEmails.toSet().toList();
-
-      // Lọc email theo bộ lọc và từ khóa tìm kiếm
       final query = widget.searchQuery.trim().toLowerCase();
       final filteredEmails =
-          allEmails.where((email) {
+          emailData.where((item) {
+            final email = item['email'] as Email;
+            final state = item['state'] as EmailState;
+
             // Text search
-            bool matchesText = true;
+            var matchesText = true;
             if (query.isNotEmpty) {
               final from = email.from.trim().toLowerCase();
               final subject = email.subject.trim().toLowerCase();
@@ -135,7 +107,7 @@ class _SearchResultsState extends State<SearchResults> {
             }
 
             // Filter by sender
-            bool matchesFrom = true;
+            var matchesFrom = true;
             if (widget.filters.from != null) {
               matchesFrom = email.from.toLowerCase().contains(
                 widget.filters.from!.toLowerCase(),
@@ -143,35 +115,30 @@ class _SearchResultsState extends State<SearchResults> {
             }
 
             // Filter by recipient
-            bool matchesTo = true;
+            var matchesTo = true;
             if (widget.filters.to != null) {
+              final filterTo = widget.filters.to!.toLowerCase();
               matchesTo =
                   email.to.any(
-                    (recipient) => recipient.toLowerCase().contains(
-                      widget.filters.to!.toLowerCase(),
-                    ),
+                    (recipient) => recipient.toLowerCase().contains(filterTo),
                   ) ||
                   email.cc.any(
-                    (recipient) => recipient.toLowerCase().contains(
-                      widget.filters.to!.toLowerCase(),
-                    ),
+                    (recipient) => recipient.toLowerCase().contains(filterTo),
                   ) ||
                   email.bcc.any(
-                    (recipient) => recipient.toLowerCase().contains(
-                      widget.filters.to!.toLowerCase(),
-                    ),
+                    (recipient) => recipient.toLowerCase().contains(filterTo),
                   );
             }
 
             // Filter by attachments
-            bool matchesAttachments = true;
+            var matchesAttachments = true;
             if (widget.filters.hasAttachments != null) {
               matchesAttachments =
                   email.hasAttachments == widget.filters.hasAttachments;
             }
 
             // Filter by date range
-            bool matchesDateRange = true;
+            var matchesDateRange = true;
             if (widget.filters.dateRange != null) {
               final emailDate = email.timestamp;
               final startDate = widget.filters.dateRange!.start;
@@ -182,10 +149,10 @@ class _SearchResultsState extends State<SearchResults> {
                   emailDate.isAfter(startDate) && emailDate.isBefore(endDate);
             }
 
-            // Filter by label
-            bool matchesLabel = true;
+            // Filter by label (from EmailState)
+            var matchesLabel = true;
             if (widget.filters.label != null) {
-              matchesLabel = email.labels.contains(widget.filters.label!);
+              matchesLabel = state.labels.contains(widget.filters.label);
             }
 
             return matchesText &&
@@ -196,7 +163,6 @@ class _SearchResultsState extends State<SearchResults> {
                 matchesLabel;
           }).toList();
 
-      // Tạo kết quả tìm kiếm
       final searchResults = await Future.wait(
         filteredEmails.map((item) async {
           final email = item['email'] as Email;
@@ -206,12 +172,13 @@ class _SearchResultsState extends State<SearchResults> {
           );
           return EmailSearchResult(
             senderName: senderName,
-            subject: email.subject,
-            preview: email.body,
+            subject: email.subject.isEmpty ? '(No Subject)' : email.subject,
+            preview: email.body.isEmpty ? '(No Content)' : email.body,
             time: DateFormat.formatTimestamp(email.timestamp),
             avatarUrl: '',
             isStarred: state.starred,
-            avatarText: senderName.isNotEmpty ? senderName[0] : 'A',
+            avatarText:
+                senderName.isNotEmpty ? senderName[0].toUpperCase() : 'A',
             backgroundColor: Colors.blue,
             email: email,
           );
@@ -230,6 +197,11 @@ class _SearchResultsState extends State<SearchResults> {
         _isLoading = false;
       });
       AppFunctions.debugPrint('Error searching emails: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi khi tìm kiếm email: $e')));
+      }
     }
   }
 

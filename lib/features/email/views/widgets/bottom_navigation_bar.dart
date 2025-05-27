@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class BottomNavigationBarWidget extends StatefulWidget {
-  final int selectedIndex;
-  final EmailService emailService;
-  final void Function(int) onItemTapped;
-
   const BottomNavigationBarWidget({
-    super.key,
     required this.selectedIndex,
     required this.emailService,
     required this.onItemTapped,
+    super.key,
   });
+
+  final int selectedIndex;
+  final EmailService emailService;
+  final void Function(int) onItemTapped;
 
   @override
   State<BottomNavigationBarWidget> createState() =>
@@ -28,7 +28,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     final iconColor = isDarkMode ? Colors.white70 : Colors.grey[800];
     final backgroundColor = isDarkMode ? Colors.grey[900] : Colors.white70;
     final badgeBackgroundColor = isDarkMode ? Colors.red[700] : Colors.red[500];
-    final badgeTextColor = Colors.white;
+    const badgeTextColor = Colors.white;
     final selectedItemColor = Theme.of(context).colorScheme.primary;
 
     return BottomNavigationBar(
@@ -46,14 +46,20 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
               );
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Badge(
-                  label: Text('...', style: TextStyle(color: badgeTextColor)),
+                  label: const Text(
+                    '...',
+                    style: TextStyle(color: badgeTextColor),
+                  ),
                   backgroundColor: badgeBackgroundColor,
                   child: icon,
                 );
               }
               if (snapshot.hasError) {
                 return Badge(
-                  label: Text('Err', style: TextStyle(color: badgeTextColor)),
+                  label: const Text(
+                    'Err',
+                    style: TextStyle(color: badgeTextColor),
+                  ),
                   backgroundColor: badgeBackgroundColor,
                   child: icon,
                 );
@@ -62,7 +68,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
                 return Badge(
                   label: Text(
                     snapshot.data.toString(),
-                    style: TextStyle(color: badgeTextColor),
+                    style: const TextStyle(color: badgeTextColor),
                   ),
                   backgroundColor: badgeBackgroundColor,
                   child: icon,
@@ -92,7 +98,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
       type: BottomNavigationBarType.fixed,
       showSelectedLabels: false,
       showUnselectedLabels: false,
-      elevation: 8, 
+      elevation: 8,
     );
   }
 }
