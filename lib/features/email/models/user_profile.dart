@@ -10,6 +10,7 @@ class UserProfile {
     this.photoUrl,
     this.email,
     this.twoStepEnabled,
+    this.autoReplyTime = 5,
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> data) {
@@ -25,6 +26,7 @@ class UserProfile {
       photoUrl: data['photoUrl'] as String?,
       email: data['email'] as String?,
       twoStepEnabled: data['twoStepEnabled'] as bool? ?? false,
+      autoReplyTime: data['autoReplyTime'] as int? ?? 5,
     );
   }
   final String uid;
@@ -35,6 +37,7 @@ class UserProfile {
   final String? photoUrl;
   final String? email;
   final bool? twoStepEnabled;
+  final int autoReplyTime;
 
   Map<String, dynamic> toMap() {
     return {
@@ -48,8 +51,6 @@ class UserProfile {
       'email': email,
       'twoStepEnabled': twoStepEnabled,
       'autoReplyEnabled': false,
-      'autoReplyMessage':
-          'Cảm ơn bạn đã gửi email cho tôi. Tôi sẽ trả lời bạn sớm nhất có thể.',
       'autoReplyTime': 5,
     };
   }
