@@ -1,10 +1,10 @@
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
-import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/views/screens/compose_screen.dart';
 import 'package:email_application/features/email/views/screens/meet_screen.dart';
 import 'package:email_application/features/email/views/widgets/bottom_navigation_bar.dart';
 import 'package:email_application/features/email/views/widgets/compose_button.dart';
+import 'package:email_application/features/email/views/widgets/draft_list.dart';
 import 'package:email_application/features/email/views/widgets/email_list.dart';
 import 'package:email_application/features/email/views/widgets/gmail_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/gmail_drawer.dart';
@@ -22,7 +22,7 @@ class _GmailScreenState extends State<GmailScreen>
   bool isDrawerOpen = false;
   String currentCategory = AppStrings.inbox;
   final EmailService emailService = EmailService();
-  late Stream<List<Email>> emailStream;
+  late Stream<List<Map<String, dynamic>>> emailStream;
   int _selectedIndex = 0;
 
   @override
@@ -93,12 +93,20 @@ class _GmailScreenState extends State<GmailScreen>
               Expanded(
                 child: Stack(
                   children: [
-                    EmailList(
-                      emailService: emailService,
-                      currentCategory: currentCategory,
-                      emailStream: emailStream,
-                      onRefresh: _refreshStream,
-                    ),
+                    if (currentCategory == AppStrings.drafts)
+                      DraftList(
+                        emailService: emailService,
+                        currentCategory: currentCategory,
+                        draftStream: emailStream,
+                        onRefresh: _refreshStream,
+                      )
+                    else
+                      EmailList(
+                        emailService: emailService,
+                        currentCategory: currentCategory,
+                        emailStream: emailStream,
+                        onRefresh: _refreshStream,
+                      ),
                     ComposeButton(
                       onPressed: () {
                         Navigator.push(

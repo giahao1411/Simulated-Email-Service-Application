@@ -1,17 +1,20 @@
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
+import 'package:email_application/features/email/models/email_state.dart';
 import 'package:flutter/material.dart';
 
 class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MailDetailAppBar({
     required this.email,
+    required this.state,
     required this.emailService,
     this.onRefresh,
     super.key,
   });
 
   final Email email;
+  final EmailState state;
   final EmailService emailService;
   final VoidCallback? onRefresh;
 
@@ -42,7 +45,7 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           onPressed: () async {
             try {
-              await emailService.toggleRead(email.id, email.read);
+              await emailService.toggleRead(email.id, state.read);
               onRefresh?.call();
               Navigator.pop(context);
             } on Exception catch (e) {

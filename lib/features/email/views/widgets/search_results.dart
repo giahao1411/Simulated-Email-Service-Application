@@ -1,6 +1,8 @@
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
+import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_search_result.dart';
+import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:email_application/features/email/views/screens/mail_detail_screen.dart';
@@ -24,6 +26,7 @@ class SearchResults extends StatefulWidget {
 
 class _SearchResultsState extends State<SearchResults> {
   List<EmailSearchResult> _results = [];
+  List<Map<String, dynamic>> _filteredEmails = [];
   bool _isLoading = false;
   final EmailService _emailService = EmailService();
 
@@ -43,9 +46,10 @@ class _SearchResultsState extends State<SearchResults> {
   }
 
   Future<void> _performSearch() async {
-    if (widget.searchQuery.isEmpty) {
+    if (widget.searchQuery.trim().isEmpty) {
       setState(() {
         _results = [];
+        _filteredEmails = [];
         _isLoading = false;
       });
       return;
@@ -62,7 +66,8 @@ class _SearchResultsState extends State<SearchResults> {
 
       final query = widget.searchQuery.trim().toLowerCase();
       final filteredEmails =
-          emails.where((email) {
+          emails.where((item) {
+            final email = item['email'] as Email;
             final from = email.from.trim().toLowerCase();
             final subject = email.subject.trim().toLowerCase();
             final body = email.body.trim().toLowerCase();
@@ -76,7 +81,9 @@ class _SearchResultsState extends State<SearchResults> {
           }).toList();
 
       final searchResults = await Future.wait(
-        filteredEmails.map((email) async {
+        filteredEmails.map((item) async {
+          final email = item['email'] as Email;
+          final state = item['state'] as EmailState;
           final senderName = await _emailService.getUserFullNameByEmail(
             email.from,
           );
@@ -86,7 +93,7 @@ class _SearchResultsState extends State<SearchResults> {
             preview: email.body,
             time: DateFormat.formatTimestamp(email.timestamp),
             avatarUrl: '',
-            isStarred: email.starred,
+            isStarred: state.starred,
             avatarText: senderName.isNotEmpty ? senderName[0] : 'A',
             backgroundColor: Colors.blue,
             email: email,
@@ -96,11 +103,13 @@ class _SearchResultsState extends State<SearchResults> {
 
       setState(() {
         _results = searchResults;
+        _filteredEmails = filteredEmails;
         _isLoading = false;
       });
     } on Exception catch (e) {
       setState(() {
         _results = [];
+        _filteredEmails = [];
         _isLoading = false;
       });
       AppFunctions.debugPrint('Error searching emails: $e');
@@ -162,6 +171,8 @@ class _SearchResultsState extends State<SearchResults> {
                       builder:
                           (context) => MailDetail(
                             email: _results[index].email!,
+                            state:
+                                _filteredEmails[index]['state'] as EmailState,
                             onRefresh: _performSearch,
                           ),
                     ),

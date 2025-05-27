@@ -1,15 +1,22 @@
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
+import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:email_application/features/email/utils/email_recipients.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class MailDetailBody extends StatefulWidget {
-  MailDetailBody({required this.email, this.onRefresh, super.key});
+  MailDetailBody({
+    required this.email,
+    required this.state,
+    this.onRefresh,
+    super.key,
+  });
 
   final Email email;
+  final EmailState state;
   final VoidCallback? onRefresh;
 
   final EmailService emailService = EmailService();
@@ -20,6 +27,7 @@ class MailDetailBody extends StatefulWidget {
 
 class _MailDetailBodyState extends State<MailDetailBody> {
   late Email email;
+  late EmailState state;
   final EmailService emailService = EmailService();
   bool isShowSendingDetail = false;
 
@@ -27,6 +35,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
   void initState() {
     super.initState();
     email = widget.email;
+    state = widget.state;
   }
 
   Future<int> countUnreadMails() {
@@ -64,15 +73,13 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                     ),
                     IconButton(
                       icon: Icon(
-                        email.starred ? Icons.star : Icons.star_border,
-                        color: email.starred ? Colors.amber : onSurface60,
+                        state.starred ? Icons.star : Icons.star_border,
+                        color: state.starred ? Colors.amber : onSurface60,
                         size: 25,
                       ),
                       onPressed: () async {
-                        await emailService.toggleStar(email.id, email.starred);
-                        setState(() {
-                          email = email.copyWith(starred: !email.starred);
-                        });
+                        await emailService.toggleStar(email.id, state.starred);
+                        widget.onRefresh?.call();
                       },
                     ),
                   ],

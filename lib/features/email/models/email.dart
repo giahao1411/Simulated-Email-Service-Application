@@ -10,9 +10,6 @@ class Email {
     required this.timestamp,
     this.cc = const [],
     this.bcc = const [],
-    this.read = false,
-    this.starred = false,
-    this.labels = const [],
     this.isDraft = false,
   });
 
@@ -26,9 +23,6 @@ class Email {
       subject: data['subject'] as String? ?? '',
       body: data['body'] as String? ?? '',
       timestamp: (data['timestamp'] as Timestamp).toDate(),
-      read: data['read'] as bool? ?? false,
-      starred: data['starred'] as bool? ?? false,
-      labels: (data['labels'] as List<dynamic>? ?? []).cast<String>(),
       isDraft: data['isDraft'] as bool? ?? false,
     );
   }
@@ -41,9 +35,6 @@ class Email {
   final String subject;
   final String body;
   final DateTime timestamp;
-  final bool read;
-  final bool starred;
-  final List<String> labels;
   final bool isDraft;
 
   Map<String, dynamic> toMap() {
@@ -55,9 +46,6 @@ class Email {
       'subject': subject,
       'body': body,
       'timestamp': timestamp.toIso8601String(),
-      'read': read,
-      'starred': starred,
-      'labels': labels,
       'isDraft': isDraft,
     };
   }
@@ -71,9 +59,6 @@ class Email {
     String? subject,
     String? body,
     DateTime? timestamp,
-    bool? read,
-    bool? starred,
-    List<String>? labels,
     bool? isDraft,
   }) {
     return Email(
@@ -85,9 +70,6 @@ class Email {
       subject: subject ?? this.subject,
       body: body ?? this.body,
       timestamp: timestamp ?? this.timestamp,
-      read: read ?? this.read,
-      starred: starred ?? this.starred,
-      labels: labels ?? this.labels,
       isDraft: isDraft ?? this.isDraft,
     );
   }

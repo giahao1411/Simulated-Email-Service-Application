@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/core/constants/app_strings.dart';
+import 'package:email_application/features/email/models/draft.dart';
 import 'package:email_application/features/email/models/email.dart';
+import 'package:email_application/features/email/models/email_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class EmailService {
@@ -9,7 +11,7 @@ class EmailService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String? userEmail;
 
-  Stream<List<Email>> getEmails(String category) {
+  Stream<List<Map<String, dynamic>>> getEmails(String category) {
     if (userEmail == null || FirebaseAuth.instance.currentUser == null) {
       AppFunctions.debugPrint('Không truy vấn email vì chưa đăng nhập');
       return Stream.value([]);
@@ -17,15 +19,11 @@ class EmailService {
 
     AppFunctions.debugPrint('Lấy email cho danh mục: $category');
     var query = _firestore
-        .collection(category == 'Thư nháp' ? 'drafts' : 'emails')
+        .collection(category == AppStrings.drafts ? 'drafts' : 'emails')
         .orderBy('timestamp', descending: true);
 
     if (category == AppStrings.inbox) {
       query = query.where('to', arrayContains: userEmail);
-    } else if (category == AppStrings.starred) {
-      query = query
-          .where('to', arrayContains: userEmail)
-          .where('starred', isEqualTo: true);
     } else if (category == AppStrings.sent) {
       query = query.where('from', isEqualTo: userEmail);
     } else if (category == AppStrings.drafts) {
@@ -33,24 +31,42 @@ class EmailService {
         'userId',
         isEqualTo: FirebaseAuth.instance.currentUser?.uid,
       );
-    } else if (category == AppStrings.trash) {
-      query = query
-          .where('to', arrayContains: userEmail)
-          .where('trashed', isEqualTo: true);
-    } else {
-      query = query
-          .where('labels', arrayContains: category)
-          .where('to', arrayContains: userEmail);
     }
 
-    return query.snapshots().map((snapshot) {
+    return query.snapshots().asyncMap((snapshot) async {
       try {
-        return snapshot.docs
-            .map((doc) => Email.fromMap(doc.id, doc.data()))
-            .toList();
+        final emailsWithState = <Map<String, dynamic>>[];
+        for (final doc in snapshot.docs) {
+          final email = Email.fromMap(doc.id, doc.data());
+          final stateDoc =
+              await _firestore
+                  .collection('users')
+                  .doc(FirebaseAuth.instance.currentUser!.uid)
+                  .collection('email_states')
+                  .doc(email.id)
+                  .get();
+          final emailState =
+              stateDoc.exists
+                  ? EmailState.fromMap(stateDoc.data()!)
+                  : EmailState(emailId: email.id);
+
+          if (category == AppStrings.starred && !emailState.starred) continue;
+          if (category == AppStrings.trash && !emailState.trashed) continue;
+          if (category != AppStrings.starred &&
+              category != AppStrings.trash &&
+              category != AppStrings.inbox &&
+              category != AppStrings.sent &&
+              category != AppStrings.drafts &&
+              !emailState.labels.contains(category)) {
+            continue;
+          }
+
+          emailsWithState.add({'email': email, 'state': emailState});
+        }
+        return emailsWithState;
       } on Exception catch (e) {
         AppFunctions.debugPrint('Lỗi khi ánh xạ dữ liệu email: $e');
-        return <Email>[];
+        return <Map<String, dynamic>>[];
       }
     });
   }
@@ -67,7 +83,8 @@ class EmailService {
         throw Exception('Chưa đăng nhập để gửi email');
       }
 
-      await _firestore.collection('emails').add({
+      // add email to collection 'emails'
+      final emailRef = await _firestore.collection('emails').add({
         'from': userEmail,
         'to': to,
         'cc': cc,
@@ -75,28 +92,77 @@ class EmailService {
         'subject': subject,
         'body': body,
         'timestamp': FieldValue.serverTimestamp(),
-        'read': false,
-        'starred': false,
-        'labels': <String>[],
+        'isDraft': false,
       });
+
+      // create email state
+      await _firestore
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .collection('email_states')
+          .doc(emailRef.id)
+          .set(EmailState(emailId: emailRef.id).toMap());
+
+      // create email for each recipient
+      final allRecipients =
+          <dynamic>{...to, ...cc, ...bcc}.toList(); // filter duplicates
+      for (final recipientEmail in allRecipients) {
+        final userQuery =
+            await _firestore
+                .collection('users')
+                .where('email', isEqualTo: recipientEmail)
+                .limit(1)
+                .get();
+        if (userQuery.docs.isNotEmpty) {
+          final recipientUid = userQuery.docs.first.id;
+          await _firestore
+              .collection('users')
+              .doc(recipientUid)
+              .collection('email_states')
+              .doc(emailRef.id)
+              .set(EmailState(emailId: emailRef.id).toMap());
+        }
+      }
     } on Exception catch (e) {
       AppFunctions.debugPrint('Lỗi khi gửi email: $e');
       throw Exception('Lỗi khi gửi email: $e');
     }
   }
 
-  Future<void> saveDraft(String to, String subject, String body) async {
+  Future<void> saveDraft({
+    required List<String> to,
+    required List<String> cc,
+    required List<String> bcc,
+    required String subject,
+    required String body, String? id,
+  }) async {
     try {
       if (FirebaseAuth.instance.currentUser == null) {
         throw Exception('Chưa đăng nhập để lưu thư nháp');
       }
-      await _firestore.collection('drafts').add({
-        'userId': FirebaseAuth.instance.currentUser!.uid,
-        'to': to,
-        'subject': subject,
-        'body': body,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+
+      // create a new draft
+      final draft = Draft(
+        id: '',
+        userId: userId,
+        to: to,
+        cc: cc,
+        bcc: bcc,
+        subject: subject,
+        body: body,
+        timestamp: DateTime.now(),
+      );
+
+      final draftRef = await _firestore.collection('drafts').add(draft.toMap());
+
+      // create state for draft
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('email_states')
+          .doc(draftRef.id)
+          .set(EmailState(emailId: draftRef.id).toMap());
     } on Exception catch (e) {
       AppFunctions.debugPrint('Lỗi khi lưu thư nháp: $e');
       throw Exception('Lỗi khi lưu thư nháp: $e');
@@ -105,9 +171,25 @@ class EmailService {
 
   Future<void> toggleStar(String emailId, bool currentStatus) async {
     try {
-      await _firestore.collection('emails').doc(emailId).update({
-        'starred': !currentStatus,
-      });
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final stateDoc =
+          await _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('email_states')
+              .doc(emailId)
+              .get();
+      final emailState =
+          stateDoc.exists
+              ? EmailState.fromMap(stateDoc.data()!)
+              : EmailState(emailId: emailId);
+
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('email_states')
+          .doc(emailId)
+          .set(emailState.copyWith(starred: !currentStatus).toMap());
     } catch (e) {
       AppFunctions.debugPrint('Lỗi khi thay đổi trạng thái sao: $e');
       throw Exception('Không thể thay đổi trạng thái sao: $e');
@@ -116,9 +198,25 @@ class EmailService {
 
   Future<void> toggleRead(String emailId, bool currentStatus) async {
     try {
-      await _firestore.collection('emails').doc(emailId).update({
-        'read': !currentStatus,
-      });
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final stateDoc =
+          await _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('email_states')
+              .doc(emailId)
+              .get();
+      final emailState =
+          stateDoc.exists
+              ? EmailState.fromMap(stateDoc.data()!)
+              : EmailState(emailId: emailId);
+
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('email_states')
+          .doc(emailId)
+          .set(emailState.copyWith(read: !currentStatus).toMap());
     } catch (e) {
       AppFunctions.debugPrint('Lỗi khi thay đổi trạng thái đã đọc: $e');
       throw Exception('Không thể thay đổi trạng thái đã đọc: $e');
@@ -127,12 +225,56 @@ class EmailService {
 
   Future<void> addLabel(String emailId, String label) async {
     try {
-      await _firestore.collection('emails').doc(emailId).update({
-        'labels': FieldValue.arrayUnion([label]),
-      });
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final stateDoc =
+          await _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('email_states')
+              .doc(emailId)
+              .get();
+      final emailState =
+          stateDoc.exists
+              ? EmailState.fromMap(stateDoc.data()!)
+              : EmailState(emailId: emailId);
+
+      final updatedLabels = List<String>.from(emailState.labels)..add(label);
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('email_states')
+          .doc(emailId)
+          .set(emailState.copyWith(labels: updatedLabels).toMap());
     } catch (e) {
       AppFunctions.debugPrint('Lỗi khi thêm nhãn: $e');
       throw Exception('Không thể thêm nhãn: $e');
+    }
+  }
+
+  Future<void> moveToTrash(String emailId) async {
+    try {
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final stateDoc =
+          await _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('email_states')
+              .doc(emailId)
+              .get();
+      final emailState =
+          stateDoc.exists
+              ? EmailState.fromMap(stateDoc.data()!)
+              : EmailState(emailId: emailId);
+
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('email_states')
+          .doc(emailId)
+          .set(emailState.copyWith(trashed: true).toMap());
+    } catch (e) {
+      AppFunctions.debugPrint('Lỗi khi chuyển vào thùng rác: $e');
+      throw Exception('Không thể chuyển vào thùng rác: $e');
     }
   }
 
@@ -140,8 +282,9 @@ class EmailService {
     try {
       final snapshot =
           await _firestore
-              .collection('emails')
-              .where('to', arrayContains: userEmail)
+              .collection('users')
+              .doc(FirebaseAuth.instance.currentUser!.uid)
+              .collection('email_states')
               .where('read', isEqualTo: false)
               .get();
       return snapshot.docs.length;
@@ -175,12 +318,36 @@ class EmailService {
     }
   }
 
-  Future<void> deleteEmail(String email) async {
+  // hard delete email
+  Future<void> deleteEmail(String emailId) async {
     try {
-      await _firestore.collection('emails').doc(email).delete();
+      await _firestore.collection('emails').doc(emailId).delete();
+      await _firestore.collection('drafts').doc(emailId).delete();
+      await _firestore
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .collection('email_states')
+          .doc(emailId)
+          .delete();
     } catch (e) {
       AppFunctions.debugPrint('Lỗi khi xóa email: $e');
       throw Exception('Không thể xóa email: $e');
+    }
+  }
+
+  // hard delete draft
+  Future<void> deleteDraft(String draftId) async {
+    try {
+      await _firestore.collection('drafts').doc(draftId).delete();
+      await _firestore
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .collection('email_states')
+          .doc(draftId)
+          .delete();
+    } catch (e) {
+      AppFunctions.debugPrint('Lỗi khi xóa thư nháp: $e');
+      throw Exception('Không thể xóa thư nháp: $e');
     }
   }
 }
