@@ -20,7 +20,6 @@ class MailDetail extends StatefulWidget {
   final Email email;
   final EmailState state;
   final VoidCallback? onRefresh;
-  final VoidCallback? refreshStream; // Callback để làm mới stream
 
   @override
   State<MailDetail> createState() => _MailDetailState();
@@ -79,8 +78,6 @@ class _MailDetailState extends State<MailDetail>
             state: widget.state,
             emailService: emailService,
             onRefresh: widget.onRefresh,
-            refreshStream:
-                widget.refreshStream, // Truyền refreshStream vào AppBar
           ),
           body: Column(
             children: [
@@ -89,6 +86,7 @@ class _MailDetailState extends State<MailDetail>
                   email: email,
                   state: widget.state,
                   onRefresh: widget.onRefresh,
+                  markMailAsRead: _markMailAsRead,
                 ),
               ),
             ],

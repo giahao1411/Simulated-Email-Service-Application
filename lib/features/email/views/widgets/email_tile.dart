@@ -45,28 +45,21 @@ class EmailTile extends StatelessWidget {
       },
     );
 
-    return ListTile(
+    return InkWell(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      leading: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-        child: Text(
-          email.from.isNotEmpty ? email.from[0].toUpperCase() : '?',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-      ),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(child: senderNameWidget),
-          Text(
-            DateFormat.formatTimestamp(email.timestamp),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              fontSize: 12,
-              fontWeight: email.read ? FontWeight.normal : FontWeight.bold,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: CircleAvatar(
+                radius: 20,
+                backgroundImage: NetworkImage(
+                  'https://picsum.photos/250?image=$index',
+                ),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -155,29 +148,8 @@ class EmailTile extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-      trailing: IconButton(
-        icon: Icon(
-          email.starred ? Icons.star : Icons.star_border,
-          color:
-              email.starred
-                  ? Colors
-                      .amber // Màu vàng khi đã tích
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-          size: 20,
+          ],
         ),
-        onPressed: () async {
-          try {
-            await emailService.toggleStar(email.id, email.starred);
-            onStarToggled?.call();
-          } catch (e) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-          }
-        },
       ),
     );
   }

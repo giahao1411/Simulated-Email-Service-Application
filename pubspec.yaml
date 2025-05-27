@@ -43,6 +43,7 @@ dependencies:
   stream_transform: ^2.1.0
   provider: ^6.1.2
   js: ^0.6.5
+  async: ^2.12.0
 
 dev_dependencies:
   flutter_test:

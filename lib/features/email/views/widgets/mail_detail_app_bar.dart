@@ -12,7 +12,6 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.state,
     required this.emailService,
     this.onRefresh,
-    this.refreshStream,
     this.onCategoryChanged,
     super.key,
   });
@@ -21,13 +20,12 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
   final EmailState state;
   final EmailService emailService;
   final VoidCallback? onRefresh;
-  final VoidCallback? refreshStream;
   final void Function(String)? onCategoryChanged;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final LabelController labelController = LabelController();
+    final labelController = LabelController();
 
     return AppBar(
       actionsPadding: const EdgeInsets.only(left: 16, right: 8),
@@ -35,7 +33,6 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
         icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
         onPressed: () {
           onRefresh?.call();
-          refreshStream?.call();
           Navigator.pop(context);
         },
       ),
@@ -61,9 +58,8 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
             try {
               await emailService.toggleRead(email.id, state.read);
               onRefresh?.call();
-              refreshStream?.call();
               Navigator.pop(context);
-            } catch (e) {
+            } on Exception catch (e) {
               AppFunctions.debugPrint('Lỗi khi chuyển trạng thái đã đọc: $e');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Lỗi khi chuyển trạng thái đã đọc: $e')),
@@ -83,23 +79,19 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                     'Trạng thái hidden: ${!email.hidden}',
                   );
                   onRefresh?.call();
-                  refreshStream?.call();
                   onCategoryChanged?.call(AppStrings.hidden);
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Đã tạm ẩn email')),
                   );
-                  break;
                 case 'labels':
                   await _showLabelsDialog(context, labelController);
-                  break;
                 case 'important':
                   await emailService.markAsImportant(email.id, email.important);
                   AppFunctions.debugPrint(
                     'Trạng thái important: ${!email.important}',
                   );
                   onRefresh?.call();
-                  refreshStream?.call();
                   onCategoryChanged?.call(AppStrings.important);
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -111,23 +103,19 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                     ),
                   );
-                  break;
                 case 'spam':
                   await emailService.markAsSpam(email.id, email.spam);
                   AppFunctions.debugPrint('Trạng thái spam: ${!email.spam}');
                   onRefresh?.call();
-                  refreshStream?.call();
                   onCategoryChanged?.call(AppStrings.spam);
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Đã báo cáo thư rác')),
                   );
-                  break;
                 case 'cancel':
                   Navigator.pop(context);
-                  break;
               }
-            } catch (e) {
+            } on Exception catch (e) {
               AppFunctions.debugPrint('Lỗi khi thực hiện hành động $value: $e');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Lỗi khi thực hiện hành động: $e')),
@@ -172,7 +160,7 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
   ) async {
     final labels = await labelController.loadLabels();
     // Tạo một bản sao của danh sách nhãn hiện tại của email
-    List<String> selectedLabels = List.from(email.labels ?? []);
+    final selectedLabels = List<String>.from(state.labels);
 
     if (!context.mounted) return;
 
@@ -214,7 +202,7 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                         )
                       else
                         const Padding(
-                          padding: EdgeInsets.all(16.0),
+                          padding: EdgeInsets.all(16),
                           child: Text('Không có nhãn nào'),
                         ),
                     ],
@@ -236,18 +224,17 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                           'Đã cập nhật nhãn: $selectedLabels',
                         );
                         onRefresh?.call();
-                        refreshStream?.call();
                         Navigator.pop(dialogContext);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Đã cập nhật nhãn')),
                           );
                         }
-                        // Nếu có nhãn được chọn, chuyển đến danh mục của nhãn đầu tiên
+                        // Nếu nhãn được chọn, chuyển đến danh mục nhãn đầu tiên
                         if (selectedLabels.isNotEmpty) {
                           onCategoryChanged?.call(selectedLabels.first);
                         }
-                      } catch (e) {
+                      } on Exception catch (e) {
                         AppFunctions.debugPrint('Lỗi khi cập nhật nhãn: $e');
                         if (dialogContext.mounted) {
                           ScaffoldMessenger.of(dialogContext).showSnackBar(
