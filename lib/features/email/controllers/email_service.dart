@@ -79,6 +79,11 @@ class EmailService {
   }
 
   Stream<List<Map<String, dynamic>>> _getInboxEmails() {
+    if (userEmail == null) {
+      AppFunctions.debugPrint('Không lấy email inbox vì userEmail null');
+      return Stream.value([]);
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       AppFunctions.debugPrint('Không có người dùng đăng nhập');
@@ -88,6 +93,10 @@ class EmailService {
     AppFunctions.debugPrint(
       'Bắt đầu lắng nghe email cho user: $userEmail (UID: ${user.uid})',
     );
+
+    // Cache danh sách email để tránh truy vấn lại nhiều lần
+    var cachedEmails = <Map<String, dynamic>>[];
+    final seenIds = <String>{};
 
     final toStream = _firestore
         .collection('emails')
@@ -121,81 +130,35 @@ class EmailService {
     return StreamGroup.merge([toStream, ccStream, bccStream, stateStream])
         .asyncMap((sourceData) async {
           try {
-            final emailsWithState = <Map<String, dynamic>>[];
-            final seenIds = <String>{};
+            final emailsWithState = List<Map<String, dynamic>>.from(
+              cachedEmails,
+            );
 
-            // Nếu sourceData là từ email_states, kích hoạt làm mới toàn bộ danh sách
             if (sourceData is QuerySnapshot) {
               AppFunctions.debugPrint(
                 'Nhận snapshot từ email_states: ${sourceData.docs.length} tài liệu',
               );
-              // Lấy lại tất cả email từ to, cc, bcc
-              final toSnapshot =
-                  await _firestore
-                      .collection('emails')
-                      .where('to', arrayContains: userEmail)
-                      .orderBy('timestamp', descending: true)
-                      .get();
-              final ccSnapshot =
-                  await _firestore
-                      .collection('emails')
-                      .where('cc', arrayContains: userEmail)
-                      .orderBy('timestamp', descending: true)
-                      .get();
-              final bccSnapshot =
-                  await _firestore
-                      .collection('emails')
-                      .where('bcc', arrayContains: userEmail)
-                      .orderBy('timestamp', descending: true)
-                      .get();
-
-              for (final snapshot in [toSnapshot, ccSnapshot, bccSnapshot]) {
-                for (final doc in snapshot.docs) {
-                  final docId = doc.id;
-                  if (seenIds.contains(docId)) {
-                    AppFunctions.debugPrint(
-                      'Bỏ qua email trùng lặp: $docId (từ snapshot cache)',
-                    );
-                    continue;
-                  }
-                  seenIds.add(docId);
-
-                  final data = doc.data();
-                  if (data.isEmpty) {
-                    AppFunctions.debugPrint(
-                      'Bỏ qua tài liệu rỗng: $docId (từ snapshot cache)',
-                    );
-                    continue;
-                  }
-
-                  try {
-                    final email = Email.fromMap(docId, data);
-                    final stateDoc =
-                        await _firestore
-                            .collection('users')
-                            .doc(user.uid)
-                            .collection('email_states')
-                            .doc(email.id)
-                            .get();
-                    final emailState =
-                        stateDoc.exists
-                            ? EmailState.fromMap(stateDoc.data()!)
-                            : EmailState(emailId: email.id);
-
-                    emailsWithState.add({'email': email, 'state': emailState});
-                    AppFunctions.debugPrint(
-                      'Thêm email: ${email.id} (từ snapshot cache)',
-                    );
-                  } on Exception catch (e) {
-                    AppFunctions.debugPrint(
-                      'Lỗi khi xử lý email $docId (từ snapshot cache): $e',
-                    );
-                    continue;
-                  }
-                }
+              // Khi email_states thay đổi, cập nhật trạng thái cho email trong cache
+              for (final cachedEmail in cachedEmails) {
+                final email = cachedEmail['email'] as Email;
+                final emailId = email.id;
+                final stateDoc =
+                    await _firestore
+                        .collection('users')
+                        .doc(user.uid)
+                        .collection('email_states')
+                        .doc(emailId)
+                        .get();
+                final emailState =
+                    stateDoc.exists
+                        ? EmailState.fromMap(stateDoc.data()!)
+                        : EmailState(emailId: emailId);
+                cachedEmail['state'] = emailState;
+                AppFunctions.debugPrint(
+                  'Cập nhật trạng thái cho email: $emailId (read: ${emailState.read})',
+                );
               }
             } else {
-              // Xử lý snapshot từ to, cc, hoặc bcc
               final dataMap = sourceData as Map<String, dynamic>;
               final source = dataMap['source'] as String;
               final snapshot = dataMap['snapshot'] as QuerySnapshot;
@@ -238,7 +201,7 @@ class EmailService {
 
                   emailsWithState.add({'email': email, 'state': emailState});
                   AppFunctions.debugPrint(
-                    'Thêm email: ${email.id} (từ $source)',
+                    'Thêm email: ${email.id} (từ $source, read: ${emailState.read})',
                   );
                 } on Exception catch (e) {
                   AppFunctions.debugPrint(
@@ -247,6 +210,10 @@ class EmailService {
                   continue;
                 }
               }
+
+              // Cập nhật cache
+              cachedEmails = List<Map<String, dynamic>>.from(emailsWithState);
+              seenIds.clear(); // Reset seenIds để cho phép cập nhật email mới
             }
 
             if (emailsWithState.isEmpty) {
