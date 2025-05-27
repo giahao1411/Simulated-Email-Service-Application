@@ -19,6 +19,7 @@ class EmailList extends StatelessWidget {
   final String currentCategory;
   final Stream<List<Map<String, dynamic>>> emailStream;
   final VoidCallback? onRefresh;
+  final VoidCallback? refreshStream; // Thêm tham số
 
   @override
   Widget build(BuildContext context) {

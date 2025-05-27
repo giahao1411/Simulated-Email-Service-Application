@@ -20,6 +20,7 @@ class MailDetail extends StatefulWidget {
   final Email email;
   final EmailState state;
   final VoidCallback? onRefresh;
+  final VoidCallback? refreshStream; // Callback để làm mới stream
 
   @override
   State<MailDetail> createState() => _MailDetailState();
@@ -78,10 +79,11 @@ class _MailDetailState extends State<MailDetail>
             state: widget.state,
             emailService: emailService,
             onRefresh: widget.onRefresh,
+            refreshStream:
+                widget.refreshStream, // Truyền refreshStream vào AppBar
           ),
           body: Column(
             children: [
-              // Không cần danh sách email như GmailScreen, chỉ hiển thị chi tiết
               Expanded(
                 child: MailDetailBody(
                   email: email,

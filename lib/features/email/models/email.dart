@@ -11,6 +11,11 @@ class Email {
     this.cc = const [],
     this.bcc = const [],
     this.isDraft = false,
+    this.hasAttachments = false,
+    this.hidden = false,
+    this.important = false,
+    this.spam = false,
+    this.trashed = false, // Thêm trường trashed
   });
 
   factory Email.fromMap(String id, Map<String, dynamic> data) {
@@ -24,6 +29,12 @@ class Email {
       body: data['body'] as String? ?? '',
       timestamp: (data['timestamp'] as Timestamp).toDate(),
       isDraft: data['isDraft'] as bool? ?? false,
+      hasAttachments: data['hasAttachments'] as bool? ?? false,
+      hidden: data['hidden'] as bool? ?? false,
+      important: data['important'] as bool? ?? false,
+      spam: data['spam'] as bool? ?? false,
+      trashed:
+          data['trashed'] as bool? ?? false, // Thêm deserialization cho trashed
     );
   }
 
@@ -36,6 +47,11 @@ class Email {
   final String body;
   final DateTime timestamp;
   final bool isDraft;
+  final bool hasAttachments;
+  final bool hidden;
+  final bool important;
+  final bool spam;
+  final bool trashed; // Thêm trường trashed
 
   Map<String, dynamic> toMap() {
     return {
@@ -47,6 +63,11 @@ class Email {
       'body': body,
       'timestamp': timestamp.toIso8601String(),
       'isDraft': isDraft,
+      'hasAttachments': hasAttachments,
+      'hidden': hidden,
+      'important': important,
+      'spam': spam,
+      'trashed': trashed, // Thêm serialization cho trashed
     };
   }
 
@@ -60,6 +81,11 @@ class Email {
     String? body,
     DateTime? timestamp,
     bool? isDraft,
+    bool? hasAttachments,
+    bool? hidden,
+    bool? important,
+    bool? spam,
+    bool? trashed,
   }) {
     return Email(
       id: id ?? this.id,
@@ -71,6 +97,11 @@ class Email {
       body: body ?? this.body,
       timestamp: timestamp ?? this.timestamp,
       isDraft: isDraft ?? this.isDraft,
+      hasAttachments: hasAttachments ?? this.hasAttachments,
+      hidden: hidden ?? this.hidden,
+      important: important ?? this.important,
+      spam: spam ?? this.spam,
+      trashed: trashed ?? this.trashed, // Thêm trong copyWith
     );
   }
 }

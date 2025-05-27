@@ -46,8 +46,8 @@ class _GmailScreenState extends State<GmailScreen>
   void setCategory(String category) {
     setState(() {
       currentCategory = category;
-      isDrawerOpen = false;
       _refreshStream();
+      isDrawerOpen = false;
     });
   }
 

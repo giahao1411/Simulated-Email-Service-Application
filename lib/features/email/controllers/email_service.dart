@@ -429,6 +429,51 @@ class EmailService {
     } catch (e) {
       AppFunctions.debugPrint('Lỗi khi xóa thư nháp: $e');
       throw Exception('Không thể xóa thư nháp: $e');
+      
+  Future<void> markAsImportant(String emailId, bool currentStatus) async {
+    try {
+      await _firestore.collection('emails').doc(emailId).update({
+        'important': !currentStatus,
+      });
+    } catch (e) {
+      AppFunctions.debugPrint('Lỗi khi đánh dấu quan trọng: $e');
+      throw Exception('Không thể đánh dấu quan trọng: $e');
+    }
+  }
+
+  Future<void> markAsSpam(String emailId, bool currentStatus) async {
+    try {
+      await _firestore.collection('emails').doc(emailId).update({
+        'spam': !currentStatus,
+      });
+    } catch (e) {
+      AppFunctions.debugPrint('Lỗi khi báo cáo thư rác: $e');
+      throw Exception('Không thể báo cáo thư rác: $e');
+    }
+  }
+
+  Future<void> markAsHidden(String emailId, bool currentStatus) async {
+    try {
+      await _firestore.collection('emails').doc(emailId).update({
+        'hidden': !currentStatus,
+      });
+    } catch (e) {
+      AppFunctions.debugPrint('Lỗi khi tạm ẩn: $e');
+      throw Exception('Không thể tạm ẩn: $e');
+    }
+  }
+
+  // Thêm phương thức updateEmailStatus để cập nhật nhiều trường cùng lúc
+  Future<void> updateEmailStatus(
+    String emailId,
+    Map<String, dynamic> updates,
+  ) async {
+    try {
+      await _firestore.collection('emails').doc(emailId).update(updates);
+      AppFunctions.debugPrint('Đã cập nhật trạng thái email: $updates');
+    } catch (e) {
+      AppFunctions.debugPrint('Lỗi khi cập nhật trạng thái email: $e');
+      throw Exception('Không thể cập nhật trạng thái email: $e');
     }
   }
 }

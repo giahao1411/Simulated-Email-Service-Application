@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/models/email_search_result.dart';
 import 'package:flutter/material.dart';
 
@@ -130,7 +131,7 @@ class EmailSearchItem extends StatelessWidget {
                 size: 20,
               ),
               onPressed: () {
-                print('Toggle star for: ${result.subject}');
+                AppFunctions.debugPrint('Toggle star for: ${result.subject}');
               },
             ),
           ],
@@ -165,7 +166,7 @@ class EmailSearchItem extends StatelessWidget {
                   fontSize: 14,
                 ),
               )
-              : Icon(Icons.person, color: Colors.white, size: 20),
+              : const Icon(Icons.person, color: Colors.white, size: 20),
     );
   }
 }
