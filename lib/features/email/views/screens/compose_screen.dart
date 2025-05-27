@@ -58,7 +58,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
             .toList();
 
     // validate data
-    if (toEmails.isEmpty) {
+    if (toEmails.isEmpty || ccEmails.isEmpty || bccEmails.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng nhập địa chỉ email người nhận')),
       );
