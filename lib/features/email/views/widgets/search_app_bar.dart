@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:email_application/features/email/models/search_filters.dart';
 import 'package:email_application/features/email/views/widgets/advanced_search_filters.dart';
@@ -8,6 +9,7 @@ class SearchAppBar extends StatefulWidget {
     required this.onSearchSubmitted,
     required this.onBackPressed,
     required this.onFiltersChanged,
+    required this.currentCategory,
     super.key,
   });
 
@@ -15,6 +17,7 @@ class SearchAppBar extends StatefulWidget {
   final void Function(String) onSearchSubmitted;
   final VoidCallback onBackPressed;
   final void Function(SearchFilters) onFiltersChanged;
+  final String currentCategory;
 
   @override
   State<SearchAppBar> createState() => _SearchAppBarState();
@@ -123,14 +126,17 @@ class _SearchAppBarState extends State<SearchAppBar> {
                     icon: const Icon(Icons.mic),
                     color: iconColor,
                     onPressed: () {
-                      print('Voice search pressed');
+                      AppFunctions.debugPrint('Voice search pressed');
                     },
                   ),
               ],
             ),
           ),
           const Divider(height: 1, thickness: 0.5),
-          AdvancedSearchFilters(onFiltersChanged: widget.onFiltersChanged),
+          AdvancedSearchFilters(
+            onFiltersChanged: widget.onFiltersChanged,
+            currentCategory: widget.currentCategory,
+          ),
         ],
       ),
     );
