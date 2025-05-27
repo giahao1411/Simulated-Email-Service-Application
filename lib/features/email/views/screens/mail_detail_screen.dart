@@ -13,12 +13,14 @@ class MailDetail extends StatefulWidget {
   const MailDetail({
     required this.email,
     required this.state,
+    required this.senderFullName, // Thêm tham số senderFullName
     this.onRefresh,
     super.key,
   });
 
   final Email email;
   final EmailState state;
+  final String senderFullName; // Thêm senderFullName
   final VoidCallback? onRefresh;
 
   @override
@@ -85,8 +87,12 @@ class _MailDetailState extends State<MailDetail>
                 child: MailDetailBody(
                   email: email,
                   state: widget.state,
+                  senderFullName:
+                      widget
+                          .senderFullName, // Truyền senderFullName vào MailDetailBody
                   onRefresh: widget.onRefresh,
                   markMailAsRead: _markMailAsRead,
+                  index: _selectedIndex,
                 ),
               ),
             ],

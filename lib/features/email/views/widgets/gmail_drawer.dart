@@ -163,7 +163,7 @@ class _GmailDrawerState extends State<GmailDrawer> {
                     ),
                     DrawerItem(
                       title: AppStrings.hidden,
-                      icon: Icons.visibility_off,
+                      icon: Icons.watch_later_outlined,
                       isSelected: widget.currentCategory == AppStrings.hidden,
                       onTap: () => widget.onCategorySelected(AppStrings.hidden),
                     ),
@@ -175,7 +175,7 @@ class _GmailDrawerState extends State<GmailDrawer> {
                     ),
                     DrawerItem(
                       title: AppStrings.drafts,
-                      icon: Icons.insert_drive_file,
+                      icon: Icons.insert_drive_file_outlined,
                       isSelected: widget.currentCategory == AppStrings.drafts,
                       onTap: () => widget.onCategorySelected(AppStrings.drafts),
                     ),
@@ -187,7 +187,7 @@ class _GmailDrawerState extends State<GmailDrawer> {
                     ),
                     DrawerItem(
                       title: AppStrings.trash,
-                      icon: Icons.delete,
+                      icon: Icons.delete_outline_outlined,
                       isSelected: widget.currentCategory == AppStrings.trash,
                       onTap: () => widget.onCategorySelected(AppStrings.trash),
                     ),
