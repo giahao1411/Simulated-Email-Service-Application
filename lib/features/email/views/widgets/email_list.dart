@@ -63,12 +63,17 @@ class EmailList extends StatelessWidget {
               itemBuilder: (context, index) {
                 final email = emailsWithState[index]['email'] as Email;
                 final state = emailsWithState[index]['state'] as EmailState;
+                final senderFullName =
+                    emailsWithState[index]['senderFullName']
+                        as String; // Lấy senderFullName
                 return EmailTile(
                   email: email,
                   state: state,
                   index: index,
                   emailService: emailService,
                   currentCategory: currentCategory,
+                  senderFullName:
+                      senderFullName, // Truyền senderFullName vào EmailTile
                   onStarToggled: onRefresh,
                   onTap: () {
                     Navigator.push(
@@ -78,6 +83,8 @@ class EmailList extends StatelessWidget {
                             (context) => MailDetail(
                               email: email,
                               state: state,
+                              senderFullName:
+                                  senderFullName, // Truyền senderFullName vào MailDetail
                               onRefresh: onRefresh,
                             ),
                       ),

@@ -4,6 +4,9 @@ class EmailState {
     this.read = false,
     this.starred = false,
     this.trashed = false,
+    this.important = false,
+    this.spam = false,
+    this.hidden = false,
     this.labels = const [],
   });
 
@@ -13,6 +16,9 @@ class EmailState {
       read: data['read'] as bool? ?? false,
       starred: data['starred'] as bool? ?? false,
       trashed: data['trashed'] as bool? ?? false,
+      important: data['important'] as bool? ?? false,
+      spam: data['spam'] as bool? ?? false,
+      hidden: data['hidden'] as bool? ?? false,
       labels: (data['labels'] as List<dynamic>? ?? []).cast<String>(),
     );
   }
@@ -21,6 +27,9 @@ class EmailState {
   final bool read;
   final bool starred;
   final bool trashed;
+  final bool important;
+  final bool spam;
+  final bool hidden;
   final List<String> labels;
 
   Map<String, dynamic> toMap() {
@@ -29,6 +38,9 @@ class EmailState {
       'read': read,
       'starred': starred,
       'trashed': trashed,
+      'important': important,
+      'spam': spam,
+      'hidden': hidden,
       'labels': labels,
     };
   }
@@ -38,6 +50,9 @@ class EmailState {
     bool? read,
     bool? starred,
     bool? trashed,
+    bool? important,
+    bool? spam,
+    bool? hidden,
     List<String>? labels,
   }) {
     return EmailState(
@@ -45,6 +60,9 @@ class EmailState {
       read: read ?? this.read,
       starred: starred ?? this.starred,
       trashed: trashed ?? this.trashed,
+      important: important ?? this.important,
+      spam: spam ?? this.spam,
+      hidden: hidden ?? this.hidden,
       labels: labels ?? this.labels,
     );
   }

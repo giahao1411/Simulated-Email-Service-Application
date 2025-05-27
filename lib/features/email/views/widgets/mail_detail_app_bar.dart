@@ -41,11 +41,36 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           icon: Icon(
-            Icons.label_outline,
+            Icons.delete_outline_outlined,
             color: theme.colorScheme.onSurface,
-          ), // Thay icon thùng rác bằng icon nhãn
+          ),
           onPressed: () async {
-            await _showLabelsDialog(context, labelController);
+            try {
+              await emailService.moveToTrash(email.id);
+              AppFunctions.debugPrint('Trạng thái trashed: ${!state.trashed}');
+              onRefresh?.call();
+              // Chuyển danh mục dựa trên trạng thái trashed
+              if (!state.trashed) {
+                onCategoryChanged?.call(AppStrings.trash);
+              } else {
+                onCategoryChanged?.call(AppStrings.inbox);
+              }
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    state.trashed
+                        ? 'Đã khôi phục khỏi thùng rác'
+                        : 'Đã chuyển vào thùng rác',
+                  ),
+                ),
+              );
+            } on Exception catch (e) {
+              AppFunctions.debugPrint('Lỗi khi chuyển vào thùng rác: $e');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Lỗi khi chuyển vào thùng rác: $e')),
+              );
+            }
           },
         ),
         const SizedBox(width: 8),
@@ -74,46 +99,67 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
             try {
               switch (value) {
                 case 'hide':
-                  await emailService.markAsHidden(email.id, email.hidden);
+                  await emailService.markAsHidden(email.id, state.hidden);
                   AppFunctions.debugPrint(
-                    'Trạng thái hidden: ${!email.hidden}',
+                    'Trạng thái hidden: ${!state.hidden}',
                   );
                   onRefresh?.call();
-                  onCategoryChanged?.call(AppStrings.hidden);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã tạm ẩn email')),
-                  );
-                case 'labels':
-                  await _showLabelsDialog(context, labelController);
-                case 'important':
-                  await emailService.markAsImportant(email.id, email.important);
-                  AppFunctions.debugPrint(
-                    'Trạng thái important: ${!email.important}',
-                  );
-                  onRefresh?.call();
-                  onCategoryChanged?.call(AppStrings.important);
+                  if (!state.hidden) {
+                    onCategoryChanged?.call(AppStrings.hidden);
+                  }
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        email.important
+                        state.hidden ? 'Đã bỏ tạm ẩn email' : 'Đã tạm ẩn email',
+                      ),
+                    ),
+                  );
+                  break;
+                case 'labels':
+                  await _showLabelsDialog(context, labelController);
+                  break;
+                case 'important':
+                  await emailService.markAsImportant(email.id, state.important);
+                  AppFunctions.debugPrint(
+                    'Trạng thái important: ${!state.important}',
+                  );
+                  onRefresh?.call();
+                  if (!state.important) {
+                    onCategoryChanged?.call(AppStrings.important);
+                  }
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        state.important
                             ? 'Đã bỏ đánh dấu quan trọng'
                             : 'Đã đánh dấu quan trọng',
                       ),
                     ),
                   );
+                  break;
                 case 'spam':
-                  await emailService.markAsSpam(email.id, email.spam);
-                  AppFunctions.debugPrint('Trạng thái spam: ${!email.spam}');
+                  await emailService.markAsSpam(email.id, state.spam);
+                  AppFunctions.debugPrint('Trạng thái spam: ${!state.spam}');
                   onRefresh?.call();
-                  onCategoryChanged?.call(AppStrings.spam);
+                  if (!state.spam) {
+                    onCategoryChanged?.call(AppStrings.spam);
+                  }
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã báo cáo thư rác')),
+                    SnackBar(
+                      content: Text(
+                        state.spam
+                            ? 'Đã bỏ đánh dấu thư rác'
+                            : 'Đã báo cáo thư rác',
+                      ),
+                    ),
                   );
+                  break;
                 case 'cancel':
                   Navigator.pop(context);
+                  break;
               }
             } on Exception catch (e) {
               AppFunctions.debugPrint('Lỗi khi thực hiện hành động $value: $e');
@@ -124,9 +170,9 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
           },
           itemBuilder:
               (BuildContext context) => <PopupMenuEntry<String>>[
-                const PopupMenuItem<String>(
+                PopupMenuItem<String>(
                   value: 'hide',
-                  child: Text('Tạm ẩn'),
+                  child: Text(state.hidden ? 'Bỏ ẩn' : 'Tạm ẩn'),
                 ),
                 const PopupMenuItem<String>(
                   value: 'labels',
@@ -135,14 +181,16 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                 PopupMenuItem<String>(
                   value: 'important',
                   child: Text(
-                    email.important
+                    state.important
                         ? 'Bỏ đánh dấu quan trọng'
                         : 'Đánh dấu là quan trọng',
                   ),
                 ),
-                const PopupMenuItem<String>(
+                PopupMenuItem<String>(
                   value: 'spam',
-                  child: Text('Báo cáo thư rác'),
+                  child: Text(
+                    state.spam ? 'Bỏ đánh dấu thư rác' : 'Báo cáo thư rác',
+                  ),
                 ),
                 const PopupMenuItem<String>(
                   value: 'cancel',
@@ -159,7 +207,6 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
     LabelController labelController,
   ) async {
     final labels = await labelController.loadLabels();
-    // Tạo một bản sao của danh sách nhãn hiện tại của email
     final selectedLabels = List<String>.from(state.labels);
 
     if (!context.mounted) return;
@@ -216,7 +263,6 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                   TextButton(
                     onPressed: () async {
                       try {
-                        // Cập nhật danh sách nhãn trong Firestore
                         await emailService.updateEmailStatus(email.id, {
                           'labels': selectedLabels,
                         });
@@ -230,7 +276,6 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                             const SnackBar(content: Text('Đã cập nhật nhãn')),
                           );
                         }
-                        // Nếu nhãn được chọn, chuyển đến danh mục nhãn đầu tiên
                         if (selectedLabels.isNotEmpty) {
                           onCategoryChanged?.call(selectedLabels.first);
                         }

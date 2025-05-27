@@ -11,7 +11,7 @@ class AppStrings {
   static const String inbox = 'Hộp thư đến';
   static const String starred = 'Có gắn dấu sao';
   static const String important = 'Quan trọng';
-  static const String hidden = 'Thư ẩn';
+  static const String hidden = 'Đã ẩn';
   static const String sent = 'Đã gửi';
   static const String spam = 'Thư rác';
   static const String drafts = 'Thư nháp';

@@ -11,6 +11,8 @@ class MailDetailBody extends StatefulWidget {
   MailDetailBody({
     required this.email,
     required this.state,
+    required this.index,
+    required this.senderFullName, // Thêm tham số senderFullName
     this.onRefresh,
     this.markMailAsRead,
     super.key,
@@ -18,6 +20,8 @@ class MailDetailBody extends StatefulWidget {
 
   final Email email;
   final EmailState state;
+  final int index;
+  final String senderFullName; // Họ tên người gửi
   final VoidCallback? onRefresh;
   final VoidCallback? markMailAsRead;
 
@@ -80,8 +84,12 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                         size: 25,
                       ),
                       onPressed: () async {
+                        // Toggle trạng thái trong Firestore
                         await emailService.toggleStar(email.id, state.starred);
-                        widget.onRefresh?.call();
+                        // Cập nhật trạng thái cục bộ ngay lập tức
+                        setState(() {
+                          state = state.copyWith(starred: !state.starred);
+                        });
                       },
                     ),
                   ],
@@ -90,27 +98,16 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                 // sender information
                 ListTile(
                   contentPadding: const EdgeInsets.only(right: -16),
-                  leading: const CircleAvatar(
+                  leading: CircleAvatar(
                     backgroundImage: NetworkImage(
-                      'https://via.placeholder.com/40',
+                      'https://picsum.photos/250?image=${widget.index}',
                     ),
                   ),
                   title: Row(
                     children: [
-                      FutureBuilder<String>(
-                        future: emailService.getUserFullNameByEmail(email.from),
-                        builder: (context, snapshot) {
-                          final displayName =
-                              (snapshot.connectionState ==
-                                          ConnectionState.done &&
-                                      snapshot.hasData)
-                                  ? snapshot.data!
-                                  : '';
-                          return Text(
-                            displayName,
-                            style: TextStyle(color: onSurface),
-                          );
-                        },
+                      Text(
+                        widget.senderFullName, // Chỉ hiển thị họ tên
+                        style: TextStyle(color: onSurface),
                       ),
                       const SizedBox(width: 8),
                       Text(

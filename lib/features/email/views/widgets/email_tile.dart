@@ -11,6 +11,7 @@ class EmailTile extends StatelessWidget {
     required this.index,
     required this.emailService,
     required this.currentCategory,
+    required this.senderFullName, // Thêm tham số senderFullName
     this.onStarToggled,
     this.onTap,
     super.key,
@@ -21,28 +22,20 @@ class EmailTile extends StatelessWidget {
   final int index;
   final EmailService emailService;
   final String currentCategory;
+  final String senderFullName; // Họ tên người gửi
   final VoidCallback? onStarToggled;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final senderNameWidget = FutureBuilder<String>(
-      future: emailService.getUserFullNameByEmail(email.from),
-      builder: (context, snapshot) {
-        final displayName =
-            snapshot.connectionState == ConnectionState.done && snapshot.hasData
-                ? snapshot.data!
-                : email.from;
-        return Text(
-          displayName,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            fontSize: 16,
-            color: Theme.of(context).colorScheme.onSurface,
-            fontWeight: state.read ? FontWeight.normal : FontWeight.bold,
-          ),
-        );
-      },
+    final senderNameWidget = Text(
+      senderFullName, // Chỉ hiển thị họ tên
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+        fontSize: 16,
+        color: Theme.of(context).colorScheme.onSurface,
+        fontWeight: state.read ? FontWeight.normal : FontWeight.bold,
+      ),
     );
 
     return InkWell(

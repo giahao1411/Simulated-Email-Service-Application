@@ -373,6 +373,9 @@ class _SearchResultsState extends State<SearchResults> {
                             email: _results[index].email!,
                             state:
                                 _filteredEmails[index]['state'] as EmailState,
+                            senderFullName:
+                                _results[index]
+                                    .senderName, // Truyền senderFullName
                             onRefresh: _performSearch,
                           ),
                     ),
