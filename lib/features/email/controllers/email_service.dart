@@ -20,7 +20,9 @@ class EmailService {
 
     AppFunctions.debugPrint('Lấy email cho danh mục: $category');
 
-    if (category == AppStrings.inbox) {
+    // Đồng bộ logic cho "Inbox" (bao gồm cả "Hộp thư đến" và "Inbox")
+    if (category.toLowerCase() == AppStrings.inbox.toLowerCase() ||
+        category == 'Inbox') {
       return _getInboxEmails();
     }
 
@@ -60,6 +62,10 @@ class EmailService {
           // Lấy họ tên người gửi
           final senderFullName = await getUserFullNameByEmail(email.from);
 
+          AppFunctions.debugPrint(
+            'Checking email ${email.id} - important: ${emailState.important}, hidden: ${emailState.hidden}, trashed: ${emailState.trashed}, labels: ${emailState.labels}',
+          );
+
           if (emailState.hidden && category != AppStrings.hidden) {
             AppFunctions.debugPrint(
               'Bỏ qua email ẩn: ${email.id} cho danh mục $category',
@@ -74,39 +80,171 @@ class EmailService {
             continue;
           }
 
-          // Lọc theo danh mục
-          if (category == AppStrings.starred && !emailState.starred) continue;
-          if (category == AppStrings.trash && !emailState.trashed) continue;
-          if (category == AppStrings.important && !emailState.important)
-            continue;
-          if (category == AppStrings.spam && !emailState.spam) continue;
-          if (category == AppStrings.hidden && !emailState.hidden) continue;
-          if (category != AppStrings.starred &&
-              category != AppStrings.trash &&
-              category != AppStrings.inbox &&
-              category != AppStrings.sent &&
-              category != AppStrings.drafts &&
-              category != AppStrings.important &&
-              category != AppStrings.spam &&
-              category != AppStrings.hidden &&
-              !emailState.labels.contains(category)) {
-            continue;
+          // Lọc theo danh mục cố định
+          bool shouldInclude = true;
+
+          if (category == AppStrings.starred) {
+            if (!emailState.starred) {
+              AppFunctions.debugPrint(
+                'Bỏ qua email không có sao: ${email.id} cho danh mục $category',
+              );
+              shouldInclude = false;
+            }
+          } else if (category == AppStrings.important) {
+            if (!emailState.important) {
+              AppFunctions.debugPrint(
+                'Bỏ qua email không quan trọng: ${email.id} cho danh mục $category',
+              );
+              shouldInclude = false;
+            }
+          } else if (category == AppStrings.spam) {
+            if (!emailState.spam) {
+              AppFunctions.debugPrint(
+                'Bỏ qua email không phải spam: ${email.id} cho danh mục $category',
+              );
+              shouldInclude = false;
+            }
+          } else if (category == AppStrings.hidden) {
+            if (!emailState.hidden) {
+              AppFunctions.debugPrint(
+                'Bỏ qua email không ẩn: ${email.id} cho danh mục $category',
+              );
+              shouldInclude = false;
+            }
+          } else {
+            // Chỉ kiểm tra labels cho các nhãn tùy chỉnh (không phải danh mục cố định)
+            final fixedCategories = [
+              AppStrings.starred,
+              AppStrings.important,
+              AppStrings.spam,
+              AppStrings.hidden,
+              AppStrings.inbox,
+              AppStrings.sent,
+              AppStrings.drafts,
+              AppStrings.trash,
+            ];
+            if (!fixedCategories.contains(category) &&
+                !emailState.labels.contains(category)) {
+              AppFunctions.debugPrint(
+                'Bỏ qua email không thuộc nhãn tùy chỉnh: ${email.id} cho danh mục $category',
+              );
+              shouldInclude = false;
+            }
           }
+
+          if (!shouldInclude) continue;
 
           emailsWithState.add({
             'email': email,
             'state': emailState,
-            'senderFullName': senderFullName, // Thêm họ tên vào dữ liệu trả về
+            'senderFullName': senderFullName,
           });
         }
         if (emailsWithState.isEmpty) {
           AppFunctions.debugPrint(
             'Danh sách email rỗng cho danh mục: $category',
           );
+        } else {
+          AppFunctions.debugPrint(
+            'Found ${emailsWithState.length} emails in category "$category"',
+          );
         }
         return emailsWithState;
       } on Exception catch (e) {
         AppFunctions.debugPrint('Lỗi khi ánh xạ dữ liệu email: $e');
+        return <Map<String, dynamic>>[];
+      }
+    });
+  }
+
+  // Thêm phương thức lấy tất cả email từ các danh mục
+  Stream<List<Map<String, dynamic>>> getAllEmails() {
+    if (userEmail == null || FirebaseAuth.instance.currentUser == null) {
+      AppFunctions.debugPrint('Không truy vấn email vì chưa đăng nhập');
+      return Stream.value([]);
+    }
+
+    AppFunctions.debugPrint('Lấy tất cả email cho user: $userEmail');
+
+    // Lấy email từ "emails" (bao gồm Inbox, Sent, v.v.)
+    final emailsStream =
+        _firestore
+            .collection('emails')
+            .orderBy('timestamp', descending: true)
+            .snapshots();
+
+    // Lấy email từ "drafts"
+    final draftsStream =
+        _firestore
+            .collection('drafts')
+            .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+            .orderBy('timestamp', descending: true)
+            .snapshots();
+
+    // Lấy trạng thái email
+    final stateStream =
+        _firestore
+            .collection('users')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .collection('email_states')
+            .snapshots();
+
+    return StreamGroup.merge([
+      emailsStream,
+      draftsStream,
+      stateStream,
+    ]).asyncMap((snapshot) async {
+      try {
+        final emailsWithState = <Map<String, dynamic>>[];
+        final seenIds = <String>{};
+
+        for (final doc in snapshot.docs) {
+          final docId = doc.id;
+          if (seenIds.contains(docId)) continue;
+          seenIds.add(docId);
+
+          final data = doc.data();
+          if (data.isEmpty) continue;
+
+          final email = Email.fromMap(docId, data);
+          final stateDoc =
+              await _firestore
+                  .collection('users')
+                  .doc(FirebaseAuth.instance.currentUser!.uid)
+                  .collection('email_states')
+                  .doc(email.id)
+                  .get();
+          final emailState =
+              stateDoc.exists
+                  ? EmailState.fromMap(stateDoc.data()!)
+                  : EmailState(emailId: email.id);
+
+          final senderFullName = await getUserFullNameByEmail(email.from);
+
+          emailsWithState.add({
+            'email': email,
+            'state': emailState,
+            'senderFullName': senderFullName,
+          });
+        }
+
+        if (emailsWithState.isEmpty) {
+          AppFunctions.debugPrint('Danh sách tất cả email rỗng');
+        } else {
+          AppFunctions.debugPrint(
+            'Tìm thấy ${emailsWithState.length} email trong tất cả danh mục',
+          );
+        }
+
+        emailsWithState.sort((a, b) {
+          final aTimestamp = (a['email'] as Email).timestamp;
+          final bTimestamp = (b['email'] as Email).timestamp;
+          return bTimestamp.compareTo(aTimestamp);
+        });
+
+        return emailsWithState;
+      } on Exception catch (e) {
+        AppFunctions.debugPrint('Lỗi khi lấy tất cả email: $e');
         return <Map<String, dynamic>>[];
       }
     });
@@ -184,6 +322,16 @@ class EmailService {
                   .orderBy('timestamp', descending: true)
                   .get();
 
+          AppFunctions.debugPrint(
+            'toSnapshot: ${toSnapshot.docs.length} emails',
+          );
+          AppFunctions.debugPrint(
+            'ccSnapshot: ${ccSnapshot.docs.length} emails',
+          );
+          AppFunctions.debugPrint(
+            'bccSnapshot: ${bccSnapshot.docs.length} emails',
+          );
+
           for (final snapshot in [toSnapshot, ccSnapshot, bccSnapshot]) {
             for (final doc in snapshot.docs) {
               final docId = doc.id;
@@ -217,13 +365,11 @@ class EmailService {
                         ? EmailState.fromMap(stateDoc.data()!)
                         : EmailState(emailId: email.id);
 
-                // Lấy họ tên người gửi
                 final senderFullName = await getUserFullNameByEmail(email.from);
 
-                // Loại bỏ email ẩn hoặc trong thùng rác khỏi hộp thư đến
                 if (emailState.hidden || emailState.trashed) {
                   AppFunctions.debugPrint(
-                    'Bỏ qua email ${email.id} (ẩn hoặc trong thùng rác) cho hộp thư đến',
+                    'Bỏ qua email ${email.id} (ẩn: ${emailState.hidden}, thùng rác: ${emailState.trashed}) cho hộp thư đến',
                   );
                   continue;
                 }
@@ -285,13 +431,11 @@ class EmailService {
                       ? EmailState.fromMap(stateDoc.data()!)
                       : EmailState(emailId: email.id);
 
-              // Lấy họ tên người gửi
               final senderFullName = await getUserFullNameByEmail(email.from);
 
-              // Loại bỏ email ẩn hoặc trong thùng rác khỏi hộp thư đến
               if (emailState.hidden || emailState.trashed) {
                 AppFunctions.debugPrint(
-                  'Bỏ qua email ${email.id} (ẩn hoặc trong thùng rác) cho hộp thư đến',
+                  'Bỏ qua email ${email.id} (ẩn: ${emailState.hidden}, thùng rác: ${emailState.trashed}) cho hộp thư đến',
                 );
                 continue;
               }

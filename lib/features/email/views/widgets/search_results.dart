@@ -44,17 +44,9 @@ class _SearchResultsState extends State<SearchResults> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.searchQuery != widget.searchQuery ||
         oldWidget.currentCategory != widget.currentCategory ||
-        !_filtersEqual(oldWidget.filters, widget.filters)) {
+        oldWidget.filters != widget.filters) {
       _performSearch();
     }
-  }
-
-  bool _filtersEqual(SearchFilters a, SearchFilters b) {
-    return a.label == b.label &&
-        a.from == b.from &&
-        a.to == b.to &&
-        a.hasAttachments == b.hasAttachments &&
-        a.dateRange == b.dateRange;
   }
 
   Future<void> _performSearch() async {
@@ -72,17 +64,42 @@ class _SearchResultsState extends State<SearchResults> {
     });
 
     try {
-      final emailStream =
-          _emailService.getEmails(widget.currentCategory).asBroadcastStream();
+      AppFunctions.debugPrint('=== PERFORMING SEARCH ===');
+      AppFunctions.debugPrint('Query: "${widget.searchQuery}"');
+      AppFunctions.debugPrint('Current Category: "${widget.currentCategory}"');
+      AppFunctions.debugPrint('Filters: ${widget.filters.toString()}');
+
+      // Mặc định tìm kiếm trên tất cả email, trừ khi filters.category được chọn
+      Stream<List<Map<String, dynamic>>> emailStream;
+      String searchScope = 'Tất cả thư';
+      if (widget.filters.category != null) {
+        searchScope = widget.filters.category!;
+        AppFunctions.debugPrint('Switching to filter category: "$searchScope"');
+        emailStream = _emailService.getEmails(searchScope).asBroadcastStream();
+      } else {
+        AppFunctions.debugPrint('Searching in all emails');
+        emailStream = _emailService.getAllEmails().asBroadcastStream();
+      }
+
       final emailData = await emailStream.first;
+
+      // Debug: In danh sách email thô để kiểm tra
+      AppFunctions.debugPrint('Raw emails in "$searchScope": $emailData');
+
+      if (emailData.isEmpty) {
+        AppFunctions.debugPrint('No emails found in "$searchScope"');
+      } else {
+        AppFunctions.debugPrint(
+          'Found ${emailData.length} emails in "$searchScope"',
+        );
+      }
 
       final query = widget.searchQuery.trim().toLowerCase();
       final filteredEmails =
           emailData.where((item) {
             final email = item['email'] as Email;
-            final state = item['state'] as EmailState;
 
-            // Text search
+            // Lọc theo từ khóa
             var matchesText = true;
             if (query.isNotEmpty) {
               final from = email.from.trim().toLowerCase();
@@ -97,6 +114,7 @@ class _SearchResultsState extends State<SearchResults> {
               final bcc = email.bcc
                   .map((recipient) => recipient.trim().toLowerCase())
                   .join(' ');
+
               matchesText =
                   from.contains(query) ||
                   subject.contains(query) ||
@@ -106,38 +124,31 @@ class _SearchResultsState extends State<SearchResults> {
                   bcc.contains(query);
             }
 
-            // Filter by sender
+            // Lọc theo nhãn nếu có (đã xử lý trong emailStream)
+            // Lọc theo các bộ lọc khác
             var matchesFrom = true;
-            if (widget.filters.from != null) {
+            if (widget.filters.from != null &&
+                widget.filters.from!.isNotEmpty) {
               matchesFrom = email.from.toLowerCase().contains(
                 widget.filters.from!.toLowerCase(),
               );
             }
 
-            // Filter by recipient
             var matchesTo = true;
-            if (widget.filters.to != null) {
+            if (widget.filters.to != null && widget.filters.to!.isNotEmpty) {
               final filterTo = widget.filters.to!.toLowerCase();
               matchesTo =
-                  email.to.any(
-                    (recipient) => recipient.toLowerCase().contains(filterTo),
-                  ) ||
-                  email.cc.any(
-                    (recipient) => recipient.toLowerCase().contains(filterTo),
-                  ) ||
-                  email.bcc.any(
-                    (recipient) => recipient.toLowerCase().contains(filterTo),
-                  );
+                  email.to.any((r) => r.toLowerCase().contains(filterTo)) ||
+                  email.cc.any((r) => r.toLowerCase().contains(filterTo)) ||
+                  email.bcc.any((r) => r.toLowerCase().contains(filterTo));
             }
 
-            // Filter by attachments
             var matchesAttachments = true;
             if (widget.filters.hasAttachments != null) {
               matchesAttachments =
                   email.hasAttachments == widget.filters.hasAttachments;
             }
 
-            // Filter by date range
             var matchesDateRange = true;
             if (widget.filters.dateRange != null) {
               final emailDate = email.timestamp;
@@ -147,21 +158,21 @@ class _SearchResultsState extends State<SearchResults> {
               );
               matchesDateRange =
                   emailDate.isAfter(startDate) && emailDate.isBefore(endDate);
-            }
-
-            // Filter by label (from EmailState)
-            var matchesLabel = true;
-            if (widget.filters.label != null) {
-              matchesLabel = state.labels.contains(widget.filters.label);
+              AppFunctions.debugPrint(
+                'Date filter: ${emailDate} vs $startDate - $endDate, matches: $matchesDateRange',
+              );
             }
 
             return matchesText &&
                 matchesFrom &&
                 matchesTo &&
                 matchesAttachments &&
-                matchesDateRange &&
-                matchesLabel;
+                matchesDateRange;
           }).toList();
+
+      AppFunctions.debugPrint(
+        'Filtered emails count: ${filteredEmails.length}',
+      );
 
       final searchResults = await Future.wait(
         filteredEmails.map((item) async {
@@ -182,20 +193,24 @@ class _SearchResultsState extends State<SearchResults> {
             backgroundColor: Colors.blue,
             email: email,
           );
-        }).toList(),
+        }),
       );
 
-      setState(() {
-        _results = searchResults;
-        _filteredEmails = filteredEmails;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _results = searchResults;
+          _filteredEmails = filteredEmails;
+          _isLoading = false;
+        });
+      }
     } on Exception catch (e) {
-      setState(() {
-        _results = [];
-        _filteredEmails = [];
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _results = [];
+          _filteredEmails = [];
+          _isLoading = false;
+        });
+      }
       AppFunctions.debugPrint('Error searching emails: $e');
       if (mounted) {
         ScaffoldMessenger.of(
@@ -207,21 +222,18 @@ class _SearchResultsState extends State<SearchResults> {
 
   Widget _buildFilterSummary() {
     final activeFilters = <String>[];
-
-    if (widget.filters.label != null) {
-      activeFilters.add('Nhãn: ${widget.filters.label}');
-    }
-    if (widget.filters.from != null) {
+    if (widget.filters.category != null)
+      activeFilters.add(
+        'Thư mục: ${_getCategoryDisplayName(widget.filters.category!)}',
+      );
+    if (widget.filters.from != null)
       activeFilters.add('Từ: ${widget.filters.from}');
-    }
-    if (widget.filters.to != null) {
+    if (widget.filters.to != null)
       activeFilters.add('Đến: ${widget.filters.to}');
-    }
-    if (widget.filters.hasAttachments != null) {
+    if (widget.filters.hasAttachments != null)
       activeFilters.add(
         'Tệp đính kèm: ${widget.filters.hasAttachments! ? "Có" : "Không"}',
       );
-    }
     if (widget.filters.dateRange != null) {
       final start = widget.filters.dateRange!.start;
       final end = widget.filters.dateRange!.end;
@@ -236,7 +248,7 @@ class _SearchResultsState extends State<SearchResults> {
     final isDarkMode = themeProvider.isDarkMode;
     final textColor = isDarkMode ? Colors.white70 : Colors.grey[600];
 
-    return Container(
+    return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,6 +299,52 @@ class _SearchResultsState extends State<SearchResults> {
     );
   }
 
+  String _getCategoryDisplayName(String category) {
+    const Map<String, String> categoryNames = {
+      'Inbox': 'Hộp thư đến',
+      'Sent': 'Thư đã gửi',
+      'Draft': 'Thư nháp',
+      'Important': 'Quan trọng',
+      'Spam': 'Thư rác',
+      'Trash': 'Thùng rác',
+      'Archive': 'Lưu trữ',
+    };
+    return categoryNames[category] ?? category;
+  }
+
+  Widget _buildInitialState() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white70 : Colors.grey[600];
+    final iconColor = isDarkMode ? Colors.white38 : Colors.grey[400];
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search, size: 80, color: iconColor),
+          const SizedBox(height: 24),
+          Text(
+            'Tìm kiếm trong tất cả thư',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              'Nhập từ khóa hoặc sử dụng bộ lọc để tìm kiếm email',
+              style: TextStyle(color: textColor, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeManage>(context, listen: false);
@@ -294,8 +352,10 @@ class _SearchResultsState extends State<SearchResults> {
     final textColor = isDarkMode ? Colors.white70 : Colors.grey[600];
     final iconColor = isDarkMode ? Colors.white38 : Colors.grey[400];
 
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+
+    if (widget.searchQuery.isEmpty && !widget.filters.hasActiveFilters) {
+      return _buildInitialState();
     }
 
     if (_results.isEmpty) {
@@ -312,14 +372,14 @@ class _SearchResultsState extends State<SearchResults> {
                   Text(
                     widget.searchQuery.isNotEmpty
                         ? 'Không tìm thấy kết quả cho "${widget.searchQuery}"'
-                        : 'Không tìm thấy email nào phù hợp với bộ lọc',
+                        : 'Không có email phù hợp với bộ lọc',
                     style: TextStyle(color: textColor, fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
                   if (widget.filters.hasActiveFilters) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Thử điều chỉnh bộ lọc để xem thêm kết quả',
+                      'Thử điều chỉnh bộ lọc hoặc từ khóa để xem thêm kết quả',
                       style: TextStyle(color: textColor, fontSize: 14),
                       textAlign: TextAlign.center,
                     ),
@@ -373,9 +433,7 @@ class _SearchResultsState extends State<SearchResults> {
                             email: _results[index].email!,
                             state:
                                 _filteredEmails[index]['state'] as EmailState,
-                            senderFullName:
-                                _results[index]
-                                    .senderName, // Truyền senderFullName
+                            senderFullName: _results[index].senderName,
                             onRefresh: _performSearch,
                           ),
                     ),
