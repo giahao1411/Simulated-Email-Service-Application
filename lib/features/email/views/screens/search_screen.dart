@@ -18,27 +18,32 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _hasSearched = false;
 
   void _onSearchChanged(String query) {
-    setState(() {
-      _searchQuery = query;
-      if (query.isNotEmpty) {
-        _hasSearched = true;
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _searchQuery = query;
+        _hasSearched = query.isNotEmpty || _filters.hasActiveFilters;
+      });
     });
   }
 
   void _onSearchSubmitted(String query) {
-    setState(() {
-      _searchQuery = query;
-      _hasSearched = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _searchQuery = query;
+        _hasSearched = query.isNotEmpty || _filters.hasActiveFilters;
+      });
     });
   }
 
   void _onFiltersChanged(SearchFilters filters) {
-    setState(() {
-      _filters = filters;
-      if (filters.hasActiveFilters) {
-        _hasSearched = true;
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _filters = filters;
+        _hasSearched = _searchQuery.isNotEmpty || filters.hasActiveFilters;
+      });
     });
   }
 
@@ -53,6 +58,7 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(
           children: [
             SearchAppBar(
+              currentCategory: widget.currentCategory,
               onSearchChanged: _onSearchChanged,
               onSearchSubmitted: _onSearchSubmitted,
               onBackPressed: _onBackPressed,
@@ -86,7 +92,7 @@ class _SearchScreenState extends State<SearchScreen> {
           Icon(Icons.search, size: 80, color: iconColor),
           const SizedBox(height: 24),
           Text(
-            'Tìm kiếm trong ${widget.currentCategory}',
+            'Tìm trong thư',
             style: TextStyle(
               color: textColor,
               fontSize: 18,

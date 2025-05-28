@@ -63,6 +63,20 @@ class _GmailScreenState extends State<GmailScreen>
     }
   }
 
+  String _getCategoryDisplayName(String category) {
+    const Map<String, String> categoryNames = {
+      'Inbox': 'Hộp thư đến',
+      'Sent': 'Thư đã gửi',
+      'Draft': 'Thư nháp',
+      'Important': 'Quan trọng',
+      'Spam': 'Thư rác',
+      'Trash': 'Thùng rác',
+      'Archive': 'Lưu trữ',
+      'All Mail': 'Tất cả thư',
+    };
+    return categoryNames[category] ?? category;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -80,7 +94,7 @@ class _GmailScreenState extends State<GmailScreen>
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    currentCategory,
+                    _getCategoryDisplayName(currentCategory),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontSize: 14,
                       color: Theme.of(
