@@ -59,10 +59,6 @@ class DraftTile extends StatelessWidget {
                           ).textTheme.bodyLarge?.copyWith(
                             fontSize: 16,
                             color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight:
-                                state.read
-                                    ? FontWeight.normal
-                                    : FontWeight.bold,
                           ),
                         ),
                       ),
@@ -83,8 +79,6 @@ class DraftTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight:
-                          state.read ? FontWeight.normal : FontWeight.bold,
                     ),
                   ),
                   Row(

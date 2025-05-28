@@ -1,18 +1,21 @@
+import 'package:email_application/core/constants/app_functions.dart';
+import 'package:email_application/core/constants/app_strings.dart';
+import 'package:email_application/features/email/controllers/draft_service.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ComposeAppBar({
-    required this.onSaveDraft,
     required this.onSendEmail,
     required this.onBack,
+    required this.draftId,
     super.key,
   });
 
-  final VoidCallback onSaveDraft;
   final VoidCallback onSendEmail;
   final Future<bool> Function() onBack;
+  final String draftId;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +52,8 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget popUpMenuButton(BuildContext context) {
+    final draftService = DraftService();
+
     final themeProvider = Provider.of<ThemeManage>(context);
     final isDarkMode = themeProvider.isDarkMode;
     final textIconTheme = isDarkMode ? Colors.white70 : Colors.grey[800];
@@ -57,14 +62,29 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
       icon: Icon(Icons.more_horiz, color: textIconTheme),
       offset: const Offset(0, 40),
       color: isDarkMode ? Colors.grey[800] : Colors.white,
-      onSelected: (String value) {
+      onSelected: (String value) async {
         if (value == 'discard') {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Đã bỏ nháp!')));
-          Future.delayed(const Duration(milliseconds: 500), () {
-            Navigator.pop(context);
-          });
+          try {
+            await draftService.deleteDraft(draftId);
+            if (context.mounted) {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('${AppStrings.drafts} đã được bỏ'),
+                ),
+              );
+            }
+          } on Exception catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Bỏ nháp thất bại: $e')));
+            }
+          }
+        } else if (value == 'schedule-send') {
+          // Handle schedule send action
+          AppFunctions.debugPrint('Schedule send action selected');
+          // Implement your schedule send logic here
         }
       },
       itemBuilder:

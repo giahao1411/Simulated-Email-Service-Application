@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/draft_service.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/draft.dart';
@@ -39,19 +40,57 @@ class _ComposeScreenState extends State<ComposeScreen> {
   }
 
   // check if any of the text fields have data
-  bool get hasData {
-    return toController.text.isNotEmpty ||
-        ccController.text.isNotEmpty ||
-        bccController.text.isNotEmpty ||
-        subjectController.text.isNotEmpty ||
-        bodyController.text.isNotEmpty;
+  bool get hasChanges {
+    final toEmails = EmailValidator.parseEmails(toController.text);
+    final ccEmails = EmailValidator.parseEmails(ccController.text);
+    final bccEmails = EmailValidator.parseEmails(bccController.text);
+    final subject = subjectController.text.trim();
+    final body = bodyController.text.trim();
+
+    if (widget.draft == null) {
+      return toEmails.isNotEmpty ||
+          ccEmails.isNotEmpty ||
+          bccEmails.isNotEmpty ||
+          subject.isNotEmpty ||
+          body.isNotEmpty;
+    }
+
+    return widget.draft!.to.join(',') != toEmails.join(',') ||
+        widget.draft!.cc.join(',') != ccEmails.join(',') ||
+        widget.draft!.bcc.join(',') != bccEmails.join(',') ||
+        widget.draft!.subject != subject ||
+        widget.draft!.body != body;
   }
 
   Future<bool> handleBackAction() async {
-    if (hasData) {
-      await handleSaveDraft();
+    if (!hasChanges) {
+      AppFunctions.debugPrint('Không có thay đổi, bỏ qua lưu nháp');
+      return true; // Cho phép thoát
     }
-    return true; // allow back navigation
+
+    final shouldSave = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Lưu thư nháp?'),
+            content: const Text('Bạn có muốn lưu thư nháp trước khi thoát?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Hủy'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Lưu'),
+              ),
+            ],
+          ),
+    );
+
+    if (shouldSave ?? false) {
+      await handleSaveDraft(showSnackBar: false);
+    }
+    return true;
   }
 
   Future<void> handleSendEmail() async {
@@ -106,11 +145,32 @@ class _ComposeScreenState extends State<ComposeScreen> {
     }
   }
 
-  Future<void> handleSaveDraft() async {
+  Future<void> handleSaveDraft({bool showSnackBar = true}) async {
     // get to, cc, and bcc emails
     final toEmails = EmailValidator.parseEmails(toController.text);
     final ccEmails = EmailValidator.parseEmails(ccController.text);
     final bccEmails = EmailValidator.parseEmails(bccController.text);
+    final subject = subjectController.text.trim();
+    final body = bodyController.text.trim();
+
+    // Bỏ qua nếu không có dữ liệu
+    if (toEmails.isEmpty &&
+        ccEmails.isEmpty &&
+        bccEmails.isEmpty &&
+        subject.isEmpty &&
+        body.isEmpty &&
+        widget.draft == null) {
+      AppFunctions.debugPrint('Các trường rỗng, không lưu nháp');
+      return;
+    }
+
+    // Kiểm tra thay đổi
+    if (!hasChanges && widget.draft != null) {
+      AppFunctions.debugPrint(
+        'Không có thay đổi, bỏ qua lưu nháp: ${widget.draft!.id}',
+      );
+      return;
+    }
 
     try {
       await draftService.saveDraft(
@@ -121,7 +181,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
         body: bodyController.text,
         id: widget.draft?.id, // update draft if it exists
       );
-      if (mounted) {
+      if (mounted && showSnackBar) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Lưu thư nháp thành công')),
         );
@@ -147,9 +207,9 @@ class _ComposeScreenState extends State<ComposeScreen> {
       },
       child: Scaffold(
         appBar: ComposeAppBar(
-          onSaveDraft: handleSaveDraft,
           onSendEmail: handleSendEmail,
           onBack: handleBackAction,
+          draftId: widget.draft!.id,
         ),
         body: ComposeBody(
           toController: toController,

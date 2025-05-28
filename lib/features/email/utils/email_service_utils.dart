@@ -62,6 +62,7 @@ class EmailServiceUtils {
   ) {
     switch (category.toLowerCase()) {
       case 'inbox':
+      case 'hộp thư đến':
         return email is Email &&
             (email.to.contains(userEmail) ||
                 email.cc.contains(userEmail) ||
@@ -69,29 +70,39 @@ class EmailServiceUtils {
             !emailState.trashed &&
             !emailState.hidden;
       case 'sent':
-        return email is Email && email.from == userEmail;
+      case 'đã gửi':
+        return email is Email &&
+            email.from == userEmail &&
+            !emailState.trashed &&
+            !emailState.hidden;
       case 'draft':
       case 'drafts':
+      case 'thư nháp':
         return email is Draft &&
             email.userId == FirebaseAuth.instance.currentUser!.uid;
       case 'starred':
+      case 'có gắn dấu sao':
         return email is Email &&
             emailState.starred &&
             !emailState.trashed &&
             !emailState.hidden;
       case 'important':
+      case 'quan trọng':
         return email is Email &&
             emailState.important &&
             !emailState.trashed &&
             !emailState.hidden;
       case 'spam':
+      case 'thư rác':
         return email is Email &&
             emailState.spam &&
             !emailState.trashed &&
             !emailState.hidden;
       case 'hidden':
+      case 'đã ẩn':
         return email is Email && emailState.hidden;
       case 'trash':
+      case 'thùng rác':
         return email is Email && emailState.trashed;
       default:
         return email is Email &&

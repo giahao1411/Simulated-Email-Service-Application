@@ -22,7 +22,16 @@ class DraftService {
       }
       final userId = FirebaseAuth.instance.currentUser!.uid;
 
-      final draftRef = await _firestore.collection('drafts').add({
+      // create new or update the existing draft
+      final draft = await _firestore.collection('drafts').add({
+        'id':
+            id ??
+            _firestore
+                .collection('users')
+                .doc(userId)
+                .collection('drafts')
+                .doc()
+                .id,
         'userId': userId,
         'to': to,
         'cc': cc,
@@ -36,8 +45,8 @@ class DraftService {
           .collection('users')
           .doc(userId)
           .collection('email_states')
-          .doc(draftRef.id)
-          .set(EmailState(emailId: draftRef.id).toMap());
+          .doc(draft.id)
+          .set(EmailState(emailId: draft.id, read: true).toMap());
 
       // Cập nhật danh bạ cho người gửi
       await EmailServiceUtils.updateUserContacts(
@@ -53,15 +62,15 @@ class DraftService {
     }
   }
 
-  Future<void> deleteDraft(String emailId) async {
+  Future<void> deleteDraft(String draftId) async {
     try {
-      await _firestore.collection('drafts').doc(emailId).delete();
-      await _firestore
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
-          .collection('email_states')
-          .doc(emailId)
-          .delete();
+      if (FirebaseAuth.instance.currentUser == null) {
+        throw Exception('Chưa đăng nhập để xóa thư nháp');
+      }
+
+      await _firestore.collection('drafts').doc(draftId).delete();
+
+      AppFunctions.debugPrint('Xóa nháp thành công: $draftId');
     } catch (e) {
       AppFunctions.debugPrint('Lỗi khi xóa thư nháp: $e');
       throw Exception('Không thể xóa thư nháp: $e');
