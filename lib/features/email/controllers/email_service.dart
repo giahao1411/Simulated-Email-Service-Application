@@ -4,6 +4,7 @@ import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
+import 'package:email_application/features/email/utils/email_reply.dart';
 import 'package:email_application/features/email/utils/email_service_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -707,7 +708,11 @@ class EmailService {
     }
   }
 
-  Future<void> sendReply(String emailId, EmailState state) async {
+  Future<void> sendReply(
+    String emailId,
+    EmailState state,
+    String replyBody,
+  ) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('Người dùng chưa đăng nhập');
 
@@ -716,10 +721,14 @@ class EmailService {
     if (!emailDoc.exists) throw Exception('Email không tồn tại');
     final originalEmail = Email.fromMap(emailId, emailDoc.data()!);
 
-    // tạo email reply
-    final replyEmail = originalEmail.createReply(user.email!);
+    // tạo mail trả lời
+    final replyEmail = EmailReply.createCustomReply(
+      originalEmail,
+      user.email!,
+      replyBody,
+    );
 
-    // Lưu email reply vào Firestore và lấy ID
+    // lưu vào Firestore và lấy ID
     final replyDocRef = await _firestore
         .collection('emails')
         .add(replyEmail.toMap());
@@ -739,8 +748,10 @@ class EmailService {
       );
     }
 
-    // lưu vào Firestore
+    // luu trạng thái vào đúng đường dẫn
     await _firestore
+        .collection('users')
+        .doc(user.uid)
         .collection('email_states')
         .doc(emailId)
         .set(updatedState.toMap(), SetOptions(merge: true));
