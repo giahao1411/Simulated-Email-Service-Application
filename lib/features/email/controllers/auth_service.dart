@@ -54,7 +54,7 @@ class AuthService {
                 otp: credential.smsCode ?? '',
               );
               AppFunctions.debugPrint('Automatic registration successful');
-            } catch (e) {
+            } on Exception catch (e) {
               AppFunctions.debugPrint('Automatic registration error: $e');
               onError('Automatic registration failed: $e');
             }
@@ -66,16 +66,12 @@ class AuthService {
           switch (e.code) {
             case 'invalid-phone-number':
               errorMessage = 'Số điện thoại không hợp lệ';
-              break;
             case 'quota-exceeded':
               errorMessage = 'Đã vượt quá hạn mức gửi OTP, thử lại sau';
-              break;
             case 'too-many-requests':
               errorMessage = 'Quá nhiều yêu cầu, vui lòng thử lại sau';
-              break;
             case 'app-not-authorized':
               errorMessage = 'Ứng dụng chưa được cấp quyền, kiểm tra App Check';
-              break;
             default:
               errorMessage = 'Gửi OTP thất bại: ${e.message}';
           }
@@ -92,7 +88,6 @@ class AuthService {
             'OTP auto-retrieval timeout, verificationId: $verificationId',
           );
         },
-        timeout: const Duration(seconds: 30),
       );
     } catch (e) {
       AppFunctions.debugPrint('Error sending OTP: $e');
@@ -119,10 +114,8 @@ class AuthService {
       switch (e.code) {
         case 'invalid-verification-code':
           errorMessage = 'Mã OTP không đúng';
-          break;
         case 'session-expired':
           errorMessage = 'Phiên xác minh đã hết hạn, vui lòng gửi lại OTP';
-          break;
         default:
           errorMessage = 'Xác minh OTP thất bại: ${e.message}';
       }
@@ -363,7 +356,7 @@ class AuthService {
       }
 
       final userDoc = userQuery.docs.first;
-      final userData = userDoc.data() as Map<String, dynamic>;
+      final userData = userDoc.data()! as Map<String, dynamic>;
       final userEmail = userData['email'] as String;
       final userUid = userData['uid'] as String;
 
@@ -463,7 +456,7 @@ class AuthService {
         }
       }
       return null;
-    } catch (e) {
+    } on Exception catch (e) {
       AppFunctions.debugPrint('Error fetching current user: $e');
       return null;
     }

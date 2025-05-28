@@ -85,19 +85,4 @@ class Email {
       inReplyTo: inReplyTo ?? this.inReplyTo,
     );
   }
-
-  Email createReply(String currentUserEmail) {
-    final newSubject = subject.startsWith('Re: ') ? subject : 'Re: $subject';
-    final quotedBody =
-        'On ${timestamp.toIso8601String()} $from wrote:\n> $body\n\n';
-    return Email(
-      id: '', // tự động tạo ID khi lưu vào Firestore
-      from: currentUserEmail,
-      to: [from],
-      subject: newSubject,
-      body: quotedBody,
-      timestamp: DateTime.now(),
-      inReplyTo: id, // liên kết với email gốc
-    );
-  }
 }

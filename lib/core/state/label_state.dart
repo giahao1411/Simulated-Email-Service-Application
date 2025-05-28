@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:email_application/features/email/controllers/label_controller.dart';
+import 'package:flutter/foundation.dart';
 
 class LabelState {
-  static final LabelState _instance = LabelState._internal();
   factory LabelState() => _instance;
   LabelState._internal();
+  static final LabelState _instance = LabelState._internal();
 
   final ValueNotifier<List<String>> labelsNotifier =
       ValueNotifier<List<String>>([]);

@@ -82,13 +82,6 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                 ),
                 const SizedBox(height: 20),
                 if (state.isReplied) ...[
-                  const Text(
-                    'Luồng trả lời:',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                   ...state.replyEmailIds.map((replyId) {
                     return StreamBuilder<DocumentSnapshot>(
                       stream:
