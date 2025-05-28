@@ -12,6 +12,7 @@ class Email {
     this.bcc = const [],
     this.isDraft = false,
     this.hasAttachments = false,
+    this.userId, // Thêm trường userId
   });
 
   factory Email.fromMap(String id, Map<String, dynamic> data) {
@@ -23,9 +24,10 @@ class Email {
       bcc: (data['bcc'] as List<dynamic>? ?? []).cast<String>(),
       subject: data['subject'] as String? ?? '',
       body: data['body'] as String? ?? '',
-      timestamp: (data['timestamp'] as Timestamp).toDate(),
+      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isDraft: data['isDraft'] as bool? ?? false,
       hasAttachments: data['hasAttachments'] as bool? ?? false,
+      userId: data['userId'] as String?, // Ánh xạ userId từ Firestore
     );
   }
 
@@ -39,6 +41,7 @@ class Email {
   final DateTime timestamp;
   final bool isDraft;
   final bool hasAttachments;
+  final String? userId; // Có thể null cho email không phải nháp
 
   Map<String, dynamic> toMap() {
     return {
@@ -51,6 +54,7 @@ class Email {
       'timestamp': timestamp.toIso8601String(),
       'isDraft': isDraft,
       'hasAttachments': hasAttachments,
+      'userId': userId, // Lưu userId vào Firestore
     };
   }
 
@@ -65,6 +69,7 @@ class Email {
     DateTime? timestamp,
     bool? isDraft,
     bool? hasAttachments,
+    String? userId,
   }) {
     return Email(
       id: id ?? this.id,
@@ -77,6 +82,7 @@ class Email {
       timestamp: timestamp ?? this.timestamp,
       isDraft: isDraft ?? this.isDraft,
       hasAttachments: hasAttachments ?? this.hasAttachments,
+      userId: userId ?? this.userId,
     );
   }
 }
