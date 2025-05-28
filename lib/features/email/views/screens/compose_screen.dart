@@ -1,3 +1,4 @@
+import 'package:email_application/features/email/controllers/draft_service.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/draft.dart';
 import 'package:email_application/features/email/utils/email_validator.dart';
@@ -22,6 +23,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
   final TextEditingController subjectController = TextEditingController();
   final TextEditingController bodyController = TextEditingController();
   final EmailService emailService = EmailService();
+  final DraftService draftService = DraftService();
 
   @override
   void initState() {
@@ -85,7 +87,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
 
       if (widget.draft != null) {
         // if this is a draft, delete it after sending
-        await emailService.deleteDraft(widget.draft!.id);
+        await draftService.deleteDraft(widget.draft!.id);
       }
 
       if (mounted) {
@@ -124,7 +126,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
             .where((e) => e.isNotEmpty)
             .toList();
 
-    await emailService.saveDraft(
+    await draftService.saveDraft(
       to: toEmails,
       cc: ccEmails,
       bcc: bccEmails,
