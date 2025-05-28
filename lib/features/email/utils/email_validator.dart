@@ -13,4 +13,12 @@ class EmailValidator {
         .where((e) => e.isNotEmpty);
     return emails.every(emailRegex.hasMatch);
   }
+
+  static List<String> parseEmails(String emailString) {
+    return emailString
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
 }

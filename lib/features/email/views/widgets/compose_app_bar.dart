@@ -6,24 +6,30 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ComposeAppBar({
     required this.onSaveDraft,
     required this.onSendEmail,
+    required this.onBack,
     super.key,
   });
 
   final VoidCallback onSaveDraft;
   final VoidCallback onSendEmail;
+  final Future<bool> Function() onBack;
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       leading: IconButton(
         icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () async {
+          if (await onBack()) {
+            Navigator.pop(context);
+          }
+        },
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       actions: [
         IconButton(
           icon: Icon(
-            Icons.drafts,
+            Icons.attachment,
             color: Theme.of(context).colorScheme.onSurface,
           ),
           onPressed: () {},

@@ -2,6 +2,7 @@ import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/core/constants/app_strings.dart';
+import 'package:email_application/features/email/models/draft.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -55,33 +56,48 @@ class EmailServiceUtils {
   }
 
   static bool emailMatchesCategory(
-    Email email,
+    dynamic email,
     EmailState emailState,
     String category,
   ) {
     switch (category.toLowerCase()) {
       case 'inbox':
-        return email.to.contains(userEmail) ||
-            email.cc.contains(userEmail) ||
-            email.bcc.contains(userEmail);
+        return email is Email &&
+            (email.to.contains(userEmail) ||
+                email.cc.contains(userEmail) ||
+                email.bcc.contains(userEmail)) &&
+            !emailState.trashed &&
+            !emailState.hidden;
       case 'sent':
-        return email.from == userEmail;
+        return email is Email && email.from == userEmail;
       case 'draft':
       case 'drafts':
-        return email.userId != null &&
+        return email is Draft &&
             email.userId == FirebaseAuth.instance.currentUser!.uid;
       case 'starred':
-        return emailState.starred;
+        return email is Email &&
+            emailState.starred &&
+            !emailState.trashed &&
+            !emailState.hidden;
       case 'important':
-        return emailState.important;
+        return email is Email &&
+            emailState.important &&
+            !emailState.trashed &&
+            !emailState.hidden;
       case 'spam':
-        return emailState.spam;
+        return email is Email &&
+            emailState.spam &&
+            !emailState.trashed &&
+            !emailState.hidden;
       case 'hidden':
-        return emailState.hidden;
+        return email is Email && emailState.hidden;
       case 'trash':
-        return emailState.trashed;
+        return email is Email && emailState.trashed;
       default:
-        return emailState.labels.contains(category);
+        return email is Email &&
+            emailState.labels.contains(category) &&
+            !emailState.trashed &&
+            !emailState.hidden;
     }
   }
 
