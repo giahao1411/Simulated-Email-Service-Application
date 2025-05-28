@@ -91,13 +91,13 @@ class Email {
     final quotedBody =
         'On ${timestamp.toIso8601String()} $from wrote:\n> $body\n\n';
     return Email(
-      id: '', // Sẽ được tạo khi lưu vào Firestore
+      id: '', // tự động tạo ID khi lưu vào Firestore
       from: currentUserEmail,
       to: [from],
       subject: newSubject,
       body: quotedBody,
       timestamp: DateTime.now(),
-      inReplyTo: id, // Liên kết với email gốc
+      inReplyTo: id, // liên kết với email gốc
     );
   }
 }
