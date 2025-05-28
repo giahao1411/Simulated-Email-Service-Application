@@ -6,6 +6,7 @@ import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/models/search_filters.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
+import 'package:email_application/features/email/utils/email_service_utils.dart';
 import 'package:email_application/features/email/views/screens/mail_detail_screen.dart';
 import 'package:email_application/features/email/views/widgets/email_search_item.dart';
 import 'package:flutter/material.dart';
@@ -67,11 +68,11 @@ class _SearchResultsState extends State<SearchResults> {
       AppFunctions.debugPrint('=== PERFORMING SEARCH ===');
       AppFunctions.debugPrint('Query: "${widget.searchQuery}"');
       AppFunctions.debugPrint('Current Category: "${widget.currentCategory}"');
-      AppFunctions.debugPrint('Filters: ${widget.filters.toString()}');
+      AppFunctions.debugPrint('Filters: ${widget.filters}');
 
       // Mặc định tìm kiếm trên tất cả email, trừ khi filters.category được chọn
       Stream<List<Map<String, dynamic>>> emailStream;
-      String searchScope = 'Tất cả thư';
+      var searchScope = 'Tất cả thư';
       if (widget.filters.category != null) {
         searchScope = widget.filters.category!;
         AppFunctions.debugPrint('Switching to filter category: "$searchScope"');
@@ -178,7 +179,7 @@ class _SearchResultsState extends State<SearchResults> {
         filteredEmails.map((item) async {
           final email = item['email'] as Email;
           final state = item['state'] as EmailState;
-          final senderName = await _emailService.getUserFullNameByEmail(
+          final senderName = await EmailServiceUtils.getUserFullNameByEmail(
             email.from,
           );
           return EmailSearchResult(

@@ -10,7 +10,6 @@ class Draft {
     required this.timestamp,
     this.cc = const [],
     this.bcc = const [],
-    this.isDraft = true,
   });
 
   factory Draft.fromMap(String id, Map<String, dynamic> data) {
@@ -23,7 +22,6 @@ class Draft {
       subject: data['subject'] as String? ?? '',
       body: data['body'] as String? ?? '',
       timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      isDraft: data['isDraft'] as bool? ?? true,
     );
   }
 
@@ -35,7 +33,6 @@ class Draft {
   final String subject;
   final String body;
   final DateTime timestamp;
-  final bool isDraft;
 
   Map<String, dynamic> toMap() {
     return {
@@ -46,7 +43,6 @@ class Draft {
       'subject': subject,
       'body': body,
       'timestamp': Timestamp.fromDate(timestamp),
-      'isDraft': isDraft,
     };
   }
 
@@ -59,7 +55,6 @@ class Draft {
     String? subject,
     String? body,
     DateTime? timestamp,
-    bool? isDraft,
   }) {
     return Draft(
       id: id ?? this.id,
@@ -70,7 +65,6 @@ class Draft {
       subject: subject ?? this.subject,
       body: body ?? this.body,
       timestamp: timestamp ?? this.timestamp,
-      isDraft: isDraft ?? this.isDraft,
     );
   }
 }

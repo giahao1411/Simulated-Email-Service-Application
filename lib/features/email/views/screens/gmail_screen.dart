@@ -64,7 +64,7 @@ class _GmailScreenState extends State<GmailScreen>
   }
 
   String _getCategoryDisplayName(String category) {
-    const Map<String, String> categoryNames = {
+    const categoryNames = <String, String>{
       'Inbox': 'Hộp thư đến',
       'Sent': 'Thư đã gửi',
       'Draft': 'Thư nháp',
