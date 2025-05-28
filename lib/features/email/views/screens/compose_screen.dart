@@ -38,26 +38,27 @@ class _ComposeScreenState extends State<ComposeScreen> {
     }
   }
 
+  // check if any of the text fields have data
+  bool get hasData {
+    return toController.text.isNotEmpty ||
+        ccController.text.isNotEmpty ||
+        bccController.text.isNotEmpty ||
+        subjectController.text.isNotEmpty ||
+        bodyController.text.isNotEmpty;
+  }
+
+  Future<bool> handleBackAction() async {
+    if (hasData) {
+      await handleSaveDraft();
+    }
+    return true; // allow back navigation
+  }
+
   Future<void> handleSendEmail() async {
     // get to, cc, and bcc emails
-    final toEmails =
-        toController.text
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
-    final ccEmails =
-        ccController.text
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
-    final bccEmails =
-        bccController.text
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
+    final toEmails = EmailValidator.parseEmails(toController.text);
+    final ccEmails = EmailValidator.parseEmails(ccController.text);
+    final bccEmails = EmailValidator.parseEmails(bccController.text);
 
     // validate data
     if (toEmails.isEmpty && ccEmails.isEmpty) {
@@ -107,55 +108,57 @@ class _ComposeScreenState extends State<ComposeScreen> {
 
   Future<void> handleSaveDraft() async {
     // get to, cc, and bcc emails
-    final toEmails =
-        toController.text
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
-    final ccEmails =
-        ccController.text
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
-    final bccEmails =
-        bccController.text
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
+    final toEmails = EmailValidator.parseEmails(toController.text);
+    final ccEmails = EmailValidator.parseEmails(ccController.text);
+    final bccEmails = EmailValidator.parseEmails(bccController.text);
 
-    await draftService.saveDraft(
-      to: toEmails,
-      cc: ccEmails,
-      bcc: bccEmails,
-      subject: subjectController.text,
-      body: bodyController.text,
-      id: widget.draft?.id, // update draft if it exists
-    );
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Lưu thư nháp thành công')));
-      Navigator.pop(context);
+    try {
+      await draftService.saveDraft(
+        to: toEmails,
+        cc: ccEmails,
+        bcc: bccEmails,
+        subject: subjectController.text,
+        body: bodyController.text,
+        id: widget.draft?.id, // update draft if it exists
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lưu thư nháp thành công')),
+        );
+      }
+    } on Exception catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lưu thư nháp thất bại: $e')));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: ComposeAppBar(
-        onSaveDraft: handleSaveDraft,
-        onSendEmail: handleSendEmail,
-      ),
-      body: ComposeBody(
-        toController: toController,
-        fromController: fromController,
-        ccController: ccController,
-        bccController: bccController,
-        subjectController: subjectController,
-        bodyController: bodyController,
+    return PopScope(
+      canPop: false, // disable default back button behavior
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return; // if pop was invoked, do nothing
+        if (await handleBackAction()) {
+          Navigator.pop(context); // pop the screen if back action is allowed
+        }
+      },
+      child: Scaffold(
+        appBar: ComposeAppBar(
+          onSaveDraft: handleSaveDraft,
+          onSendEmail: handleSendEmail,
+          onBack: handleBackAction,
+        ),
+        body: ComposeBody(
+          toController: toController,
+          fromController: fromController,
+          ccController: ccController,
+          bccController: bccController,
+          subjectController: subjectController,
+          bodyController: bodyController,
+        ),
       ),
     );
   }

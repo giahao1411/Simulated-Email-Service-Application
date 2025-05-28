@@ -368,7 +368,7 @@ class EmailService {
           .doc(FirebaseAuth.instance.currentUser!.uid)
           .collection('email_states')
           .doc(emailRef.id)
-          .set(EmailState(emailId: emailRef.id).toMap());
+          .set(EmailState(emailId: emailRef.id, read: true).toMap());
 
       final allRecipients = <String>{...to, ...cc, ...bcc}.toList();
       for (final recipientEmail in allRecipients) {
