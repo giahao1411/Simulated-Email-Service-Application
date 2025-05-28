@@ -1,6 +1,10 @@
+import 'package:email_application/core/constants/app_functions.dart';
+import 'package:email_application/features/email/controllers/draft_service.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
+import 'package:email_application/features/email/models/draft.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
+import 'package:email_application/features/email/utils/email_validator.dart';
 import 'package:email_application/features/email/views/widgets/compose_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/compose_body.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +13,13 @@ class ReplyScreen extends StatefulWidget {
   const ReplyScreen({
     required this.email,
     required this.state,
+    this.draft,
     this.onRefresh,
     super.key,
   });
 
   final Email email;
+  final Draft? draft; // Optional draft for reply
   final EmailState state;
   final VoidCallback? onRefresh;
 
@@ -29,6 +35,7 @@ class _ReplyScreenState extends State<ReplyScreen> {
   final TextEditingController subjectController = TextEditingController();
   final TextEditingController bodyController = TextEditingController();
   final EmailService emailService = EmailService();
+  final DraftService draftService = DraftService();
 
   @override
   void initState() {
@@ -39,6 +46,60 @@ class _ReplyScreenState extends State<ReplyScreen> {
         widget.email.subject.startsWith('Re: ')
             ? widget.email.subject
             : 'Re: ${widget.email.subject}';
+  }
+
+  // check if any of the text fields have data
+  bool get hasChanges {
+    final toEmails = EmailValidator.parseEmails(toController.text);
+    final ccEmails = EmailValidator.parseEmails(ccController.text);
+    final bccEmails = EmailValidator.parseEmails(bccController.text);
+    final subject = subjectController.text.trim();
+    final body = bodyController.text.trim();
+
+    if (widget.draft == null) {
+      return toEmails.isNotEmpty ||
+          ccEmails.isNotEmpty ||
+          bccEmails.isNotEmpty ||
+          subject.isNotEmpty ||
+          body.isNotEmpty;
+    }
+
+    return widget.draft!.to.join(',') != toEmails.join(',') ||
+        widget.draft!.cc.join(',') != ccEmails.join(',') ||
+        widget.draft!.bcc.join(',') != bccEmails.join(',') ||
+        widget.draft!.subject != subject ||
+        widget.draft!.body != body;
+  }
+
+  Future<bool> handleBackAction() async {
+    if (!hasChanges) {
+      AppFunctions.debugPrint('Không có thay đổi, bỏ qua lưu nháp');
+      return true; // Cho phép thoát
+    }
+
+    final shouldSave = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Lưu thư nháp?'),
+            content: const Text('Bạn có muốn lưu thư nháp trước khi thoát?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Hủy'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Lưu'),
+              ),
+            ],
+          ),
+    );
+
+    if (shouldSave ?? false) {
+      await handleSaveDraft(showSnackBar: false);
+    }
+    return true;
   }
 
   Future<void> handleSendReply() async {
@@ -73,40 +134,53 @@ class _ReplyScreenState extends State<ReplyScreen> {
     }
   }
 
-  Future<void> handleSaveDraft() async {
-    // Lưu nội dung reply dưới dạng nháp (tùy chọn)
-    final toEmails =
-        toController.text
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
-    final ccEmails =
-        ccController.text
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
-    final bccEmails =
-        bccController.text
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
+  Future<void> handleSaveDraft({bool showSnackBar = true}) async {
+    // get to, cc, and bcc emails
+    final toEmails = EmailValidator.parseEmails(toController.text);
+    final ccEmails = EmailValidator.parseEmails(ccController.text);
+    final bccEmails = EmailValidator.parseEmails(bccController.text);
+    final subject = subjectController.text.trim();
+    final body = bodyController.text.trim();
 
-    await emailService.saveDraft(
-      to: toEmails,
-      cc: ccEmails,
-      bcc: bccEmails,
-      subject: subjectController.text,
-      body: bodyController.text,
-    );
+    // Bỏ qua nếu không có dữ liệu
+    if (toEmails.isEmpty &&
+        ccEmails.isEmpty &&
+        bccEmails.isEmpty &&
+        subject.isEmpty &&
+        body.isEmpty &&
+        widget.draft == null) {
+      AppFunctions.debugPrint('Các trường rỗng, không lưu nháp');
+      return;
+    }
 
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Lưu thư nháp thành công')));
-      Navigator.pop(context);
+    // Kiểm tra thay đổi
+    if (!hasChanges && widget.draft != null) {
+      AppFunctions.debugPrint(
+        'Không có thay đổi, bỏ qua lưu nháp: ${widget.draft!.id}',
+      );
+      return;
+    }
+
+    try {
+      await draftService.saveDraft(
+        to: toEmails,
+        cc: ccEmails,
+        bcc: bccEmails,
+        subject: subjectController.text,
+        body: bodyController.text,
+        id: widget.draft?.id, // update draft if it exists
+      );
+      if (mounted && showSnackBar) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lưu thư nháp thành công')),
+        );
+      }
+    } on Exception catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lưu thư nháp thất bại: $e')));
+      }
     }
   }
 
@@ -114,8 +188,9 @@ class _ReplyScreenState extends State<ReplyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: ComposeAppBar(
-        onSaveDraft: handleSaveDraft,
         onSendEmail: handleSendReply,
+        onBack: handleBackAction,
+        draftId: widget.draft!.id,
       ),
       body: ComposeBody(
         toController: toController,
