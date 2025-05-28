@@ -12,6 +12,7 @@ class Email {
     this.bcc = const [],
     this.isDraft = false,
     this.hasAttachments = false,
+    this.inReplyTo,
     this.userId, // Thêm trường userId
   });
 
@@ -27,6 +28,7 @@ class Email {
       timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isDraft: data['isDraft'] as bool? ?? false,
       hasAttachments: data['hasAttachments'] as bool? ?? false,
+      inReplyTo: data['inReplyTo'] as String?,
       userId: data['userId'] as String?, // Ánh xạ userId từ Firestore
     );
   }
@@ -41,6 +43,7 @@ class Email {
   final DateTime timestamp;
   final bool isDraft;
   final bool hasAttachments;
+  final String? inReplyTo;
   final String? userId; // Có thể null cho email không phải nháp
 
   Map<String, dynamic> toMap() {
@@ -54,6 +57,7 @@ class Email {
       'timestamp': timestamp.toIso8601String(),
       'isDraft': isDraft,
       'hasAttachments': hasAttachments,
+      'inReplyTo': inReplyTo,
       'userId': userId, // Lưu userId vào Firestore
     };
   }
@@ -69,6 +73,7 @@ class Email {
     DateTime? timestamp,
     bool? isDraft,
     bool? hasAttachments,
+    String? inReplyTo,
     String? userId,
   }) {
     return Email(
@@ -82,7 +87,23 @@ class Email {
       timestamp: timestamp ?? this.timestamp,
       isDraft: isDraft ?? this.isDraft,
       hasAttachments: hasAttachments ?? this.hasAttachments,
+      inReplyTo: inReplyTo ?? this.inReplyTo,
       userId: userId ?? this.userId,
+    );
+  }
+
+  Email createReply(String currentUserEmail) {
+    final newSubject = subject.startsWith('Re: ') ? subject : 'Re: $subject';
+    final quotedBody =
+        'On ${timestamp.toIso8601String()} $from wrote:\n> $body\n\n';
+    return Email(
+      id: '', // tự động tạo ID khi lưu vào Firestore
+      from: currentUserEmail,
+      to: [from],
+      subject: newSubject,
+      body: quotedBody,
+      timestamp: DateTime.now(),
+      inReplyTo: id, // liên kết với email gốc
     );
   }
 }

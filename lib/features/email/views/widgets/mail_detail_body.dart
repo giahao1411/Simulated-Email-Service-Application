@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
@@ -12,18 +13,21 @@ class MailDetailBody extends StatefulWidget {
     required this.email,
     required this.state,
     required this.index,
-    required this.senderFullName, // Thêm tham số senderFullName
+    required this.senderFullName,
+    required this.sendReply,
     this.onRefresh,
     this.markMailAsRead,
+
     super.key,
   });
 
   final Email email;
   final EmailState state;
   final int index;
-  final String senderFullName; // Họ tên người gửi
+  final String senderFullName;
   final VoidCallback? onRefresh;
   final VoidCallback? markMailAsRead;
+  final VoidCallback sendReply;
 
   final EmailService emailService = EmailService();
 
@@ -48,6 +52,11 @@ class _MailDetailBodyState extends State<MailDetailBody> {
     return emailService.countUnreadEmails();
   }
 
+  String getSummaryBody(String body) {
+    final quoteIndex = body.indexOf('On ');
+    return quoteIndex != -1 ? body.substring(0, quoteIndex).trim() : body;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -63,175 +72,202 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           Expanded(
             child: ListView(
               children: [
-                // mail subject
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        email.subject,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: onSurface,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        state.starred ? Icons.star : Icons.star_border,
-                        color: state.starred ? Colors.amber : onSurface60,
-                        size: 25,
-                      ),
-                      onPressed: () async {
-                        // Toggle trạng thái trong Firestore
-                        await emailService.toggleStar(email.id, state.starred);
-                        // Cập nhật trạng thái cục bộ ngay lập tức
-                        setState(() {
-                          state = state.copyWith(starred: !state.starred);
-                        });
-                      },
-                    ),
-                  ],
-                ),
-
-                // sender information
-                ListTile(
-                  contentPadding: const EdgeInsets.only(right: -16),
-                  leading: CircleAvatar(
-                    backgroundImage: NetworkImage(
-                      'https://picsum.photos/250?image=${widget.index}',
-                    ),
-                  ),
-                  title: Row(
-                    children: [
-                      Text(
-                        widget.senderFullName, // Chỉ hiển thị họ tên
-                        style: TextStyle(color: onSurface),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        DateFormat.formatTimestamp(email.timestamp),
-                        style: TextStyle(color: onSurface70, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [buildSendingDetail(email, onSurface70)],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.reply, color: onSurface60),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.more_horiz, color: onSurface60),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                  onTap: () {},
-                ),
-
-                // sender container details
+                _buildSubjectRow(onSurface, onSurface60),
+                _buildSenderInfo(onSurface, onSurface70, onSurface60, context),
                 if (isShowSendingDetail)
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    margin: const EdgeInsets.only(top: 4, bottom: 20, right: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: onSurface60.withOpacity(0.2)),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: buildSendingDetailContainer(email, onSurface70),
-                  ),
-
-                // mail body
+                  _buildSendingDetailContainer(email, onSurface70),
                 Text(
-                  email.body,
+                  getSummaryBody(email.body),
                   style: TextStyle(fontSize: 16, color: onSurface70),
                 ),
+                const SizedBox(height: 20),
+                if (state.isReplied) ...[
+                  const Text(
+                    'Luồng trả lời:',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  ...state.replyEmailIds.map((replyId) {
+                    return StreamBuilder<DocumentSnapshot>(
+                      stream:
+                          FirebaseFirestore.instance
+                              .collection('emails')
+                              .doc(replyId)
+                              .snapshots(),
+                      builder: (context, replySnapshot) {
+                        if (!replySnapshot.hasData)
+                          return const SizedBox.shrink();
+                        final replyEmail = Email.fromMap(
+                          replyId,
+                          replySnapshot.data!.data()! as Map<String, dynamic>,
+                        );
+                        return ReplyItem(
+                          replyEmail: replyEmail,
+                          onSurface60: onSurface60,
+                          onShowOriginalEmail:
+                              () => _showFullBodyDialog(context, email.body),
+                        );
+                      },
+                    );
+                  }),
+                ],
               ],
             ),
           ),
+          _buildUtilsBar(onSurface60),
+        ],
+      ),
+    );
+  }
 
-          // utils/icons
-          Container(
-            padding: const EdgeInsets.all(8),
-            color: theme.colorScheme.surface,
-            child: Column(
-              children: [
-                OverflowBar(
-                  alignment: MainAxisAlignment.center,
+  Widget _buildSubjectRow(Color onSurface, Color onSurface60) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            email.subject,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: onSurface,
+            ),
+          ),
+        ),
+        IconButton(
+          icon: Icon(
+            state.starred ? Icons.star : Icons.star_border,
+            color: state.starred ? Colors.amber : onSurface60,
+            size: 25,
+          ),
+          onPressed: () async {
+            await emailService.toggleStar(email.id, state.starred);
+            setState(() {
+              state = state.copyWith(starred: !state.starred);
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSenderInfo(
+    Color onSurface,
+    Color onSurface70,
+    Color onSurface60,
+    BuildContext context,
+  ) {
+    return ListTile(
+      contentPadding: const EdgeInsets.only(right: -16),
+      leading: CircleAvatar(
+        backgroundImage: NetworkImage(
+          'https://picsum.photos/250?image=${widget.index}',
+        ),
+      ),
+      title: Row(
+        children: [
+          Text(widget.senderFullName, style: TextStyle(color: onSurface)),
+          const SizedBox(width: 8),
+          Text(
+            DateFormat.formatTimestamp(email.timestamp),
+            style: TextStyle(color: onSurface70, fontSize: 12),
+          ),
+        ],
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [buildSendingDetail(email, onSurface70)],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: Icon(Icons.reply, color: onSurface60),
+            onPressed: widget.sendReply,
+          ),
+          IconButton(
+            icon: Icon(Icons.more_horiz, color: onSurface60),
+            onPressed: () {
+              _showFullBodyDialog(context, email.body);
+            },
+          ),
+        ],
+      ),
+      onTap: () {},
+    );
+  }
+
+  Widget _buildUtilsBar(Color onSurface60) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      color: Theme.of(context).colorScheme.surface,
+      child: Column(
+        children: [
+          OverflowBar(
+            alignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton(
+                onPressed: widget.sendReply,
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: onSurface60),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    OutlinedButton(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: onSurface60),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.reply, color: onSurface60),
-                          const SizedBox(width: 4),
-                          Text('Reply', style: TextStyle(color: onSurface60)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (email.cc.isNotEmpty)
-                      OutlinedButton(
-                        onPressed: () {},
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: onSurface60),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.reply_all, color: onSurface60),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Reply all',
-                              style: TextStyle(color: onSurface60),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(width: 8),
-                    OutlinedButton(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: onSurface60),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.forward, color: onSurface60),
-                          const SizedBox(width: 4),
-                          Text('Forward', style: TextStyle(color: onSurface60)),
-                        ],
-                      ),
-                    ),
+                    Icon(Icons.reply, color: onSurface60),
+                    const SizedBox(width: 4),
+                    Text('Reply', style: TextStyle(color: onSurface60)),
                   ],
                 ),
-                const SizedBox(height: 16),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [SizedBox.shrink()],
+              ),
+              const SizedBox(width: 8),
+              if (email.cc.isNotEmpty)
+                OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: onSurface60),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.reply_all, color: onSurface60),
+                      const SizedBox(width: 4),
+                      Text('Reply all', style: TextStyle(color: onSurface60)),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              const SizedBox(width: 8),
+              OutlinedButton(
+                onPressed: () {},
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: onSurface60),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.forward, color: onSurface60),
+                    const SizedBox(width: 4),
+                    Text('Forward', style: TextStyle(color: onSurface60)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [SizedBox.shrink()],
           ),
         ],
       ),
@@ -271,6 +307,35 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSendingDetailContainer(Email email, Color onSurface70) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.only(top: 4, bottom: 20, right: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: onSurface70.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: buildSendingDetailContainer(email, onSurface70),
+    );
+  }
+
+  void _showFullBodyDialog(BuildContext context, String fullBody) {
+    showDialog<void>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Chi tiết nội dung'),
+            content: SingleChildScrollView(child: Text(fullBody)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Đóng'),
+              ),
+            ],
+          ),
     );
   }
 
@@ -436,6 +501,95 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           ],
         ),
       ],
+    );
+  }
+}
+
+// Widget ReplyItem
+class ReplyItem extends StatefulWidget {
+  const ReplyItem({
+    required this.replyEmail,
+    required this.onSurface60,
+    required this.onShowOriginalEmail,
+    super.key,
+  });
+  final Email replyEmail;
+  final Color onSurface60;
+  final VoidCallback onShowOriginalEmail;
+
+  @override
+  _ReplyItemState createState() => _ReplyItemState();
+}
+
+class _ReplyItemState extends State<ReplyItem> {
+  bool _isExpanded = false;
+
+  String getSummaryBody(String body) {
+    final quoteIndex = body.indexOf('On ');
+    if (quoteIndex != -1) {
+      return body.substring(0, quoteIndex).trim();
+    }
+    return body;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _isExpanded = !_isExpanded;
+        });
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16, top: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Reply từ ${widget.replyEmail.from} lúc ${DateFormat.formatTimestamp(widget.replyEmail.timestamp)}:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: widget.onSurface60,
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.reply,
+                        color: widget.onSurface60,
+                        size: 20,
+                      ),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.more_horiz,
+                        color: widget.onSurface60,
+                        size: 20,
+                      ),
+                      onPressed: widget.onShowOriginalEmail,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _isExpanded
+                  ? widget.replyEmail.body
+                  : getSummaryBody(widget.replyEmail.body),
+              style: TextStyle(color: widget.onSurface60),
+            ),
+            const Divider(),
+          ],
+        ),
+      ),
     );
   }
 }

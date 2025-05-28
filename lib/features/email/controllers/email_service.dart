@@ -1097,4 +1097,43 @@ class EmailService {
       throw Exception('Không thể cập nhật trạng thái email: $e');
     }
   }
+
+  Future<void> sendReply(String emailId, EmailState state) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+
+    // lấy email gốc từ Firestore
+    final emailDoc = await _firestore.collection('emails').doc(emailId).get();
+    if (!emailDoc.exists) throw Exception('Email không tồn tại');
+    final originalEmail = Email.fromMap(emailId, emailDoc.data()!);
+
+    // tạo email reply
+    final replyEmail = originalEmail.createReply(user.email!);
+
+    // Lưu email reply vào Firestore và lấy ID
+    final replyDocRef = await _firestore
+        .collection('emails')
+        .add(replyEmail.toMap());
+    final replyEmailId = replyDocRef.id;
+
+    // cập nhật EmailState
+    EmailState updatedState;
+    if (state.isReplied) {
+      updatedState = state.copyWith(
+        isReplied: true,
+        replyEmailIds: List.from(state.replyEmailIds)..add(replyEmailId),
+      );
+    } else {
+      updatedState = state.copyWith(
+        isReplied: true,
+        replyEmailIds: [replyEmailId],
+      );
+    }
+
+    // lưu vào Firestore
+    await _firestore
+        .collection('email_states')
+        .doc(emailId)
+        .set(updatedState.toMap(), SetOptions(merge: true));
+  }
 }
