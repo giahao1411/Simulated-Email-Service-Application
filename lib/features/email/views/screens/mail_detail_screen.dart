@@ -51,6 +51,18 @@ class _MailDetailState extends State<MailDetail>
     }
   }
 
+  Future<void> _sendReply() async {
+    try {
+      await emailService.sendReply(email.id, widget.state);
+      widget.onRefresh?.call();
+    } on Exception catch (e) {
+      AppFunctions.debugPrint('Lỗi khi gửi reply: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi khi gửi reply: $e')));
+    }
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -93,6 +105,7 @@ class _MailDetailState extends State<MailDetail>
                   onRefresh: widget.onRefresh,
                   markMailAsRead: _markMailAsRead,
                   index: _selectedIndex,
+                  sendReply: _sendReply,
                 ),
               ),
             ],
