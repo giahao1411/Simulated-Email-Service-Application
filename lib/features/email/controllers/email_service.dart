@@ -2,6 +2,7 @@ import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/core/constants/app_strings.dart';
+import 'package:email_application/features/email/models/draft.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/utils/email_service_utils.dart';
@@ -165,22 +166,26 @@ class EmailService {
 
     AppFunctions.debugPrint('Lấy email cho danh mục: $category');
 
-    if (category.toLowerCase() == AppStrings.inbox.toLowerCase() ||
-        category == 'Inbox') {
+    // Xử lý danh mục Inbox
+    if (category == AppStrings.inbox) {
       return EmailServiceUtils.getInboxEmails();
     }
 
+    // Xác định bộ sưu tập và điều kiện truy vấn
+    final isDraft = category == AppStrings.drafts;
     var query = _firestore
-        .collection(category == AppStrings.drafts ? 'drafts' : 'emails')
+        .collection(isDraft ? 'drafts' : 'emails')
         .orderBy('timestamp', descending: true);
 
     if (category == AppStrings.sent) {
       query = query.where('from', isEqualTo: userEmail);
-    } else if (category == AppStrings.drafts) {
+    } else if (isDraft) {
       query = query.where(
         'userId',
         isEqualTo: FirebaseAuth.instance.currentUser!.uid,
       );
+    } else if (category == AppStrings.starred) {
+      // Không cần where, lọc bằng emailState.starred trong emailMatchesCategory
     }
 
     return query.snapshots().asyncMap((snapshot) async {
@@ -188,47 +193,60 @@ class EmailService {
         final emailsWithState = <Map<String, dynamic>>[];
         for (final doc in snapshot.docs) {
           final data = doc.data();
-          if (data.isEmpty) continue;
-
-          final email = Email.fromMap(doc.id, data);
-          final stateDoc =
-              await _firestore
-                  .collection('users')
-                  .doc(FirebaseAuth.instance.currentUser!.uid)
-                  .collection('email_states')
-                  .doc(email.id)
-                  .get();
-          final emailState =
-              stateDoc.exists
-                  ? EmailState.fromMap(stateDoc.data()!)
-                  : EmailState(emailId: email.id);
-
-          final senderFullName = await EmailServiceUtils.getUserFullNameByEmail(
-            email.from,
-          );
-
-          AppFunctions.debugPrint(
-            'Checking email ${email.id} - important: ${emailState.important}, hidden: ${emailState.hidden}, trashed: ${emailState.trashed}, labels: ${emailState.labels}',
-          );
-
-          final shouldInclude = EmailServiceUtils.emailMatchesCategory(
-            email,
-            emailState,
-            category,
-          );
-
-          if (!shouldInclude) {
-            AppFunctions.debugPrint(
-              'Bỏ qua email ${email.id} vì không thuộc danh mục: $category',
-            );
+          if (data.isEmpty) {
+            AppFunctions.debugPrint('Bỏ qua tài liệu rỗng: ${doc.id}');
             continue;
           }
 
-          emailsWithState.add({
-            'email': email,
-            'state': emailState,
-            'senderFullName': senderFullName,
-          });
+          try {
+            // initiate email object based on type
+            final email =
+                isDraft
+                    ? Draft.fromMap(doc.id, data)
+                    : Email.fromMap(doc.id, data);
+
+            var emailState = EmailState(emailId: doc.id);
+            if (!isDraft) {
+              final stateDoc =
+                  await _firestore
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .collection('email_states')
+                      .doc(doc.id)
+                      .get();
+              emailState =
+                  stateDoc.exists
+                      ? EmailState.fromMap(stateDoc.data()!)
+                      : EmailState(emailId: doc.id);
+            }
+
+            // Lấy tên người gửi
+            final senderFullName =
+                await EmailServiceUtils.getUserFullNameByEmail(
+                  isDraft ? (email as Draft).userId : (email as Email).from,
+                );
+
+            // Kiểm tra xem email có thuộc danh mục không
+            if (!EmailServiceUtils.emailMatchesCategory(
+              email,
+              emailState,
+              category,
+            )) {
+              AppFunctions.debugPrint(
+                'Bỏ qua email ${doc.id} vì không thuộc danh mục: $category',
+              );
+              continue;
+            }
+
+            emailsWithState.add({
+              'email': email,
+              'state': emailState,
+              'senderFullName': senderFullName,
+            });
+          } on Exception catch (e) {
+            AppFunctions.debugPrint('Lỗi khi xử lý email ${doc.id}: $e');
+            continue;
+          }
         }
 
         if (emailsWithState.isEmpty) {
@@ -237,13 +255,13 @@ class EmailService {
           );
         } else {
           AppFunctions.debugPrint(
-            'Found ${emailsWithState.length} emails in category "$category"',
+            'Tìm thấy ${emailsWithState.length} email trong danh mục "$category"',
           );
         }
         return emailsWithState;
       } on Exception catch (e) {
         AppFunctions.debugPrint('Lỗi khi ánh xạ dữ liệu email: $e');
-        return <Map<String, dynamic>>[];
+        return [];
       }
     });
   }
