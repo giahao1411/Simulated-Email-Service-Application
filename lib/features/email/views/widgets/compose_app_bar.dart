@@ -9,13 +9,13 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ComposeAppBar({
     required this.onSendEmail,
     required this.onBack,
-    required this.draftId,
+    this.draftId,
     super.key,
   });
 
   final VoidCallback onSendEmail;
   final Future<bool> Function() onBack;
-  final String draftId;
+  final String? draftId;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,9 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
       onSelected: (String value) async {
         if (value == 'discard') {
           try {
-            await draftService.deleteDraft(draftId);
+            if (draftId != null) {
+              await draftService.deleteDraft(draftId!);
+            }
             if (context.mounted) {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
