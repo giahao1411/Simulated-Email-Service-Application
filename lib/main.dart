@@ -3,9 +3,18 @@ import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/providers/two_step_manage.dart';
 import 'package:email_application/features/email/views/screens/login_screen.dart';
+import 'package:email_application/features/notification/controllers/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  AppFunctions.debugPrint(
+    'Handling a background message: ${message.messageId}',
+  );
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +22,8 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    await NotificationService().initNotifications();
     AppFunctions.debugPrint('Firebase initialized successfully');
   } on Exception catch (e) {
     AppFunctions.debugPrint('Firebase initialization error: $e');
