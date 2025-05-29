@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:email_application/features/email/utils/datetime_utils.dart';
 
 class Email {
   Email({
@@ -25,7 +26,7 @@ class Email {
       bcc: (data['bcc'] as List<dynamic>? ?? []).cast<String>(),
       subject: data['subject'] as String? ?? '',
       body: data['body'] as String? ?? '',
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      timestamp: parseToDateTime(data['timestamp']),
       isDraft: data['isDraft'] as bool? ?? false,
       hasAttachments: data['hasAttachments'] as bool? ?? false,
       inReplyTo: data['inReplyTo'] as String?,
@@ -54,7 +55,7 @@ class Email {
       'bcc': bcc,
       'subject': subject,
       'body': body,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': Timestamp.fromDate(timestamp),
       'isDraft': isDraft,
       'hasAttachments': hasAttachments,
       'inReplyTo': inReplyTo,

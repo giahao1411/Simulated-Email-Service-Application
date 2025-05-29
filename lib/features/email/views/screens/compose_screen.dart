@@ -209,7 +209,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
         appBar: ComposeAppBar(
           onSendEmail: handleSendEmail,
           onBack: handleBackAction,
-          draftId: widget.draft!.id,
+          draftId: widget.draft?.id,
         ),
         body: ComposeBody(
           toController: toController,

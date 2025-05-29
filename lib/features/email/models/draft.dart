@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:email_application/features/email/utils/datetime_utils.dart';
 
 class Draft {
   Draft({
@@ -21,7 +22,7 @@ class Draft {
       bcc: (data['bcc'] as List<dynamic>? ?? []).cast<String>(),
       subject: data['subject'] as String? ?? '',
       body: data['body'] as String? ?? '',
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      timestamp: parseToDateTime(data['timestamp']),
     );
   }
 
