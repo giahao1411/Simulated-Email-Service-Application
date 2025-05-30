@@ -55,21 +55,25 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
               } else {
                 onCategoryChanged?.call(AppStrings.inbox);
               }
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    state.trashed
-                        ? 'Đã khôi phục khỏi thùng rác'
-                        : 'Đã chuyển vào thùng rác',
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      state.trashed
+                          ? 'Đã khôi phục khỏi thùng rác'
+                          : 'Đã chuyển vào thùng rác',
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             } on Exception catch (e) {
-              AppFunctions.debugPrint('Lỗi khi chuyển vào thùng rác: $e');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Lỗi khi chuyển vào thùng rác: $e')),
-              );
+              if (context.mounted) {
+                AppFunctions.debugPrint('Lỗi khi chuyển vào thùng rác: $e');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Lỗi khi chuyển vào thùng rác: $e')),
+                );
+              }
             }
           },
         ),
@@ -83,12 +87,18 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
             try {
               await emailService.toggleRead(email.id, state.read);
               onRefresh?.call();
-              Navigator.pop(context);
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             } on Exception catch (e) {
-              AppFunctions.debugPrint('Lỗi khi chuyển trạng thái đã đọc: $e');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Lỗi khi chuyển trạng thái đã đọc: $e')),
-              );
+              if (context.mounted) {
+                AppFunctions.debugPrint('Lỗi khi chuyển trạng thái đã đọc: $e');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Lỗi khi chuyển trạng thái đã đọc: $e'),
+                  ),
+                );
+              }
             }
           },
         ),
@@ -107,18 +117,20 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                   if (!state.hidden) {
                     onCategoryChanged?.call(AppStrings.hidden);
                   }
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        state.hidden ? 'Đã bỏ tạm ẩn email' : 'Đã tạm ẩn email',
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          state.hidden
+                              ? 'Đã bỏ tạm ẩn email'
+                              : 'Đã tạm ẩn email',
+                        ),
                       ),
-                    ),
-                  );
-                  break;
+                    );
+                  }
                 case 'labels':
                   await _showLabelsDialog(context, labelController);
-                  break;
                 case 'important':
                   await emailService.markAsImportant(email.id, state.important);
                   AppFunctions.debugPrint(
@@ -128,17 +140,18 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                   if (!state.important) {
                     onCategoryChanged?.call(AppStrings.important);
                   }
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        state.important
-                            ? 'Đã bỏ đánh dấu quan trọng'
-                            : 'Đã đánh dấu quan trọng',
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          state.important
+                              ? 'Đã bỏ đánh dấu quan trọng'
+                              : 'Đã đánh dấu quan trọng',
+                        ),
                       ),
-                    ),
-                  );
-                  break;
+                    );
+                  }
                 case 'spam':
                   await emailService.markAsSpam(email.id, state.spam);
                   AppFunctions.debugPrint('Trạng thái spam: ${!state.spam}');
@@ -146,26 +159,30 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                   if (!state.spam) {
                     onCategoryChanged?.call(AppStrings.spam);
                   }
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        state.spam
-                            ? 'Đã bỏ đánh dấu thư rác'
-                            : 'Đã báo cáo thư rác',
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          state.spam
+                              ? 'Đã bỏ đánh dấu thư rác'
+                              : 'Đã báo cáo thư rác',
+                        ),
                       ),
-                    ),
-                  );
-                  break;
+                    );
+                  }
                 case 'cancel':
                   Navigator.pop(context);
-                  break;
               }
             } on Exception catch (e) {
-              AppFunctions.debugPrint('Lỗi khi thực hiện hành động $value: $e');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Lỗi khi thực hiện hành động: $e')),
-              );
+              if (context.mounted) {
+                AppFunctions.debugPrint(
+                  'Lỗi khi thực hiện hành động $value: $e',
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Lỗi khi thực hiện hành động: $e')),
+                );
+              }
             }
           },
           itemBuilder:
@@ -235,7 +252,7 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                                   value: isSelected,
                                   onChanged: (bool? value) {
                                     setState(() {
-                                      if (value == true) {
+                                      if (value! == true) {
                                         if (!selectedLabels.contains(label)) {
                                           selectedLabels.add(label);
                                         }
@@ -270,8 +287,8 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                           'Đã cập nhật nhãn: $selectedLabels',
                         );
                         onRefresh?.call();
-                        Navigator.pop(dialogContext);
                         if (context.mounted) {
+                          Navigator.pop(dialogContext);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Đã cập nhật nhãn')),
                           );

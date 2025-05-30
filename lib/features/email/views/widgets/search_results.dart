@@ -70,7 +70,6 @@ class _SearchResultsState extends State<SearchResults> {
       AppFunctions.debugPrint('Current Category: "${widget.currentCategory}"');
       AppFunctions.debugPrint('Filters: ${widget.filters}');
 
-      // Mặc định tìm kiếm trên tất cả email, trừ khi filters.category được chọn
       Stream<List<Map<String, dynamic>>> emailStream;
       var searchScope = 'Tất cả thư';
       if (widget.filters.category != null) {
@@ -84,7 +83,6 @@ class _SearchResultsState extends State<SearchResults> {
 
       final emailData = await emailStream.first;
 
-      // Debug: In danh sách email thô để kiểm tra
       AppFunctions.debugPrint('Raw emails in "$searchScope": $emailData');
 
       if (emailData.isEmpty) {
@@ -100,7 +98,6 @@ class _SearchResultsState extends State<SearchResults> {
           emailData.where((item) {
             final email = item['email'] as Email;
 
-            // Lọc theo từ khóa
             var matchesText = true;
             if (query.isNotEmpty) {
               final from = email.from.trim().toLowerCase();
@@ -125,8 +122,6 @@ class _SearchResultsState extends State<SearchResults> {
                   bcc.contains(query);
             }
 
-            // Lọc theo nhãn nếu có (đã xử lý trong emailStream)
-            // Lọc theo các bộ lọc khác
             var matchesFrom = true;
             if (widget.filters.from != null &&
                 widget.filters.from!.isNotEmpty) {
@@ -160,7 +155,7 @@ class _SearchResultsState extends State<SearchResults> {
               matchesDateRange =
                   emailDate.isAfter(startDate) && emailDate.isBefore(endDate);
               AppFunctions.debugPrint(
-                'Date filter: ${emailDate} vs $startDate - $endDate, matches: $matchesDateRange',
+                'Bộ lọc ngày: $emailDate với $startDate - $endDate, khớp: $matchesDateRange',
               );
             }
 
@@ -191,7 +186,9 @@ class _SearchResultsState extends State<SearchResults> {
             isStarred: state.starred,
             avatarText:
                 senderName.isNotEmpty ? senderName[0].toUpperCase() : 'A',
-            backgroundColor: Colors.blue,
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.primary.withOpacity(0.7), // Sử dụng opacity
             email: email,
           );
         }),
@@ -223,18 +220,24 @@ class _SearchResultsState extends State<SearchResults> {
 
   Widget _buildFilterSummary() {
     final activeFilters = <String>[];
-    if (widget.filters.category != null)
-      activeFilters.add(
-        'Thư mục: ${_getCategoryDisplayName(widget.filters.category!)}',
+    if (widget.filters.category != null) {
+      final categoryDisplayName = _getCategoryDisplayName(
+        widget.filters.category!,
       );
-    if (widget.filters.from != null)
+      activeFilters.add('Thư mục: $categoryDisplayName');
+      // Đã bao gồm "Starred" (Có gắn sao) trong danh sách category
+    }
+    if (widget.filters.from != null) {
       activeFilters.add('Từ: ${widget.filters.from}');
-    if (widget.filters.to != null)
+    }
+    if (widget.filters.to != null) {
       activeFilters.add('Đến: ${widget.filters.to}');
-    if (widget.filters.hasAttachments != null)
+    }
+    if (widget.filters.hasAttachments != null) {
       activeFilters.add(
         'Tệp đính kèm: ${widget.filters.hasAttachments! ? "Có" : "Không"}',
       );
+    }
     if (widget.filters.dateRange != null) {
       final start = widget.filters.dateRange!.start;
       final end = widget.filters.dateRange!.end;
@@ -248,6 +251,7 @@ class _SearchResultsState extends State<SearchResults> {
     final themeProvider = Provider.of<ThemeManage>(context, listen: false);
     final isDarkMode = themeProvider.isDarkMode;
     final textColor = isDarkMode ? Colors.white70 : Colors.grey[600];
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -277,17 +281,26 @@ class _SearchResultsState extends State<SearchResults> {
                         decoration: BoxDecoration(
                           color:
                               isDarkMode
-                                  ? Colors.blue.shade800
-                                  : Colors.blue.shade100,
-                          borderRadius: BorderRadius.circular(12),
+                                  ? primaryColor.withOpacity(0.2)
+                                  : primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(
+                            12,
+                          ), // Shape được làm tròn
+                          border: Border.all(
+                            color:
+                                isDarkMode
+                                    ? primaryColor.withOpacity(0.5)
+                                    : primaryColor.withOpacity(0.3),
+                            width: 1,
+                          ),
                         ),
                         child: Text(
                           filter,
                           style: TextStyle(
                             color:
                                 isDarkMode
-                                    ? Colors.blue.shade200
-                                    : Colors.blue.shade800,
+                                    ? primaryColor.withOpacity(0.8)
+                                    : primaryColor.withOpacity(0.9),
                             fontSize: 12,
                           ),
                         ),
@@ -301,20 +314,21 @@ class _SearchResultsState extends State<SearchResults> {
   }
 
   String _getCategoryDisplayName(String category) {
-    const Map<String, String> categoryNames = {
+    const categoryNames = <String, String>{
       'Inbox': 'Hộp thư đến',
-      'Sent': 'Thư đã gửi',
+      'Sent': 'Đã gửi',
       'Draft': 'Thư nháp',
       'Important': 'Quan trọng',
       'Spam': 'Thư rác',
       'Trash': 'Thùng rác',
-      'Archive': 'Lưu trữ',
+      'Starred': 'Có gắn dấu sao',
     };
     return categoryNames[category] ?? category;
   }
 
   Widget _buildInitialState() {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
     final textColor = isDarkMode ? Colors.white70 : Colors.grey[600];
     final iconColor = isDarkMode ? Colors.white38 : Colors.grey[400];
 
@@ -352,8 +366,11 @@ class _SearchResultsState extends State<SearchResults> {
     final isDarkMode = themeProvider.isDarkMode;
     final textColor = isDarkMode ? Colors.white70 : Colors.grey[600];
     final iconColor = isDarkMode ? Colors.white38 : Colors.grey[400];
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_isLoading) {
+      return Center(child: CircularProgressIndicator(color: primaryColor));
+    }
 
     if (widget.searchQuery.isEmpty && !widget.filters.hasActiveFilters) {
       return _buildInitialState();
@@ -406,8 +423,9 @@ class _SearchResultsState extends State<SearchResults> {
                 widget.searchQuery.isNotEmpty
                     ? 'Kết quả cho "${widget.searchQuery}"'
                     : 'Kết quả tìm kiếm',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                style: TextStyle(
                   color: textColor,
+                  fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
               ),

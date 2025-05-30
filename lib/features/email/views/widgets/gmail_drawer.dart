@@ -70,7 +70,7 @@ class _GmailDrawerState extends State<GmailDrawer> {
       setState(() {
         labels = loadedLabels;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       AppFunctions.debugPrint('Error loading labels: $e');
       ScaffoldMessenger.of(
         context,

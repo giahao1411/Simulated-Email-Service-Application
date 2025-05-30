@@ -7,6 +7,7 @@ import 'package:email_application/features/notification/controllers/notification
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -18,6 +19,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Khởi tạo Firebase
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -28,6 +31,8 @@ void main() async {
   } on Exception catch (e) {
     AppFunctions.debugPrint('Firebase initialization error: $e');
   }
+
+  // Đảm bảo các dịch vụ khác được khởi tạo nếu có
   runApp(const MyApp());
 }
 
@@ -46,6 +51,16 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'Simulated Email App',
+            locale: const Locale(
+              'vi',
+              'VN',
+            ), // Thiết lập ngôn ngữ mặc định là tiếng Việt
+            supportedLocales: const [Locale('vi', 'VN')],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(
                 seedColor: Colors.red,
@@ -91,6 +106,15 @@ class MyApp extends StatelessWidget {
               textTheme: const TextTheme(
                 bodyLarge: TextStyle(color: Colors.black87),
                 bodyMedium: TextStyle(color: Colors.black87),
+                titleLarge: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black87,
+                elevation: 0,
               ),
             ),
             darkTheme: ThemeData.dark().copyWith(
@@ -137,6 +161,15 @@ class MyApp extends StatelessWidget {
               textTheme: const TextTheme(
                 bodyLarge: TextStyle(color: Colors.white70),
                 bodyMedium: TextStyle(color: Colors.white70),
+                titleLarge: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white70,
+                ),
+              ),
+              appBarTheme: AppBarTheme(
+                backgroundColor: Colors.grey[900],
+                foregroundColor: Colors.white70,
+                elevation: 0,
               ),
             ),
             themeMode:

@@ -1,7 +1,9 @@
 import 'package:email_application/core/constants/app_functions.dart';
-import 'package:flutter/material.dart';
 import 'package:email_application/features/email/models/search_filters.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/views/widgets/advanced_search_filters.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class SearchAppBar extends StatefulWidget {
   const SearchAppBar({
@@ -61,14 +63,17 @@ class _SearchAppBarState extends State<SearchAppBar> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
     final surfaceColor = Theme.of(context).colorScheme.surface;
     final textColor = Theme.of(context).colorScheme.onSurface;
     final hintTextColor = Theme.of(
       context,
     ).colorScheme.onSurface.withOpacity(0.6);
     final iconColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
+    final dividerColor = isDarkMode ? Colors.grey[600] : Colors.grey[300];
 
-    return Container(
+    return ColoredBox(
       color: surfaceColor,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -78,8 +83,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  color: iconColor,
+                  icon: Icon(Icons.arrow_back, color: iconColor),
                   onPressed: widget.onBackPressed,
                 ),
                 const SizedBox(width: 8),
@@ -113,8 +117,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
                 ),
                 if (_controller.text.isNotEmpty)
                   IconButton(
-                    icon: const Icon(Icons.close),
-                    color: iconColor,
+                    icon: Icon(Icons.close, color: iconColor),
                     onPressed: () {
                       _controller.clear();
                       widget.onSearchChanged('');
@@ -123,8 +126,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
                   )
                 else
                   IconButton(
-                    icon: const Icon(Icons.mic),
-                    color: iconColor,
+                    icon: Icon(Icons.mic, color: iconColor),
                     onPressed: () {
                       AppFunctions.debugPrint('Voice search pressed');
                     },
@@ -132,7 +134,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
               ],
             ),
           ),
-          const Divider(height: 1, thickness: 0.5),
+          Divider(height: 1, thickness: 0.5, color: dividerColor),
           AdvancedSearchFilters(
             onFiltersChanged: widget.onFiltersChanged,
             currentCategory: widget.currentCategory,

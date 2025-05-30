@@ -614,6 +614,7 @@ class ReplyItem extends StatelessWidget {
   final Color onSurface60;
   final VoidCallback onShowOriginalEmail;
 
+
   String getSummaryBody(String body) {
     if (body.isEmpty) return '(No content)';
     final quoteIndex = body.indexOf('On ');

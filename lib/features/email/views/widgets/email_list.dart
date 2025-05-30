@@ -1,3 +1,4 @@
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
@@ -33,6 +34,9 @@ class EmailList extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
+              AppFunctions.debugPrint(
+                'Error loading emails: ${snapshot.error}',
+              );
               return Center(
                 child: Text(
                   AppStrings.errorLoadingEmails,

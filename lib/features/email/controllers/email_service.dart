@@ -731,8 +731,9 @@ class EmailService {
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('Người dùng chưa đăng nhập');
-
+    
     AppFunctions.debugPrint('Sending reply for emailId: $emailId');
+
     final emailDoc = await _firestore.collection('emails').doc(emailId).get();
     if (!emailDoc.exists) throw Exception('Email không tồn tại');
     final originalEmail = Email.fromMap(emailId, emailDoc.data()!);
