@@ -3,6 +3,8 @@ import 'package:email_application/features/email/models/search_filters.dart';
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 
 class AdvancedSearchFilters extends StatefulWidget {
   const AdvancedSearchFilters({
@@ -25,31 +27,28 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
   bool? hasAttachments;
   DateTimeRange? selectedDateRange;
 
-  // Chỉ giữ các nhãn cố định, thêm "Starred", bỏ "Archive", "All Mail", và nhãn từ drawer
   final List<String> drawerCategories = [
     'Inbox',
+    'Starred',
     'Sent',
     'Draft',
     'Important',
     'Spam',
     'Trash',
-    'Starred',
   ];
 
-  // Danh sách động sẽ được cập nhật từ Firestore
   List<String> commonSenders = [];
   List<String> commonRecipients = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchEmailContacts(); // Gọi hàm để lấy danh sách email
+    _fetchEmailContacts();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateFilters();
     });
   }
 
-  // Hàm lấy danh sách email từ Firestore
   Future<void> _fetchEmailContacts() async {
     final userEmail = FirebaseAuth.instance.currentUser?.email;
     if (userEmail == null) {
@@ -58,41 +57,61 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
     }
 
     try {
-      // Truy vấn email nhận (lấy danh sách "from")
-      final receivedEmailsSnapshot =
+      final emailsSnapshot =
           await FirebaseFirestore.instance
               .collection('emails')
-              .where('to', arrayContains: userEmail)
+              .where(
+                Filter.or(
+                  Filter('from', isEqualTo: userEmail),
+                  Filter('to', arrayContains: userEmail),
+                  Filter('cc', arrayContains: userEmail),
+                  Filter('bcc', arrayContains: userEmail),
+                ),
+              )
               .orderBy('timestamp', descending: true)
-              .limit(50) // Giới hạn để tránh tải quá nhiều dữ liệu
+              .limit(200)
               .get();
 
-      // Truy vấn email gửi (lấy danh sách "to")
-      final sentEmailsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('emails')
-              .where('from', isEqualTo: userEmail)
-              .orderBy('timestamp', descending: true)
-              .limit(50) // Giới hạn để tránh tải quá nhiều dữ liệu
-              .get();
-
-      // Lấy danh sách "from" từ email nhận
-      final senders =
-          receivedEmailsSnapshot.docs
-              .map((doc) => doc['from'] as String)
-              .toSet() // Loại bỏ trùng lặp
-              .toList();
-
-      // Lấy danh sách "to" từ email gửi
+      final senders = <String>{};
       final recipients = <String>{};
-      for (var doc in sentEmailsSnapshot.docs) {
-        final toList = doc['to'] as List<dynamic>;
-        recipients.addAll(toList.cast<String>());
+
+      for (var doc in emailsSnapshot.docs) {
+        final data = doc.data();
+        final from = data['from'] as String?;
+        final toList =
+            data['to'] is Iterable
+                ? List<String>.from(data['to'] as Iterable)
+                : <String>[];
+        final ccList =
+            data['cc'] is Iterable
+                ? List<String>.from(data['cc'] as Iterable)
+                : <String>[];
+        final bccList =
+            data['bcc'] is Iterable
+                ? List<String>.from(data['bcc'] as Iterable)
+                : <String>[];
+
+        if (from == userEmail) {
+          recipients.addAll(toList.where((e) => e != userEmail));
+          recipients.addAll(ccList.where((e) => e != userEmail));
+          recipients.addAll(bccList.where((e) => e != userEmail));
+        } else {
+          if (from != null && from != userEmail) {
+            senders.add(from);
+          }
+          final userIsRecipient =
+              toList.contains(userEmail) ||
+              ccList.contains(userEmail) ||
+              bccList.contains(userEmail);
+          if (userIsRecipient && from != null && from != userEmail) {
+            senders.add(from);
+          }
+        }
       }
 
       setState(() {
-        commonSenders = senders;
-        commonRecipients = recipients.toList();
+        commonSenders = senders.toList()..sort();
+        commonRecipients = recipients.toList()..sort();
       });
 
       AppFunctions.debugPrint('Fetched senders: $commonSenders');
@@ -131,25 +150,147 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
   }
 
   Future<void> _selectDateRange() async {
+    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       initialDateRange: selectedDateRange,
+      locale: const Locale('vi', 'VN'),
+      helpText: 'Chọn khoảng thời gian',
+      cancelText: 'Hủy',
+      confirmText: 'OK',
+      saveText: 'Lưu',
+      errorFormatText: 'Định dạng ngày không hợp lệ',
+      errorInvalidText: 'Ngày không hợp lệ',
+      errorInvalidRangeText: 'Khoảng thời gian không hợp lệ',
+      fieldStartHintText: 'dd/mm/yyyy',
+      fieldEndHintText: 'dd/mm/yyyy',
+      fieldStartLabelText: 'Ngày bắt đầu',
+      fieldEndLabelText: 'Ngày kết thúc',
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: Colors.blue,
-              onPrimary: Colors.white,
-              surface: Theme.of(context).colorScheme.surface,
-              onSurface: Theme.of(context).colorScheme.onSurface,
+            colorScheme:
+                isDarkMode
+                    ? ColorScheme.dark(
+                      primary: primaryColor,
+                      onPrimary: Colors.white,
+                      surface: Colors.grey[800]!,
+                      onSurface: Colors.white,
+                      background: Colors.grey[900]!,
+                      onBackground: Colors.white,
+                      secondary: primaryColor,
+                      onSecondary: Colors.white,
+                    )
+                    : ColorScheme.light(
+                      primary: primaryColor,
+                      onPrimary: Colors.white,
+                      surface: Colors.white,
+                      onSurface: Colors.black87,
+                      background: Colors.white,
+                      onBackground: Colors.black87,
+                      secondary: primaryColor,
+                      onSecondary: Colors.white,
+                    ),
+
+            dialogBackgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
+
+            cardTheme: CardThemeData(
+              color: isDarkMode ? Colors.grey[700] : Colors.grey[50],
+              elevation: 0,
+            ),
+
+            textTheme: TextTheme(
+              headlineSmall: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+              bodyLarge: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black87,
+              ),
+              bodyMedium: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+              labelLarge: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+
+            dividerTheme: DividerThemeData(
+              color: isDarkMode ? Colors.grey[600] : Colors.grey[300],
+              thickness: 1,
+            ),
+
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: isDarkMode ? Colors.grey[700] : Colors.grey[50],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: primaryColor, width: 2),
+              ),
+              labelStyle: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+              hintStyle: TextStyle(
+                color: isDarkMode ? Colors.white38 : Colors.black38,
+              ),
+            ),
+
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+
+            appBarTheme: AppBarTheme(
+              backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
+              foregroundColor: isDarkMode ? Colors.white : Colors.black87,
+              elevation: 0,
+              iconTheme: IconThemeData(
+                color: isDarkMode ? Colors.white : Colors.black87,
+              ),
             ),
           ),
-          child: child!,
+          child: Localizations.override(
+            context: context,
+            locale: const Locale('vi', 'VN'),
+            child: child!,
+          ),
         );
       },
     );
+
     if (picked != null && picked != selectedDateRange) {
       setState(() {
         selectedDateRange = picked;
@@ -164,7 +305,12 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
     required VoidCallback onTap,
     VoidCallback? onDeleted,
   }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
+    final backgroundColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final textColor = isDarkMode ? Colors.white70 : Colors.black87;
+    final iconColor = isDarkMode ? Colors.white70 : Colors.black54;
+    final actionColor = Theme.of(context).colorScheme.primary;
     final isSelected = value != null && value.isNotEmpty;
 
     return GestureDetector(
@@ -174,11 +320,13 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
         decoration: BoxDecoration(
           color:
               isSelected
-                  ? (isDarkMode ? Colors.blue.shade800 : Colors.blue.shade100)
-                  : (isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200),
+                  ? (isDarkMode
+                      ? actionColor.withOpacity(0.2)
+                      : actionColor.withOpacity(0.1))
+                  : backgroundColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isDarkMode ? Colors.grey.shade600 : Colors.grey.shade400,
+            color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
             width: 1,
           ),
         ),
@@ -191,9 +339,9 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                 color:
                     isSelected
                         ? (isDarkMode
-                            ? Colors.blue.shade200
-                            : Colors.blue.shade800)
-                        : (isDarkMode ? Colors.white70 : Colors.grey.shade700),
+                            ? actionColor.withOpacity(0.7)
+                            : actionColor.withOpacity(0.9))
+                        : textColor,
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
               ),
@@ -205,9 +353,9 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
               color:
                   isSelected
                       ? (isDarkMode
-                          ? Colors.blue.shade200
-                          : Colors.blue.shade800)
-                      : (isDarkMode ? Colors.white70 : Colors.grey.shade700),
+                          ? actionColor.withOpacity(0.7)
+                          : actionColor.withOpacity(0.9))
+                      : iconColor,
             ),
             if (isSelected && onDeleted != null) ...[
               const SizedBox(width: 4),
@@ -219,11 +367,9 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                   color:
                       isSelected
                           ? (isDarkMode
-                              ? Colors.blue.shade200
-                              : Colors.blue.shade800)
-                          : (isDarkMode
-                              ? Colors.white70
-                              : Colors.grey.shade700),
+                              ? actionColor.withOpacity(0.7)
+                              : actionColor.withOpacity(0.9))
+                          : iconColor,
                 ),
               ),
             ],
@@ -245,12 +391,20 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
       return;
     }
 
+    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
+    final backgroundColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final iconColor = isDarkMode ? Colors.white70 : Colors.black54;
+    final actionColor = Theme.of(context).colorScheme.primary;
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
+      backgroundColor: backgroundColor,
       builder: (BuildContext context) {
         return Container(
           padding: const EdgeInsets.all(16),
@@ -267,23 +421,30 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                   children: [
                     Text(
                       title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: TextStyle(
+                        color: textColor,
                         fontWeight: FontWeight.w600,
+                        fontSize: 16,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: Icon(Icons.close, color: iconColor),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
-                const Divider(),
+                Divider(
+                  color: isDarkMode ? Colors.grey[600] : Colors.grey[300],
+                ),
                 ...options.map(
                   (item) => ListTile(
-                    title: Text(_getCategoryDisplayName(item)),
+                    title: Text(
+                      _getCategoryDisplayName(item),
+                      style: TextStyle(color: textColor),
+                    ),
                     trailing:
                         _isItemSelected(title, item)
-                            ? const Icon(Icons.check, color: Colors.blue)
+                            ? Icon(Icons.check, color: actionColor)
                             : null,
                     onTap: () {
                       setState(() {
@@ -298,7 +459,7 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                           selectedTo = selectedTo == item ? null : item;
                         }
                       });
-                      _updateFilters(); // Đảm bảo cập nhật ngay lập tức
+                      _updateFilters();
                       Navigator.pop(context);
                     },
                   ),
@@ -327,22 +488,30 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
   String _getCategoryDisplayName(String category) {
     const Map<String, String> categoryNames = {
       'Inbox': 'Hộp thư đến',
-      'Sent': 'Thư đã gửi',
+      'Sent': 'Đã gửi',
       'Draft': 'Thư nháp',
       'Important': 'Quan trọng',
       'Spam': 'Thư rác',
       'Trash': 'Thùng rác',
-      'Starred': 'Có đánh dấu sao',
+      'Starred': 'Có gắn dấu sao',
     };
     return categoryNames[category] ?? category;
   }
 
   void _showAttachmentPicker() {
+    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
+    final backgroundColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final iconColor = isDarkMode ? Colors.white70 : Colors.black54;
+    final actionColor = Theme.of(context).colorScheme.primary;
+
     showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
+      backgroundColor: backgroundColor,
       builder: (BuildContext context) {
         return Container(
           padding: const EdgeInsets.all(16),
@@ -356,22 +525,29 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                   children: [
                     Text(
                       'Tệp đính kèm',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: TextStyle(
+                        color: textColor,
                         fontWeight: FontWeight.w600,
+                        fontSize: 16,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: Icon(Icons.close, color: iconColor),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
-                const Divider(),
+                Divider(
+                  color: isDarkMode ? Colors.grey[600] : Colors.grey[300],
+                ),
                 ListTile(
-                  title: const Text('Có tệp đính kèm'),
+                  title: Text(
+                    'Có tệp đính kèm',
+                    style: TextStyle(color: textColor),
+                  ),
                   trailing:
                       hasAttachments == true
-                          ? const Icon(Icons.check, color: Colors.blue)
+                          ? Icon(Icons.check, color: actionColor)
                           : null,
                   onTap: () {
                     setState(
@@ -383,10 +559,13 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                   },
                 ),
                 ListTile(
-                  title: const Text('Không có tệp đính kèm'),
+                  title: Text(
+                    'Không có tệp đính kèm',
+                    style: TextStyle(color: textColor),
+                  ),
                   trailing:
                       hasAttachments == false
-                          ? const Icon(Icons.check, color: Colors.blue)
+                          ? Icon(Icons.check, color: actionColor)
                           : null,
                   onTap: () {
                     setState(
@@ -407,13 +586,31 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
   }
 
   String _formatDateRange(DateTimeRange dateRange) {
+    final List<String> vietnameseMonths = [
+      'Tháng 1',
+      'Tháng 2',
+      'Tháng 3',
+      'Tháng 4',
+      'Tháng 5',
+      'Tháng 6',
+      'Tháng 7',
+      'Tháng 8',
+      'Tháng 9',
+      'Tháng 10',
+      'Tháng 11',
+      'Tháng 12',
+    ];
     final start = dateRange.start;
     final end = dateRange.end;
-    return '${start.day.toString().padLeft(2, '0')}/${start.month.toString().padLeft(2, '0')}/${start.year} - ${end.day.toString().padLeft(2, '0')}/${end.month.toString().padLeft(2, '0')}/${end.year}';
+    final startMonth = vietnameseMonths[start.month - 1];
+    final endMonth = vietnameseMonths[end.month - 1];
+    return '${start.day} $startMonth ${start.year} - ${end.day} $endMonth ${end.year}';
   }
 
   @override
   Widget build(BuildContext context) {
+    final actionColor = Theme.of(context).colorScheme.primary;
+
     final hasActiveFilters =
         selectedCategory != null ||
         selectedFrom != null ||
@@ -421,7 +618,6 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
         hasAttachments != null ||
         selectedDateRange != null;
 
-    // Loại bỏ lọc availableCategories, sử dụng toàn bộ drawerCategories
     final availableCategories = drawerCategories;
 
     return Column(
@@ -539,7 +735,10 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                 padding: const EdgeInsets.only(right: 8),
                 child: TextButton(
                   onPressed: _clearAllFilters,
-                  child: const Text('Xóa tất cả bộ lọc'),
+                  child: Text(
+                    'Xóa tất cả bộ lọc',
+                    style: TextStyle(color: actionColor),
+                  ),
                 ),
               ),
             ],

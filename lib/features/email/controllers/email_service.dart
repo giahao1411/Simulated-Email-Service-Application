@@ -167,12 +167,10 @@ class EmailService {
 
     AppFunctions.debugPrint('Lấy email cho danh mục: $category');
 
-    // Xử lý danh mục Inbox
     if (category == AppStrings.inbox) {
       return EmailServiceUtils.getInboxEmails();
     }
 
-    // Xác định bộ sưu tập và điều kiện truy vấn
     final isDraft = category == AppStrings.drafts;
     var query = _firestore
         .collection(isDraft ? 'drafts' : 'emails')
@@ -185,9 +183,7 @@ class EmailService {
         'userId',
         isEqualTo: FirebaseAuth.instance.currentUser!.uid,
       );
-    } else if (category == AppStrings.starred) {
-      // Không cần where, lọc bằng emailState.starred trong emailMatchesCategory
-    }
+    } else if (category == AppStrings.starred) {}
 
     return query.snapshots().asyncMap((snapshot) async {
       try {
@@ -734,7 +730,6 @@ class EmailService {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('Người dùng chưa đăng nhập');
 
-    // lấy email gốc từ Firestore
     final emailDoc = await _firestore.collection('emails').doc(emailId).get();
     if (!emailDoc.exists) throw Exception('Email không tồn tại');
     final originalEmail = Email.fromMap(emailId, emailDoc.data()!);

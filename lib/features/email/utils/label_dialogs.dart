@@ -30,7 +30,7 @@ class LabelDialogs {
       builder:
           (context) => Theme(
             data: Theme.of(context).copyWith(
-              dialogTheme: DialogTheme(
+              dialogTheme: DialogThemeData(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -115,7 +115,7 @@ class LabelDialogs {
       builder:
           (context) => Theme(
             data: Theme.of(context).copyWith(
-              dialogTheme: DialogTheme(
+              dialogTheme: DialogThemeData(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -215,7 +215,7 @@ class LabelDialogs {
       builder:
           (context) => Theme(
             data: Theme.of(context).copyWith(
-              dialogTheme: DialogTheme(
+              dialogTheme: DialogThemeData(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
