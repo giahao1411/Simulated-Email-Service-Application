@@ -8,8 +8,6 @@ class EmailState {
     this.spam = false,
     this.hidden = false,
     this.labels = const [],
-    this.isReplied = false, // tạo trạng thái trả lời
-    this.replyEmailIds = const [], // tạo danh sách reply
   });
 
   factory EmailState.fromMap(Map<String, dynamic> data) {
@@ -22,9 +20,6 @@ class EmailState {
       spam: data['spam'] as bool? ?? false,
       hidden: data['hidden'] as bool? ?? false,
       labels: (data['labels'] as List<dynamic>? ?? []).cast<String>(),
-      isReplied: data['isReplied'] as bool? ?? false,
-      replyEmailIds:
-          (data['replyEmailIds'] as List<dynamic>? ?? []).cast<String>(),
     );
   }
 
@@ -36,8 +31,6 @@ class EmailState {
   final bool spam;
   final bool hidden;
   final List<String> labels;
-  final bool isReplied; // thêm Email đã được trả lời chưa
-  final List<String> replyEmailIds; // tạo danh sách ID của các email reply
 
   Map<String, dynamic> toMap() {
     return {
@@ -49,8 +42,6 @@ class EmailState {
       'spam': spam,
       'hidden': hidden,
       'labels': labels,
-      'isReplied': isReplied,
-      'replyEmailIds': replyEmailIds,
     };
   }
 
@@ -63,8 +54,6 @@ class EmailState {
     bool? spam,
     bool? hidden,
     List<String>? labels,
-    bool? isReplied,
-    List<String>? replyEmailIds,
   }) {
     return EmailState(
       emailId: emailId ?? this.emailId,
@@ -75,8 +64,6 @@ class EmailState {
       spam: spam ?? this.spam,
       hidden: hidden ?? this.hidden,
       labels: labels ?? this.labels,
-      isReplied: isReplied ?? this.isReplied,
-      replyEmailIds: replyEmailIds ?? this.replyEmailIds,
     );
   }
 }
