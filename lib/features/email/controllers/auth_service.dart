@@ -89,7 +89,7 @@ class AuthService {
           );
         },
       );
-    } catch (e) {
+    } on Exception catch (e) {
       AppFunctions.debugPrint('Error sending OTP: $e');
       onError('Gửi OTP thất bại: $e');
     }

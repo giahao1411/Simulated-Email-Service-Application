@@ -72,31 +72,10 @@ class _ReplyScreenState extends State<ReplyScreen> {
   Future<bool> handleBackAction() async {
     if (!hasChanges) {
       AppFunctions.debugPrint('Không có thay đổi, bỏ qua lưu nháp');
-      return true;
+      return true; // Cho phép thoát
     }
 
-    final shouldSave = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Lưu thư nháp?'),
-            content: const Text('Bạn có muốn lưu thư nháp trước khi thoát?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Hủy'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Lưu'),
-              ),
-            ],
-          ),
-    );
-
-    if (shouldSave ?? false) {
-      await handleSaveDraft(showSnackBar: false);
-    }
+    await handleSaveDraft();
     return true;
   }
 
@@ -135,7 +114,7 @@ class _ReplyScreenState extends State<ReplyScreen> {
     }
   }
 
-  Future<void> handleSaveDraft({bool showSnackBar = true}) async {
+  Future<void> handleSaveDraft() async {
     final toEmails = EmailValidator.parseEmails(toController.text);
     final ccEmails = EmailValidator.parseEmails(ccController.text);
     final bccEmails = EmailValidator.parseEmails(bccController.text);
@@ -169,7 +148,7 @@ class _ReplyScreenState extends State<ReplyScreen> {
         id: widget.draft?.id,
       );
 
-      if (mounted && showSnackBar) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Lưu thư nháp thành công')),
         );

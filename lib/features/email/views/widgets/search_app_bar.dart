@@ -1,9 +1,9 @@
 import 'package:email_application/core/constants/app_functions.dart';
-import 'package:flutter/material.dart';
 import 'package:email_application/features/email/models/search_filters.dart';
-import 'package:email_application/features/email/views/widgets/advanced_search_filters.dart';
-import 'package:provider/provider.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
+import 'package:email_application/features/email/views/widgets/advanced_search_filters.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class SearchAppBar extends StatefulWidget {
   const SearchAppBar({
@@ -73,7 +73,7 @@ class _SearchAppBarState extends State<SearchAppBar> {
     final iconColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
     final dividerColor = isDarkMode ? Colors.grey[600] : Colors.grey[300];
 
-    return Container(
+    return ColoredBox(
       color: surfaceColor,
       child: Column(
         mainAxisSize: MainAxisSize.min,

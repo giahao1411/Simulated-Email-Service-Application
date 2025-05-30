@@ -68,28 +68,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
       return true; // Cho phép thoát
     }
 
-    final shouldSave = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Lưu thư nháp?'),
-            content: const Text('Bạn có muốn lưu thư nháp trước khi thoát?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Hủy'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Lưu'),
-              ),
-            ],
-          ),
-    );
-
-    if (shouldSave ?? false) {
-      await handleSaveDraft(showSnackBar: false);
-    }
+    await handleSaveDraft();
     return true;
   }
 
@@ -145,7 +124,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
     }
   }
 
-  Future<void> handleSaveDraft({bool showSnackBar = true}) async {
+  Future<void> handleSaveDraft() async {
     // get to, cc, and bcc emails
     final toEmails = EmailValidator.parseEmails(toController.text);
     final ccEmails = EmailValidator.parseEmails(ccController.text);
@@ -181,7 +160,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
         body: bodyController.text,
         id: widget.draft?.id, // update draft if it exists
       );
-      if (mounted && showSnackBar) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Lưu thư nháp thành công')),
         );
@@ -201,7 +180,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
       canPop: false, // disable default back button behavior
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return; // if pop was invoked, do nothing
-        if (await handleBackAction()) {
+        if (await handleBackAction() && context.mounted) {
           Navigator.pop(context); // pop the screen if back action is allowed
         }
       },

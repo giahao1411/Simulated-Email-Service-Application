@@ -48,7 +48,7 @@ dependencies:
   flutter_local_notifications: ^17.2.1+2 # add for notifications on local
   flutter_localizations:
     sdk: flutter
-  intl: ^0.20.2
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,5 @@
-import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/core/constants/app_functions.dart';
+import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';

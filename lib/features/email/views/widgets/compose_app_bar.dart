@@ -1,5 +1,4 @@
 import 'package:email_application/core/constants/app_functions.dart';
-import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/draft_service.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +22,7 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: IconButton(
         icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
         onPressed: () async {
-          if (await onBack()) {
+          if (await onBack() && context.mounted) {
             Navigator.pop(context);
           }
         },
@@ -52,8 +51,6 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget popUpMenuButton(BuildContext context) {
-    final draftService = DraftService();
-
     final themeProvider = Provider.of<ThemeManage>(context);
     final isDarkMode = themeProvider.isDarkMode;
     final textIconTheme = isDarkMode ? Colors.white70 : Colors.grey[800];
@@ -64,25 +61,7 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
       color: isDarkMode ? Colors.grey[800] : Colors.white,
       onSelected: (String value) async {
         if (value == 'discard') {
-          try {
-            if (draftId != null) {
-              await draftService.deleteDraft(draftId!);
-            }
-            if (context.mounted) {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('${AppStrings.drafts} đã được bỏ'),
-                ),
-              );
-            }
-          } on Exception catch (e) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Bỏ nháp thất bại: $e')));
-            }
-          }
+          showDiscardConfirmationDialog(context, draftId);
         } else if (value == 'schedule-send') {
           // Handle schedule send action
           AppFunctions.debugPrint('Schedule send action selected');
@@ -120,4 +99,39 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  void showDiscardConfirmationDialog(BuildContext context, String? draftId) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Xác nhận bỏ nháp'),
+          content: const Text('Bạn có chắc chắn muốn bỏ nháp này không?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // close dialog
+              },
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (draftId != null) {
+                  await DraftService().deleteDraft(draftId);
+                }
+                if (context.mounted) {
+                  Navigator.of(dialogContext).pop();
+                  Navigator.of(context).pop(); // on composing
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Nháp đã được bỏ')),
+                  );
+                }
+              },
+              child: const Text('Bỏ'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
