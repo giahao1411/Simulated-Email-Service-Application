@@ -3,20 +3,22 @@ import 'package:email_application/features/email/models/email.dart';
 class EmailReply {
   static Email createCustomReply(
     Email originalEmail,
-    String currentUserEmail,
-    String replyBody,
-  ) {
-    final newSubject =
-        originalEmail.subject.startsWith('Re: ')
-            ? originalEmail.subject
-            : 'Re: ${originalEmail.subject}';
+    String senderEmail,
+    String replyBody, {
+    List<String> ccEmails = const [],
+    List<String> bccEmails = const [],
+  }) {
     return Email(
       id: '',
-      from: currentUserEmail,
-      to: [originalEmail.from],
-      subject: newSubject,
-      body: replyBody,
+      from: senderEmail,
+      to: [originalEmail.from], // Reply cho người gửi gốc
+      cc: ccEmails,
+      bcc: bccEmails,
+      subject: 'Re: ${originalEmail.subject}',
+      body:
+          '$replyBody\n\nOn ${originalEmail.timestamp}, ${originalEmail.from} wrote:\n${originalEmail.body}',
       timestamp: DateTime.now(),
+      replyEmailIds: [],
       inReplyTo: originalEmail.id,
     );
   }

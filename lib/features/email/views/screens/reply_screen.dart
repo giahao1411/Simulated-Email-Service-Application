@@ -40,11 +40,18 @@ class _ReplyScreenState extends State<ReplyScreen> {
   @override
   void initState() {
     super.initState();
-    toController.text = widget.email.from; // người nhận là người gửi email gốc
+    toController.text = widget.email.from; // Người nhận là người gửi email gốc
     subjectController.text =
         widget.email.subject.startsWith('Re: ')
             ? widget.email.subject
             : 'Re: ${widget.email.subject}';
+    if (widget.draft != null) {
+      toController.text = widget.draft!.to.join(', ');
+      ccController.text = widget.draft!.cc.join(', ');
+      bccController.text = widget.draft!.bcc.join(', ');
+      subjectController.text = widget.draft!.subject;
+      bodyController.text = widget.draft!.body;
+    }
   }
 
   bool get hasChanges {
@@ -76,6 +83,7 @@ class _ReplyScreenState extends State<ReplyScreen> {
     }
 
     await handleSaveDraft();
+
     return true;
   }
 
@@ -107,6 +115,7 @@ class _ReplyScreenState extends State<ReplyScreen> {
       }
     } on Exception catch (e) {
       if (mounted) {
+        AppFunctions.debugPrint('Error sending reply: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gửi email trả lời thất bại: $e')),
         );
@@ -120,14 +129,13 @@ class _ReplyScreenState extends State<ReplyScreen> {
     final bccEmails = EmailValidator.parseEmails(bccController.text);
     final subject = subjectController.text.trim();
     final body = bodyController.text.trim();
-
     if (toEmails.isEmpty &&
         ccEmails.isEmpty &&
         bccEmails.isEmpty &&
         subject.isEmpty &&
         body.isEmpty &&
         widget.draft == null) {
-      AppFunctions.debugPrint('Các trường rỗng, không lưu nháp');
+      AppFunctions.debugPrint('Empty fields, not saving draft');
       return;
     }
 
@@ -144,7 +152,7 @@ class _ReplyScreenState extends State<ReplyScreen> {
         cc: ccEmails,
         bcc: bccEmails,
         subject: subjectController.text,
-        body: bodyController.text,
+        body: body,
         id: widget.draft?.id,
       );
 
@@ -155,9 +163,10 @@ class _ReplyScreenState extends State<ReplyScreen> {
       }
     } on Exception catch (e) {
       if (mounted) {
+        AppFunctions.debugPrint('Error saving draft: $e');
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Lưu thư nháp thất bại: $e')));
+        ).showSnackBar(SnackBar(content: Text('Lưu nháp thất bại: $e')));
       }
     }
   }

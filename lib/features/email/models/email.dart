@@ -15,6 +15,8 @@ class Email {
     this.hasAttachments = false,
     this.inReplyTo,
     this.userId, // Thêm trường userId
+    this.isReplied = false,
+    this.replyEmailIds = const [],
   });
 
   factory Email.fromMap(String id, Map<String, dynamic> data) {
@@ -31,6 +33,9 @@ class Email {
       hasAttachments: data['hasAttachments'] as bool? ?? false,
       inReplyTo: data['inReplyTo'] as String?,
       userId: data['userId'] as String?, // Ánh xạ userId từ Firestore
+      isReplied: data['isReply'] as bool? ?? false,
+      replyEmailIds:
+          (data['replyEmailIds'] as List<dynamic>? ?? []).cast<String>(),
     );
   }
 
@@ -46,6 +51,8 @@ class Email {
   final bool hasAttachments;
   final String? inReplyTo;
   final String? userId; // Có thể null cho email không phải nháp
+  final bool isReplied;
+  final List<String> replyEmailIds;
 
   Map<String, dynamic> toMap() {
     return {
@@ -60,6 +67,8 @@ class Email {
       'hasAttachments': hasAttachments,
       'inReplyTo': inReplyTo,
       'userId': userId, // Lưu userId vào Firestore
+      'isReply': isReplied,
+      'replyEmailIds': replyEmailIds,
     };
   }
 
@@ -76,6 +85,8 @@ class Email {
     bool? hasAttachments,
     String? inReplyTo,
     String? userId,
+    bool? isReplied,
+    List<String>? replyEmailIds,
   }) {
     return Email(
       id: id ?? this.id,
@@ -90,6 +101,8 @@ class Email {
       hasAttachments: hasAttachments ?? this.hasAttachments,
       inReplyTo: inReplyTo ?? this.inReplyTo,
       userId: userId ?? this.userId,
+      isReplied: isReplied ?? this.isReplied,
+      replyEmailIds: replyEmailIds ?? this.replyEmailIds,
     );
   }
 }

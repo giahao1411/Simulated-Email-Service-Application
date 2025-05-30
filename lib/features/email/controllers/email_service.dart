@@ -725,48 +725,82 @@ class EmailService {
   Future<void> sendReply(
     String emailId,
     EmailState state,
-    String replyBody,
-  ) async {
+    String replyBody, {
+    List<String> ccEmails = const [],
+    List<String> bccEmails = const [],
+  }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('Người dùng chưa đăng nhập');
+    
+    AppFunctions.debugPrint('Sending reply for emailId: $emailId');
 
     final emailDoc = await _firestore.collection('emails').doc(emailId).get();
     if (!emailDoc.exists) throw Exception('Email không tồn tại');
     final originalEmail = Email.fromMap(emailId, emailDoc.data()!);
 
-    // tạo mail trả lời
     final replyEmail = EmailReply.createCustomReply(
       originalEmail,
       user.email!,
       replyBody,
+      ccEmails: ccEmails,
+      bccEmails: bccEmails,
     );
 
-    // lưu vào Firestore và lấy ID
     final replyDocRef = await _firestore
         .collection('emails')
         .add(replyEmail.toMap());
     final replyEmailId = replyDocRef.id;
+    AppFunctions.debugPrint('Reply created with id: $replyEmailId');
 
-    // cập nhật EmailState
-    EmailState updatedState;
-    if (state.isReplied) {
-      updatedState = state.copyWith(
-        isReplied: true,
-        replyEmailIds: List.from(state.replyEmailIds)..add(replyEmailId),
+    try {
+      await _firestore.collection('emails').doc(emailId).update({
+        'isReplied': true,
+        'replyEmailIds': FieldValue.arrayUnion([replyEmailId]),
+      });
+      AppFunctions.debugPrint(
+        'Updated original email with replyEmailId: $replyEmailId',
       );
-    } else {
-      updatedState = state.copyWith(
-        isReplied: true,
-        replyEmailIds: [replyEmailId],
-      );
+    } catch (error) {
+      AppFunctions.debugPrint('Error updating original email: $error');
+      throw Exception('Failed to update original email: $error');
     }
 
-    // luu trạng thái vào đúng đường dẫn
     await _firestore
         .collection('users')
         .doc(user.uid)
         .collection('email_states')
-        .doc(emailId)
-        .set(updatedState.toMap(), SetOptions(merge: true));
+        .doc(replyEmailId)
+        .set(
+          EmailState(
+            emailId: replyEmailId,
+            read: true,
+            labels: ['sent'],
+          ).toMap(),
+        );
+
+    final allRecipients =
+        <String>{
+          originalEmail.from,
+          ...ccEmails,
+          ...bccEmails,
+        }.where((email) => email != user.email).toList();
+    for (final recipientEmail in allRecipients) {
+      final userQuery =
+          await _firestore
+              .collection('users')
+              .where('email', isEqualTo: recipientEmail)
+              .limit(1)
+              .get();
+      if (userQuery.docs.isNotEmpty) {
+        final recipientUid = userQuery.docs.first.id;
+        await _firestore
+            .collection('users')
+            .doc(recipientUid)
+            .collection('email_states')
+            .doc(replyEmailId)
+            .set(EmailState(emailId: replyEmailId, labels: []).toMap());
+        AppFunctions.debugPrint('Created EmailState for $recipientEmail');
+      }
+    }
   }
 }
