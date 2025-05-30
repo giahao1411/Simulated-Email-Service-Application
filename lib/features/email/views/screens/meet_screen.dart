@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
@@ -6,7 +8,6 @@ import 'package:email_application/features/email/views/screens/gmail_screen.dart
 import 'package:email_application/features/email/views/widgets/bottom_navigation_bar.dart';
 import 'package:email_application/features/email/views/widgets/gmail_drawer.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
 
 class MeetScreen extends StatefulWidget {
   const MeetScreen({super.key});
@@ -215,7 +216,7 @@ class _MeetScreenState extends State<MeetScreen> {
                 ),
 
                 Expanded(
-                  child: Container(
+                  child: SizedBox(
                     width: double.infinity,
                     child: _buildPage(
                       context,
@@ -250,7 +251,7 @@ class _MeetScreenState extends State<MeetScreen> {
             bottom: 0,
             child: Material(
               elevation: 16,
-              child: Container(
+              child: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.7,
                 child: GmailDrawer(
                   currentCategory: currentCategory,
@@ -271,7 +272,7 @@ class _MeetScreenState extends State<MeetScreen> {
     required String description,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

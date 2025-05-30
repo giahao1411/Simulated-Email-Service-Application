@@ -16,6 +16,7 @@ class SettingsController {
   }) {
     _imagePickerHandler = getImagePickerHandler();
   }
+
   final AuthService authService;
   final ProfileService profileService;
   final TextEditingController firstNameController;

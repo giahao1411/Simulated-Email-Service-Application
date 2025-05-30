@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:email_application/features/email/models/search_filters.dart';
-import 'package:email_application/core/constants/app_functions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart';
+import 'package:email_application/core/constants/app_functions.dart';
+import 'package:email_application/features/email/models/search_filters.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class AdvancedSearchFilters extends StatefulWidget {
   const AdvancedSearchFilters({
@@ -92,9 +92,10 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                 : <String>[];
 
         if (from == userEmail) {
-          recipients.addAll(toList.where((e) => e != userEmail));
-          recipients.addAll(ccList.where((e) => e != userEmail));
-          recipients.addAll(bccList.where((e) => e != userEmail));
+          recipients
+            ..addAll(toList.where((e) => e != userEmail))
+            ..addAll(ccList.where((e) => e != userEmail))
+            ..addAll(bccList.where((e) => e != userEmail));
         } else {
           if (from != null && from != userEmail) {
             senders.add(from);
@@ -116,7 +117,7 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
 
       AppFunctions.debugPrint('Fetched senders: $commonSenders');
       AppFunctions.debugPrint('Fetched recipients: $commonRecipients');
-    } catch (e) {
+    } on Exception catch (e) {
       AppFunctions.debugPrint('Lỗi khi lấy danh sách email: $e');
     }
   }
@@ -130,8 +131,8 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
 
     final filters = SearchFilters(
       category: selectedCategory,
-      from: selectedFrom?.isNotEmpty == true ? selectedFrom : null,
-      to: selectedTo?.isNotEmpty == true ? selectedTo : null,
+      from: selectedFrom!.isNotEmpty == true ? selectedFrom : null,
+      to: selectedTo!.isNotEmpty == true ? selectedTo : null,
       hasAttachments: hasAttachments,
       dateRange: selectedDateRange,
     );
@@ -154,7 +155,7 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
     final isDarkMode = themeProvider.isDarkMode;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
-    final DateTimeRange? picked = await showDateRangePicker(
+    final picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
@@ -180,24 +181,15 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                       primary: primaryColor,
                       onPrimary: Colors.white,
                       surface: Colors.grey[800]!,
-                      onSurface: Colors.white,
-                      background: Colors.grey[900]!,
-                      onBackground: Colors.white,
                       secondary: primaryColor,
                       onSecondary: Colors.white,
                     )
                     : ColorScheme.light(
                       primary: primaryColor,
-                      onPrimary: Colors.white,
-                      surface: Colors.white,
                       onSurface: Colors.black87,
-                      background: Colors.white,
-                      onBackground: Colors.black87,
                       secondary: primaryColor,
                       onSecondary: Colors.white,
                     ),
-
-            dialogBackgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
 
             cardTheme: CardThemeData(
               color: isDarkMode ? Colors.grey[700] : Colors.grey[50],
@@ -281,6 +273,9 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                 color: isDarkMode ? Colors.white : Colors.black87,
               ),
             ),
+            dialogTheme: DialogThemeData(
+              backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
+            ),
           ),
           child: Localizations.override(
             context: context,
@@ -301,8 +296,8 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
 
   Widget _buildFilterChip({
     required String label,
-    String? value,
     required VoidCallback onTap,
+    String? value,
     VoidCallback? onDeleted,
   }) {
     final themeProvider = Provider.of<ThemeManage>(context, listen: false);
@@ -486,7 +481,7 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
   }
 
   String _getCategoryDisplayName(String category) {
-    const Map<String, String> categoryNames = {
+    const categoryNames = <String, String>{
       'Inbox': 'Hộp thư đến',
       'Sent': 'Đã gửi',
       'Draft': 'Thư nháp',
@@ -586,7 +581,7 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
   }
 
   String _formatDateRange(DateTimeRange dateRange) {
-    final List<String> vietnameseMonths = [
+    final vietnameseMonths = <String>[
       'Tháng 1',
       'Tháng 2',
       'Tháng 3',
@@ -628,7 +623,6 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 if (availableCategories.isNotEmpty) ...[
                   _buildFilterChip(

@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:email_application/features/email/models/search_filters.dart';
 import 'package:email_application/features/email/views/widgets/search_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/search_results.dart';
+import 'package:flutter/material.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({required this.currentCategory, super.key});

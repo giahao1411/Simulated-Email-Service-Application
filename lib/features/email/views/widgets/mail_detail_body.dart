@@ -90,8 +90,9 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                               .doc(replyId)
                               .snapshots(),
                       builder: (context, replySnapshot) {
-                        if (!replySnapshot.hasData)
+                        if (!replySnapshot.hasData) {
                           return const SizedBox.shrink();
+                        }
                         final replyEmail = Email.fromMap(
                           replyId,
                           replySnapshot.data!.data()! as Map<String, dynamic>,
@@ -511,7 +512,7 @@ class ReplyItem extends StatefulWidget {
   final VoidCallback onShowOriginalEmail;
 
   @override
-  _ReplyItemState createState() => _ReplyItemState();
+  State<ReplyItem> createState() => _ReplyItemState();
 }
 
 class _ReplyItemState extends State<ReplyItem> {

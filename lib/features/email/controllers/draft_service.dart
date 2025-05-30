@@ -22,16 +22,7 @@ class DraftService {
       }
       final userId = FirebaseAuth.instance.currentUser!.uid;
 
-      // create new or update the existing draft
-      final draft = await _firestore.collection('drafts').add({
-        'id':
-            id ??
-            _firestore
-                .collection('users')
-                .doc(userId)
-                .collection('drafts')
-                .doc()
-                .id,
+      final draftData = {
         'userId': userId,
         'to': to,
         'cc': cc,
@@ -39,16 +30,47 @@ class DraftService {
         'subject': subject,
         'body': body,
         'timestamp': FieldValue.serverTimestamp(),
-      });
+      };
 
+      // create new or update the existing draft
+      if (id == null) {
+        // create new if id is null
+        final newDraft = await _firestore.collection('drafts').add({
+          'id':
+              _firestore
+                  .collection('users')
+                  .doc(userId)
+                  .collection('drafts')
+                  .doc()
+                  .id,
+          ...draftData,
+        });
+        draftData['id'] = newDraft.id;
+      } else {
+        // update the existing draft
+        await _firestore
+            .collection('drafts')
+            .doc(id)
+            .set(
+              draftData,
+              SetOptions(
+                merge: true,
+              ), // merge: true for update the changes field
+            );
+        draftData['id'] = id;
+      }
+
+      // upadate email state
       await _firestore
           .collection('users')
           .doc(userId)
           .collection('email_states')
-          .doc(draft.id)
-          .set(EmailState(emailId: draft.id, read: true).toMap());
+          .doc(draftData['id'] as String?)
+          .set(
+            EmailState(emailId: draftData['id']! as String, read: true).toMap(),
+          );
 
-      // Cập nhật danh bạ cho người gửi
+      // update contacts
       await EmailServiceUtils.updateUserContacts(
         userId: userId,
         from: userEmail ?? '',

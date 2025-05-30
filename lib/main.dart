@@ -28,10 +28,8 @@ void main() async {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     await NotificationService().initNotifications();
     AppFunctions.debugPrint('Firebase initialized successfully');
-  } catch (e) {
+  } on Exception catch (e) {
     AppFunctions.debugPrint('Firebase initialization error: $e');
-    // Hiển thị thông báo lỗi nếu cần
-    // Ví dụ: showDialog hoặc log thêm để debug
   }
 
   // Đảm bảo các dịch vụ khác được khởi tạo nếu có

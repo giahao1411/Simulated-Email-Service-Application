@@ -1,17 +1,17 @@
 class DateFormat {
   static const List<String> months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+    '11',
+    '12',
   ];
 
   static String formatTimestamp(DateTime timestamp) {
@@ -23,7 +23,7 @@ class DateFormat {
     } else if (difference.inHours < 24 && now.day == timestamp.day) {
       return '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
     } else if (timestamp.year == now.year) {
-      return '${timestamp.day} ${months[timestamp.month - 1]}';
+      return '${timestamp.day} thg ${months[timestamp.month - 1]}';
     } else {
       return '${timestamp.day}/${timestamp.month.toString().padLeft(2, '0')}/${timestamp.year}';
     }
@@ -40,6 +40,6 @@ class DateFormat {
     ); // add 0 before minute
 
     // return format example "1 May 2025 at 14:30"
-    return '$day $month $year at $hour:$minute';
+    return '$day/$month/$year vào $hour:$minute';
   }
 }
