@@ -88,7 +88,7 @@ class _WysiwygTextEditorState extends State<WysiwygTextEditor> {
   }
 
   void _showColorPicker() async {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(

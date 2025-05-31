@@ -1,5 +1,6 @@
 import 'package:email_application/core/config/firebase_options.dart';
 import 'package:email_application/core/constants/app_functions.dart';
+import 'package:email_application/features/email/providers/compose_state.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/providers/two_step_manage.dart';
 import 'package:email_application/features/email/views/screens/login_screen.dart';
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeManage()),
         ChangeNotifierProvider(create: (_) => TwoStepManage()),
+        ChangeNotifierProvider(create: (_) => ComposeState()),
       ],
       child: Consumer<ThemeManage>(
         builder: (context, themeProvider, child) {

@@ -94,7 +94,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
             snapshot.data!.id,
             snapshot.data!.data()! as Map<String, dynamic>,
           );
-          final replyEmailIds = emailData.replyEmailIds ?? [];
+          final replyEmailIds = emailData.replyEmailIds;
 
           return Column(
             children: [

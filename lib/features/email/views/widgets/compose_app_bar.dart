@@ -1,6 +1,8 @@
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/draft_service.dart';
+import 'package:email_application/features/email/providers/compose_state.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -39,12 +41,72 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: onToggleTextEditor,
           tooltip: 'Advanced text editing',
         ),
+        // Cập nhật phần onPressed của IconButton attachment
         IconButton(
           icon: Icon(
             Icons.attachment,
             color: Theme.of(context).colorScheme.onSurface,
           ),
-          onPressed: () {},
+          onPressed: () async {
+            try {
+              final result = await FilePicker.platform.pickFiles(
+                allowMultiple: false,
+                type: FileType.any,
+                allowedExtensions: null,
+                withData: true, // Quan trọng để có thể đọc bytes
+              );
+
+              if (result != null && result.files.isNotEmpty) {
+                final file = result.files.first;
+
+                // Kiểm tra kích thước file (giới hạn 25MB)
+                if (file.size > 25 * 1024 * 1024) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'File quá lớn! Vui lòng chọn file nhỏ hơn 25MB',
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                  return;
+                }
+
+                // Set file vào state
+                Provider.of<ComposeState>(
+                  context,
+                  listen: false,
+                ).setSelectedFile(file);
+
+                AppFunctions.debugPrint(
+                  'Selected file: ${file.name} (${file.size} bytes)',
+                );
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã đính kèm: ${file.name}'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } else {
+                AppFunctions.debugPrint('No file selected');
+              }
+            } catch (e) {
+              AppFunctions.debugPrint('Error picking file: $e');
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Lỗi khi chọn file. Vui lòng thử lại!'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          },
           tooltip: 'Attach file',
         ),
         const SizedBox(width: 8),
@@ -131,6 +193,10 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   await DraftService().deleteDraft(draftId);
                 }
                 if (context.mounted) {
+                  Provider.of<ComposeState>(
+                    context,
+                    listen: false,
+                  ).clearSelectedFile();
                   Navigator.of(dialogContext).pop();
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(

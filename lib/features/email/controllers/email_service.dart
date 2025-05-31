@@ -360,11 +360,23 @@ class EmailService {
     required List<String> bcc,
     required String subject,
     required String body,
+    Map<String, dynamic>? attachment, // Thêm tham số attachment
   }) async {
     try {
       if (userEmail == null) {
         throw Exception('Chưa đăng nhập để gửi email');
       }
+
+      final attachments =
+          attachment != null
+              ? [
+                {
+                  'name': attachment['name'],
+                  'bytes':
+                      attachment['bytes'], // Lưu bytes dưới dạng base64 hoặc blob
+                },
+              ]
+              : <Map<String, dynamic>>[];
 
       final emailRef = await _firestore.collection('emails').add({
         'from': userEmail,
@@ -375,7 +387,8 @@ class EmailService {
         'body': body,
         'timestamp': FieldValue.serverTimestamp(),
         'isDraft': false,
-        'hasAttachments': false,
+        'hasAttachments': attachment != null,
+        'attachments': attachments, // Lưu danh sách attachments
       });
 
       await _firestore
