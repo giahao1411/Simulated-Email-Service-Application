@@ -8,12 +8,14 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ComposeAppBar({
     required this.onSendEmail,
     required this.onBack,
+    required this.onToggleTextEditor,
     this.draftId,
     super.key,
   });
 
   final VoidCallback onSendEmail;
   final Future<bool> Function() onBack;
+  final VoidCallback onToggleTextEditor;
   final String? draftId;
 
   @override
@@ -31,10 +33,19 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           icon: Icon(
+            Icons.text_format,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+          onPressed: onToggleTextEditor,
+          tooltip: 'Advanced text editing',
+        ),
+        IconButton(
+          icon: Icon(
             Icons.attachment,
             color: Theme.of(context).colorScheme.onSurface,
           ),
           onPressed: () {},
+          tooltip: 'Attach file',
         ),
         const SizedBox(width: 8),
         IconButton(
@@ -44,6 +55,7 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
             color: Theme.of(context).colorScheme.onSurface,
           ),
           onPressed: onSendEmail,
+          tooltip: 'Send email',
         ),
         popUpMenuButton(context),
       ],
@@ -63,7 +75,6 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
         if (value == 'discard') {
           showDiscardConfirmationDialog(context, draftId);
         } else if (value == 'schedule-send') {
-          // Handle schedule send action
           AppFunctions.debugPrint('Schedule send action selected');
           // Implement your schedule send logic here
         }
@@ -110,7 +121,7 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // close dialog
+                Navigator.of(dialogContext).pop();
               },
               child: const Text('Hủy'),
             ),
@@ -121,7 +132,7 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 }
                 if (context.mounted) {
                   Navigator.of(dialogContext).pop();
-                  Navigator.of(context).pop(); // on composing
+                  Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Nháp đã được bỏ')),
                   );
