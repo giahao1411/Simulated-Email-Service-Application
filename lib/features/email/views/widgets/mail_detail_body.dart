@@ -182,36 +182,6 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                                   );
                                   return Column(
                                     children: [
-                                      GestureDetector(
-                                        onTap: () async {
-                                          Email? originalEmail = emailData;
-                                          if (replyEmail.inReplyTo != null) {
-                                            final originalDoc =
-                                                await FirebaseFirestore.instance
-                                                    .collection('emails')
-                                                    .doc(replyEmail.inReplyTo)
-                                                    .get();
-                                            if (originalDoc.exists) {
-                                              originalEmail = Email.fromMap(
-                                                originalDoc.id,
-                                                originalDoc.data()!,
-                                              );
-                                            }
-                                          }
-                                          AppFunctions.debugPrint(
-                                            'Navigating to original email: ${originalEmail.id}',
-                                          );
-                                          await Navigator.push(
-                                            context,
-                                            MaterialPageRoute<void>(
-                                              builder:
-                                                  (context) => MailDetail(
-                                                    email: originalEmail!,
-                                                    state: state,
-                                                    senderFullName:
-                                                        widget.senderFullName,
-                                                    onRefresh: widget.onRefresh,
-                                                  ),
                                       ReplyItem(
                                         replyEmail: replyEmail,
                                         onSurface60: onSurface60,
