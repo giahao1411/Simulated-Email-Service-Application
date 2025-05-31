@@ -40,7 +40,7 @@ class _ReplyScreenState extends State<ReplyScreen> {
   @override
   void initState() {
     super.initState();
-    toController.text = widget.email.from; // Người nhận là người gửi email gốc
+    toController.text = widget.email.from;
     subjectController.text =
         widget.email.subject.startsWith('Re: ')
             ? widget.email.subject
@@ -110,7 +110,9 @@ class _ReplyScreenState extends State<ReplyScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Gửi email trả lời thành công')),
         );
-        widget.onRefresh?.call();
+        if (widget.onRefresh != null) {
+          widget.onRefresh!();
+        }
         Navigator.pop(context);
       }
     } on Exception catch (e) {

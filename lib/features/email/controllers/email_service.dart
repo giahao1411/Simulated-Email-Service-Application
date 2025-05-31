@@ -728,10 +728,11 @@ class EmailService {
     String replyBody, {
     List<String> ccEmails = const [],
     List<String> bccEmails = const [],
+    VoidCallback? onRefresh,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('Người dùng chưa đăng nhập');
-    
+
     AppFunctions.debugPrint('Sending reply for emailId: $emailId');
 
     final emailDoc = await _firestore.collection('emails').doc(emailId).get();
@@ -802,5 +803,7 @@ class EmailService {
         AppFunctions.debugPrint('Created EmailState for $recipientEmail');
       }
     }
+
+    onRefresh?.call();
   }
 }
