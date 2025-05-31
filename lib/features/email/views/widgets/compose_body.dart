@@ -1,5 +1,6 @@
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/core/constants/app_strings.dart';
+import 'package:email_application/features/email/providers/compose_state.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/views/widgets/email_text_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -43,6 +44,7 @@ class _ComposeBodyState extends State<ComposeBody> {
     final themeProvider = Provider.of<ThemeManage>(context);
     final isDarkMode = themeProvider.isDarkMode;
     final colorScheme = Theme.of(context).colorScheme;
+    final composeState = Provider.of<ComposeState>(context);
     AppFunctions.debugPrint('ComposeBody - isDarkMode: $isDarkMode');
 
     final labelColor = isDarkMode ? Colors.white70 : colorScheme.onSurface;
@@ -170,6 +172,85 @@ class _ComposeBodyState extends State<ComposeBody> {
             labelText: AppStrings.subject,
           ),
         ),
+        // Thêm vào phần hiển thị file attachment trong ComposeBody
+        if (composeState.selectedFile != null) ...[
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border.all(color: borderColor),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.attach_file, color: iconColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            composeState.selectedFile!.name,
+                            style: TextStyle(
+                              color: labelColor,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            composeState.getFileSize(),
+                            style: TextStyle(
+                              color: labelColor.withOpacity(0.7),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.clear, color: iconColor),
+                      onPressed: () {
+                        composeState.clearSelectedFile();
+                      },
+                    ),
+                  ],
+                ),
+
+                // Hiển thị preview ảnh nếu là file ảnh
+                if (composeState.isImageFile() &&
+                    composeState.fileBytes != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    constraints: const BoxConstraints(
+                      maxHeight: 200,
+                      maxWidth: double.infinity,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.memory(
+                        composeState.fileBytes!,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 100,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Text('Không thể hiển thị ảnh'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
         Expanded(
           child: EmailTextField(
             controller: widget.bodyController,
