@@ -6,6 +6,8 @@ import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:email_application/features/email/utils/email_recipients.dart';
+import 'package:email_application/features/email/views/screens/mail_detail_screen.dart';
+import 'package:email_application/features/email/views/widgets/reply_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -94,7 +96,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
             snapshot.data!.id,
             snapshot.data!.data()! as Map<String, dynamic>,
           );
-          final replyEmailIds = emailData.replyEmailIds ?? [];
+          final replyEmailIds = emailData.replyEmailIds;
 
           return Column(
             children: [
@@ -122,23 +124,18 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                         ),
                       ],
                     ),
-                    if (emailData.isReplied && replyEmailIds.isNotEmpty) ...[
-                      const Padding(
-                        padding: EdgeInsets.only(left: 16, right: 8, bottom: 8),
-                        child: Text(
-                          'Replies',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    if (replyEmailIds.isNotEmpty) ...[
                       const Divider(
                         thickness: 1,
                         height: 20,
                         indent: 16,
                         endIndent: 8,
                       ),
+                      const Padding(
+                        padding: EdgeInsets.only(left: 16, right: 8, bottom: 8),
+                      ),
+                    ],
+                    if (replyEmailIds.isNotEmpty)
                       StreamBuilder<QuerySnapshot>(
                         stream:
                             replyEmailIds.isNotEmpty
@@ -148,22 +145,22 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                                       FieldPath.documentId,
                                       whereIn: replyEmailIds,
                                     )
-                                    .orderBy('timestamp', descending: false)
+                                    .orderBy('timestamp', descending: true)
                                     .snapshots()
                                 : null,
                         builder: (context, replySnapshot) {
                           if (replySnapshot.hasError) {
                             AppFunctions.debugPrint(
-                              'Error fetching replies: ${replySnapshot.error}',
+                              'Error loading replies: ${replySnapshot.error}',
                             );
                             return const Center(
-                              child: Text('Lỗi khi tải reply'),
+                              child: Text('Lỗi khi tải phản hồi'),
                             );
                           }
                           if (!replySnapshot.hasData ||
-                              replySnapshot.data == null) {
+                              replySnapshot.data!.docs.isEmpty) {
                             AppFunctions.debugPrint(
-                              'No reply data for email: ${email.id}',
+                              'No replies found for email ${emailData.id}',
                             );
                             return const SizedBox.shrink();
                           }
@@ -180,14 +177,31 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                                   );
                                   return Column(
                                     children: [
-                                      ReplyItem(
-                                        replyEmail: replyEmail,
-                                        onSurface60: onSurface60,
-                                        onShowOriginalEmail:
-                                            () => _showFullBodyDialog(
-                                              context,
-                                              replyEmail.body,
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute<void>(
+                                              builder:
+                                                  (context) => MailDetail(
+                                                    email: emailData,
+                                                    state: state,
+                                                    senderFullName:
+                                                        widget.senderFullName,
+                                                    onRefresh: widget.onRefresh,
+                                                  ),
                                             ),
+                                          );
+                                        },
+                                        child: ReplyItem(
+                                          replyEmail: replyEmail,
+                                          onSurface60: onSurface60,
+                                          onShowOriginalEmail:
+                                              () => _showFullBodyDialog(
+                                                context,
+                                                replyEmail.body,
+                                              ),
+                                        ),
                                       ),
                                       if (index < replyDocs.length - 1)
                                         const Divider(
@@ -202,7 +216,6 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                           );
                         },
                       ),
-                    ],
                   ],
                 ),
               ),
@@ -598,87 +611,6 @@ class _MailDetailBodyState extends State<MailDetailBody> {
           ],
         ),
       ],
-    );
-  }
-}
-
-class ReplyItem extends StatelessWidget {
-  const ReplyItem({
-    required this.replyEmail,
-    required this.onSurface60,
-    required this.onShowOriginalEmail,
-    super.key,
-  });
-
-  final Email replyEmail;
-  final Color onSurface60;
-  final VoidCallback onShowOriginalEmail;
-
-
-  String getSummaryBody(String body) {
-    if (body.isEmpty) return '(No content)';
-    final quoteIndex = body.indexOf('On ');
-    return quoteIndex != -1
-        ? body.substring(0, quoteIndex).trim()
-        : body.trim();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final onSurface70 = theme.colorScheme.onSurface.withOpacity(0.7);
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Reply từ ${replyEmail.from.isEmpty ? "(No sender)" : replyEmail.from} lúc ${DateFormat.formatTimestamp(replyEmail.timestamp)}:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: onSurface60,
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.reply, color: onSurface60, size: 20),
-                    onPressed: null, // Chưa triển khai reply trong ReplyItem
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.more_horiz, color: onSurface60, size: 20),
-                    onPressed: onShowOriginalEmail,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            getSummaryBody(replyEmail.body),
-            style: TextStyle(color: onSurface70),
-          ),
-          if (replyEmail.cc.isNotEmpty || replyEmail.bcc.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            if (replyEmail.cc.isNotEmpty)
-              Text(
-                'Cc: ${replyEmail.cc.join(', ')}',
-                style: TextStyle(color: onSurface70, fontSize: 14),
-              ),
-            if (replyEmail.bcc.isNotEmpty)
-              Text(
-                'Bcc: ${replyEmail.bcc.join(', ')}',
-                style: TextStyle(color: onSurface70, fontSize: 14),
-              ),
-          ],
-        ],
-      ),
     );
   }
 }

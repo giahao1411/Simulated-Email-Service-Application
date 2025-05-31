@@ -33,7 +33,7 @@ class Email {
       hasAttachments: data['hasAttachments'] as bool? ?? false,
       inReplyTo: data['inReplyTo'] as String?,
       userId: data['userId'] as String?, // Ánh xạ userId từ Firestore
-      isReplied: data['isReply'] as bool? ?? false,
+      isReplied: data['isReplied'] as bool? ?? false,
       replyEmailIds:
           (data['replyEmailIds'] as List<dynamic>? ?? []).cast<String>(),
     );
@@ -67,7 +67,7 @@ class Email {
       'hasAttachments': hasAttachments,
       'inReplyTo': inReplyTo,
       'userId': userId, // Lưu userId vào Firestore
-      'isReply': isReplied,
+      'isReplied': isReplied,
       'replyEmailIds': replyEmailIds,
     };
   }
