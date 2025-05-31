@@ -3,6 +3,7 @@ import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
+import 'package:email_application/features/email/views/screens/foward_screen.dart';
 import 'package:email_application/features/email/views/screens/gmail_screen.dart';
 import 'package:email_application/features/email/views/screens/meet_screen.dart';
 import 'package:email_application/features/email/views/screens/reply_screen.dart';
@@ -58,6 +59,20 @@ class _MailDetailState extends State<MailDetail>
       MaterialPageRoute<void>(
         builder:
             (context) => ReplyScreen(
+              email: widget.email,
+              state: widget.state,
+              onRefresh: widget.onRefresh,
+            ),
+      ),
+    );
+  }
+
+  void _sendForward() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder:
+            (context) => ForwardScreen(
               email: widget.email,
               state: widget.state,
               onRefresh: widget.onRefresh,
@@ -145,6 +160,7 @@ class _MailDetailState extends State<MailDetail>
                           markMailAsRead: _markMailAsRead,
                           index: _selectedIndex,
                           sendReply: _sendReply,
+                          sendForward: _sendForward,
                         ),
                       ),
                     ],

@@ -806,4 +806,86 @@ class EmailService {
 
     onRefresh?.call();
   }
+
+  Future<void> sendForward(
+    String emailId,
+    String forwardBody,
+    List<String> toEmails, {
+    List<String> ccEmails = const [],
+    List<String> bccEmails = const [],
+    VoidCallback? onRefresh,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Người dùng chưa đăng nhập');
+
+    AppFunctions.debugPrint('Sending forward for emailId: $emailId');
+
+    final emailDoc = await _firestore.collection('emails').doc(emailId).get();
+    if (!emailDoc.exists) throw Exception('Email không tồn tại');
+    final originalEmail = Email.fromMap(emailId, emailDoc.data()!);
+
+    final forwardEmail = Email(
+      id: '',
+      from: user.email!,
+      to: toEmails,
+      cc: ccEmails,
+      bcc: bccEmails,
+      subject: 'Fwd: ${originalEmail.subject}',
+      body: forwardBody,
+      timestamp: DateTime.now(),
+      hasAttachments: originalEmail.hasAttachments,
+      userId: user.uid,
+    );
+
+    try {
+      final forwardDocRef = await _firestore
+          .collection('emails')
+          .add(forwardEmail.toMap());
+      final forwardEmailId = forwardDocRef.id;
+      AppFunctions.debugPrint('Forward created with id: $forwardEmailId');
+
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('email_states')
+          .doc(forwardEmailId)
+          .set(
+            EmailState(
+              emailId: forwardEmailId,
+              read: true,
+              labels: ['sent'],
+            ).toMap(),
+          );
+
+      final allRecipients =
+          <String>{
+            ...toEmails,
+            ...ccEmails,
+            ...bccEmails,
+          }.where((email) => email != user.email).toList();
+      for (final recipientEmail in allRecipients) {
+        final userQuery =
+            await _firestore
+                .collection('users')
+                .where('email', isEqualTo: recipientEmail)
+                .limit(1)
+                .get();
+        if (userQuery.docs.isNotEmpty) {
+          final recipientUid = userQuery.docs.first.id;
+          await _firestore
+              .collection('users')
+              .doc(recipientUid)
+              .collection('email_states')
+              .doc(forwardEmailId)
+              .set(EmailState(emailId: forwardEmailId, labels: []).toMap());
+          AppFunctions.debugPrint('Created EmailState for $recipientEmail');
+        }
+      }
+
+      onRefresh?.call();
+    } catch (error) {
+      AppFunctions.debugPrint('Error sending forward: $error');
+      throw Exception('Failed to send forward: $error');
+    }
+  }
 }
