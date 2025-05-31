@@ -15,7 +15,7 @@ class ComposeButton extends StatelessWidget {
     final iconTextColor = isDarkMode ? Colors.white : Colors.white;
 
     return Positioned(
-      bottom: 20, 
+      bottom: 20,
       right: 16,
       child: GestureDetector(
         onTap: onPressed,

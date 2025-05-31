@@ -7,6 +7,7 @@ import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/utils/email_validator.dart';
 import 'package:email_application/features/email/views/widgets/compose_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/compose_body.dart';
+import 'package:email_application/features/email/views/widgets/wysiwyg_text_editor.dart';
 import 'package:flutter/material.dart';
 
 class ReplyScreen extends StatefulWidget {
@@ -36,6 +37,7 @@ class _ReplyScreenState extends State<ReplyScreen> {
   final TextEditingController bodyController = TextEditingController();
   final EmailService emailService = EmailService();
   final DraftService draftService = DraftService();
+  bool _showTextEditor = false;
 
   @override
   void initState() {
@@ -79,11 +81,10 @@ class _ReplyScreenState extends State<ReplyScreen> {
   Future<bool> handleBackAction() async {
     if (!hasChanges) {
       AppFunctions.debugPrint('Không có thay đổi, bỏ qua lưu nháp');
-      return true; // Cho phép thoát
+      return true;
     }
 
     await handleSaveDraft();
-
     return true;
   }
 
@@ -173,21 +174,42 @@ class _ReplyScreenState extends State<ReplyScreen> {
     }
   }
 
+  void _toggleTextEditor() {
+    setState(() {
+      _showTextEditor = !_showTextEditor;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: ComposeAppBar(
         onSendEmail: handleSendReply,
         onBack: handleBackAction,
+        onToggleTextEditor: _toggleTextEditor,
         draftId: widget.draft?.id,
       ),
-      body: ComposeBody(
-        toController: toController,
-        fromController: fromController,
-        ccController: ccController,
-        bccController: bccController,
-        subjectController: subjectController,
-        bodyController: bodyController,
+      body: Stack(
+        children: [
+          ComposeBody(
+            toController: toController,
+            fromController: fromController,
+            ccController: ccController,
+            bccController: bccController,
+            subjectController: subjectController,
+            bodyController: bodyController,
+          ),
+          if (_showTextEditor)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: WysiwygTextEditor(
+                controller: bodyController,
+                onClose: _toggleTextEditor,
+              ),
+            ),
+        ],
       ),
     );
   }
