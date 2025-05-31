@@ -111,7 +111,9 @@ class _ReplyScreenState extends State<ReplyScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Gửi email trả lời thành công')),
         );
-        widget.onRefresh?.call();
+        if (widget.onRefresh != null) {
+          widget.onRefresh!();
+        }
         Navigator.pop(context);
       }
     } on Exception catch (e) {
