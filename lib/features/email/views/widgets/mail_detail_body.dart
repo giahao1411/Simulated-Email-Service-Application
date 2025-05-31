@@ -16,6 +16,7 @@ class MailDetailBody extends StatefulWidget {
     required this.index,
     required this.senderFullName,
     required this.sendReply,
+    required this.sendReplyAll,
     this.sendForward,
     this.onRefresh,
     this.markMailAsRead,
@@ -29,6 +30,7 @@ class MailDetailBody extends StatefulWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? markMailAsRead;
   final VoidCallback sendReply;
+  final VoidCallback sendReplyAll;
   final VoidCallback? sendForward;
 
   final EmailService emailService = EmailService();
@@ -128,7 +130,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                       const Padding(
                         padding: EdgeInsets.only(left: 16, right: 8, bottom: 8),
                         child: Text(
-                          'Replies',
+                          'Phản hòi',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -325,7 +327,8 @@ class _MailDetailBodyState extends State<MailDetailBody> {
               const SizedBox(width: 8),
               if (email.cc.isNotEmpty)
                 OutlinedButton(
-                  onPressed: null, // Chưa triển khai Reply All
+                  onPressed:
+                      widget.email.from.isEmpty ? null : widget.sendReplyAll,
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: onSurface60),
                     shape: RoundedRectangleBorder(

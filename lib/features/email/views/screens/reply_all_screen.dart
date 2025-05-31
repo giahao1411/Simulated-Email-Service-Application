@@ -7,11 +7,12 @@ import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/utils/email_validator.dart';
 import 'package:email_application/features/email/views/widgets/compose_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/compose_body.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class ReplyScreen extends StatefulWidget {
-  const ReplyScreen({
+class ReplyAllScreen extends StatefulWidget {
+  const ReplyAllScreen({
     required this.email,
     required this.state,
     this.draft,
@@ -25,50 +26,82 @@ class ReplyScreen extends StatefulWidget {
   final VoidCallback? onRefresh;
 
   @override
-  State<ReplyScreen> createState() => _ReplyScreenState();
+  State<ReplyAllScreen> createState() => _ReplyAllScreenState();
 }
 
-class _ReplyScreenState extends State<ReplyScreen> {
-  final TextEditingController toController = TextEditingController();
-  final TextEditingController fromController = TextEditingController();
-  final TextEditingController ccController = TextEditingController();
-  final TextEditingController bccController = TextEditingController();
-  final TextEditingController subjectController = TextEditingController();
-  final TextEditingController bodyController = TextEditingController();
+class _ReplyAllScreenState extends State<ReplyAllScreen> {
+  final TextEditingController toCtrl = TextEditingController();
+  final TextEditingController fromCtrl = TextEditingController();
+  final TextEditingController ccCtrl = TextEditingController();
+  final TextEditingController bccCtrl = TextEditingController();
+  final TextEditingController subjectCtrl = TextEditingController();
+  final TextEditingController bodyCtrl = TextEditingController();
   final EmailService emailService = EmailService();
   final DraftService draftService = DraftService();
 
   @override
   void initState() {
     super.initState();
-    toController.text = widget.email.from;
-    subjectController.text =
+    final currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+
+    // Kiểm tra vai trò của người dùng trong email gốc
+    final isCc = widget.email.cc.contains(currentUserEmail);
+    final isBcc = widget.email.bcc.contains(currentUserEmail);
+
+    if (isCc) {
+      final ccEmails =
+          <String>{
+            widget.email.from,
+            ...widget.email.to,
+            ...widget.email.cc,
+          }.where((email) => email != currentUserEmail).toList();
+      ccCtrl.text = ccEmails.join(', ');
+      toCtrl.text = widget.email.from;
+      bccCtrl.text = '';
+    } else if (isBcc) {
+      bccCtrl.text = widget.email.from;
+      toCtrl.text = '';
+      ccCtrl.text = '';
+    } else {
+      final toEmails =
+          <String>{
+            widget.email.from,
+            ...widget.email.to,
+          }.where((email) => email != currentUserEmail).toList();
+      toCtrl.text = toEmails.join(', ');
+      final ccEmails =
+          widget.email.cc.where((email) => email != currentUserEmail).toList();
+      ccCtrl.text = ccEmails.join(', ');
+      bccCtrl.text = '';
+    }
+
+    subjectCtrl.text =
         widget.email.subject.startsWith('Re: ')
             ? widget.email.subject
             : 'Re: ${widget.email.subject}';
 
     if (widget.draft == null) {
       final dateFormat = DateFormat("dd/MM/yyyy 'lúc' HH:mm");
-      bodyController.text = '''
+      bodyCtrl.text = '''
 Vào ${dateFormat.format(widget.email.timestamp)}, ${widget.email.from} đã viết:
 ${widget.email.body}
 ''';
     }
     if (widget.draft != null) {
-      toController.text = widget.draft!.to.join(', ');
-      ccController.text = widget.draft!.cc.join(', ');
-      bccController.text = widget.draft!.bcc.join(', ');
-      subjectController.text = widget.draft!.subject;
-      bodyController.text = widget.draft!.body;
+      toCtrl.text = widget.draft!.to.join(', ');
+      ccCtrl.text = widget.draft!.cc.join(', ');
+      bccCtrl.text = widget.draft!.bcc.join(', ');
+      subjectCtrl.text = widget.draft!.subject;
+      bodyCtrl.text = widget.draft!.body;
     }
   }
 
   bool get hasChanges {
-    final toEmails = EmailValidator.parseEmails(toController.text);
-    final ccEmails = EmailValidator.parseEmails(ccController.text);
-    final bccEmails = EmailValidator.parseEmails(bccController.text);
-    final subject = subjectController.text.trim();
-    final body = bodyController.text.trim();
+    final toEmails = EmailValidator.parseEmails(toCtrl.text);
+    final ccEmails = EmailValidator.parseEmails(ccCtrl.text);
+    final bccEmails = EmailValidator.parseEmails(bccCtrl.text);
+    final subject = subjectCtrl.text.trim();
+    final body = bodyCtrl.text.trim();
 
     if (widget.draft == null) {
       return toEmails.isNotEmpty ||
@@ -88,18 +121,21 @@ ${widget.email.body}
   Future<bool> handleBackAction() async {
     if (!hasChanges) {
       AppFunctions.debugPrint('Không có thay đổi, bỏ qua lưu nháp');
-      return true; // Cho phép thoát
+      return true;
     }
 
     await handleSaveDraft();
-
     return true;
   }
 
-  Future<void> handleSendReply() async {
-    if (toController.text.isEmpty) {
+  Future<void> handleSendReplyAll() async {
+    final toEmails = EmailValidator.parseEmails(toCtrl.text);
+    final ccEmails = EmailValidator.parseEmails(ccCtrl.text);
+    final bccEmails = EmailValidator.parseEmails(bccCtrl.text);
+
+    if (toEmails.isEmpty && ccEmails.isEmpty && bccEmails.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập địa chỉ email người nhận')),
+        const SnackBar(content: Text('Vui lòng nhập ít nhất một người nhận')),
       );
       return;
     }
@@ -108,7 +144,10 @@ ${widget.email.body}
       await emailService.sendReply(
         widget.email.id,
         widget.state,
-        bodyController.text,
+        bodyCtrl.text,
+        ccEmails: ccEmails,
+        bccEmails: bccEmails,
+        onRefresh: widget.onRefresh,
       );
 
       if (widget.draft != null) {
@@ -117,7 +156,7 @@ ${widget.email.body}
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gửi email trả lời thành công')),
+          const SnackBar(content: Text('Gửi email trả lời tất cả thành công')),
         );
         if (widget.onRefresh != null) {
           widget.onRefresh!();
@@ -126,20 +165,21 @@ ${widget.email.body}
       }
     } on Exception catch (e) {
       if (mounted) {
-        AppFunctions.debugPrint('Error sending reply: $e');
+        AppFunctions.debugPrint('Error sending reply all: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gửi email trả lời thất bại: $e')),
+          SnackBar(content: Text('Gửi email trả lời tất cả thất bại: $e')),
         );
       }
     }
   }
 
   Future<void> handleSaveDraft() async {
-    final toEmails = EmailValidator.parseEmails(toController.text);
-    final ccEmails = EmailValidator.parseEmails(ccController.text);
-    final bccEmails = EmailValidator.parseEmails(bccController.text);
-    final subject = subjectController.text.trim();
-    final body = bodyController.text.trim();
+    final toEmails = EmailValidator.parseEmails(toCtrl.text);
+    final ccEmails = EmailValidator.parseEmails(ccCtrl.text);
+    final bccEmails = EmailValidator.parseEmails(bccCtrl.text);
+    final subject = subjectCtrl.text.trim();
+    final body = bodyCtrl.text.trim();
+
     if (toEmails.isEmpty &&
         ccEmails.isEmpty &&
         bccEmails.isEmpty &&
@@ -162,7 +202,7 @@ ${widget.email.body}
         to: toEmails,
         cc: ccEmails,
         bcc: bccEmails,
-        subject: subjectController.text,
+        subject: subjectCtrl.text,
         body: body,
         id: widget.draft?.id,
       );
@@ -186,30 +226,30 @@ ${widget.email.body}
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: ComposeAppBar(
-        onSendEmail: handleSendReply,
+        onSendEmail: handleSendReplyAll,
         onBack: handleBackAction,
         draftId: widget.draft?.id,
         onToggleTextEditor: () {},
       ),
       body: ComposeBody(
-        toController: toController,
-        fromController: fromController,
-        ccController: ccController,
-        bccController: bccController,
-        subjectController: subjectController,
-        bodyController: bodyController,
+        toController: toCtrl,
+        fromController: fromCtrl,
+        ccController: ccCtrl,
+        bccController: bccCtrl,
+        subjectController: subjectCtrl,
+        bodyController: bodyCtrl,
       ),
     );
   }
 
   @override
   void dispose() {
-    toController.dispose();
-    fromController.dispose();
-    ccController.dispose();
-    bccController.dispose();
-    subjectController.dispose();
-    bodyController.dispose();
+    toCtrl.dispose();
+    fromCtrl.dispose();
+    ccCtrl.dispose();
+    bccCtrl.dispose();
+    subjectCtrl.dispose();
+    bodyCtrl.dispose();
     super.dispose();
   }
 }
