@@ -2,7 +2,10 @@ import 'package:email_application/features/email/controllers/email_service.dart'
 import 'package:email_application/features/email/models/draft.dart';
 import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
+import 'package:email_application/features/email/controllers/auth_service.dart';
+import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 class DraftTile extends StatelessWidget {
   const DraftTile({
@@ -31,14 +34,49 @@ class DraftTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: CircleAvatar(
-                radius: 20,
-                backgroundImage: NetworkImage(
-                  'https://picsum.photos/250?image=$index',
-                ),
-              ),
+            FutureBuilder<UserProfile?>(
+              future: AuthService().currentUser,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.onSecondary,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  );
+                }
+                if (snapshot.hasError || !snapshot.hasData) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                    ),
+                  );
+                }
+                final userProfile = snapshot.data!;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    backgroundImage:
+                        userProfile.photoUrl != null &&
+                                userProfile.photoUrl!.isNotEmpty
+                            ? (userProfile.photoUrl!.startsWith('http')
+                                ? NetworkImage(userProfile.photoUrl!)
+                                    as ImageProvider
+                                : FileImage(File(userProfile.photoUrl!))
+                                    as ImageProvider)
+                            : null,
+                  ),
+                );
+              },
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -52,13 +90,16 @@ class DraftTile extends StatelessWidget {
                         child: Text(
                           draft.to.isNotEmpty
                               ? draft.to.join(', ')
-                              : 'Không có người nhận',
+                              : 'Thư nháp',
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(
                             context,
                           ).textTheme.bodyLarge?.copyWith(
                             fontSize: 16,
-                            color: Theme.of(context).colorScheme.onSurface,
+                            color:
+                                draft.to.isNotEmpty
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Colors.red,
                           ),
                         ),
                       ),
@@ -73,31 +114,37 @@ class DraftTile extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Text(
-                    draft.subject.isEmpty ? '(No Subject)' : draft.subject,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
+                  if (draft.subject.isNotEmpty || draft.body.isNotEmpty) ...[
+                    Text(
+                      draft.subject.isEmpty
+                          ? '(không có chủ đề)'
+                          : draft.subject,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
-                  ),
+                  ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: Text(
-                          draft.body.isEmpty ? '(No Content)' : draft.body,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(
+                      if (draft.body.isNotEmpty) ...[
+                        Expanded(
+                          child: Text(
+                            draft.body,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.6),
+                            ).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.6),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                       const SizedBox(width: 2),
                       SizedBox(
                         width: 22,

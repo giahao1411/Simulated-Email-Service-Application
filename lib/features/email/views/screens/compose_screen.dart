@@ -2,11 +2,13 @@ import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/draft_service.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/draft.dart';
+import 'package:email_application/features/email/providers/compose_state.dart';
 import 'package:email_application/features/email/utils/email_validator.dart';
 import 'package:email_application/features/email/views/widgets/compose_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/compose_body.dart';
 import 'package:email_application/features/email/views/widgets/wysiwyg_text_editor.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ComposeScreen extends StatefulWidget {
   const ComposeScreen({this.draft, super.key});
@@ -93,17 +95,27 @@ class _ComposeScreenState extends State<ComposeScreen> {
     }
 
     try {
+      final composeState = Provider.of<ComposeState>(context, listen: false);
       await emailService.sendEmail(
         to: toEmails,
         cc: ccEmails,
         bcc: bccEmails,
         subject: subjectController.text,
         body: bodyController.text,
+        attachment:
+            composeState.selectedFile != null
+                ? {
+                  'name': composeState.selectedFile!.name,
+                  'bytes': composeState.fileBytes,
+                }
+                : null,
       );
 
       if (widget.draft != null) {
         await draftService.deleteDraft(widget.draft!.id);
       }
+
+      composeState.clearSelectedFile(); // Xóa file sau khi gửi
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -175,42 +187,45 @@ class _ComposeScreenState extends State<ComposeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        if (await handleBackAction() && context.mounted) {
-          Navigator.pop(context);
-        }
-      },
-      child: Scaffold(
-        appBar: ComposeAppBar(
-          onSendEmail: handleSendEmail,
-          onBack: handleBackAction,
-          onToggleTextEditor: _toggleTextEditor,
-          draftId: widget.draft?.id,
-        ),
-        body: Stack(
-          children: [
-            ComposeBody(
-              toController: toController,
-              fromController: fromController,
-              ccController: ccController,
-              bccController: bccController,
-              subjectController: subjectController,
-              bodyController: bodyController,
-            ),
-            if (_showTextEditor)
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: WysiwygTextEditor(
-                  controller: bodyController,
-                  onClose: _toggleTextEditor,
-                ),
+    return ChangeNotifierProvider(
+      create: (_) => ComposeState(),
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          if (await handleBackAction() && context.mounted) {
+            Navigator.pop(context);
+          }
+        },
+        child: Scaffold(
+          appBar: ComposeAppBar(
+            onSendEmail: handleSendEmail,
+            onBack: handleBackAction,
+            onToggleTextEditor: _toggleTextEditor,
+            draftId: widget.draft?.id,
+          ),
+          body: Stack(
+            children: [
+              ComposeBody(
+                toController: toController,
+                fromController: fromController,
+                ccController: ccController,
+                bccController: bccController,
+                subjectController: subjectController,
+                bodyController: bodyController,
               ),
-          ],
+              if (_showTextEditor)
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: WysiwygTextEditor(
+                    controller: bodyController,
+                    onClose: _toggleTextEditor,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
