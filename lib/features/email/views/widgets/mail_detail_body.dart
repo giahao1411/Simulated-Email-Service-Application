@@ -16,6 +16,7 @@ class MailDetailBody extends StatefulWidget {
     required this.index,
     required this.senderFullName,
     required this.sendReply,
+    this.sendForward,
     this.onRefresh,
     this.markMailAsRead,
     super.key,
@@ -28,6 +29,7 @@ class MailDetailBody extends StatefulWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? markMailAsRead;
   final VoidCallback sendReply;
+  final VoidCallback? sendForward;
 
   final EmailService emailService = EmailService();
 
@@ -180,6 +182,36 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                                   );
                                   return Column(
                                     children: [
+                                      GestureDetector(
+                                        onTap: () async {
+                                          Email? originalEmail = emailData;
+                                          if (replyEmail.inReplyTo != null) {
+                                            final originalDoc =
+                                                await FirebaseFirestore.instance
+                                                    .collection('emails')
+                                                    .doc(replyEmail.inReplyTo)
+                                                    .get();
+                                            if (originalDoc.exists) {
+                                              originalEmail = Email.fromMap(
+                                                originalDoc.id,
+                                                originalDoc.data()!,
+                                              );
+                                            }
+                                          }
+                                          AppFunctions.debugPrint(
+                                            'Navigating to original email: ${originalEmail.id}',
+                                          );
+                                          await Navigator.push(
+                                            context,
+                                            MaterialPageRoute<void>(
+                                              builder:
+                                                  (context) => MailDetail(
+                                                    email: originalEmail!,
+                                                    state: state,
+                                                    senderFullName:
+                                                        widget.senderFullName,
+                                                    onRefresh: widget.onRefresh,
+                                                  ),
                                       ReplyItem(
                                         replyEmail: replyEmail,
                                         onSurface60: onSurface60,
@@ -316,7 +348,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                   children: [
                     Icon(Icons.reply, color: onSurface60),
                     const SizedBox(width: 4),
-                    Text('Reply', style: TextStyle(color: onSurface60)),
+                    Text('Phản hồi', style: TextStyle(color: onSurface60)),
                   ],
                 ),
               ),
@@ -335,13 +367,16 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                     children: [
                       Icon(Icons.reply_all, color: onSurface60),
                       const SizedBox(width: 4),
-                      Text('Reply all', style: TextStyle(color: onSurface60)),
+                      Text(
+                        'Phản hồi tất cả',
+                        style: TextStyle(color: onSurface60),
+                      ),
                     ],
                   ),
                 ),
               const SizedBox(width: 8),
               OutlinedButton(
-                onPressed: null, // Chưa triển khai Forward
+                onPressed: widget.sendForward, // Chưa triển khai Forward
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: onSurface60),
                   shape: RoundedRectangleBorder(
@@ -353,7 +388,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                   children: [
                     Icon(Icons.forward, color: onSurface60),
                     const SizedBox(width: 4),
-                    Text('Forward', style: TextStyle(color: onSurface60)),
+                    Text('Chuyển tiếp', style: TextStyle(color: onSurface60)),
                   ],
                 ),
               ),

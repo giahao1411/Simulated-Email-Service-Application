@@ -1,5 +1,4 @@
 import 'package:email_application/features/email/models/email.dart';
-import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:flutter/material.dart';
 
 class ReplyItem extends StatelessWidget {
@@ -34,15 +33,6 @@ class ReplyItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  'Reply từ ${replyEmail.from.isEmpty ? "(No sender)" : replyEmail.from} lúc ${DateFormat.formatTimestamp(replyEmail.timestamp)}:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: onSurface60,
-                  ),
-                ),
-              ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
