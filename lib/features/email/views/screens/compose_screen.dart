@@ -48,7 +48,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
     final ccEmails = EmailValidator.parseEmails(ccController.text);
     final bccEmails = EmailValidator.parseEmails(bccController.text);
     final subject = subjectController.text.trim();
-    final body = bodyController.text.trim();
+    final body = _editorKey.currentState?.getFormattedHtml().trim() ?? '';
 
     if (widget.draft == null) {
       return toEmails.isNotEmpty ||
@@ -79,6 +79,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
     final toEmails = EmailValidator.parseEmails(toController.text);
     final ccEmails = EmailValidator.parseEmails(ccController.text);
     final bccEmails = EmailValidator.parseEmails(bccController.text);
+    final body = _editorKey.currentState?.getFormattedHtml().trim() ?? '';
 
     if (toEmails.isEmpty && ccEmails.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +103,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
         cc: ccEmails,
         bcc: bccEmails,
         subject: subjectController.text,
-        body: bodyController.text,
+        body: body,
         attachment:
             composeState.selectedFile != null
                 ? {
@@ -138,7 +139,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
     final ccEmails = EmailValidator.parseEmails(ccController.text);
     final bccEmails = EmailValidator.parseEmails(bccController.text);
     final subject = subjectController.text.trim();
-    final body = bodyController.text.trim();
+    final body = _editorKey.currentState?.getFormattedHtml().trim() ?? '';
 
     if (toEmails.isEmpty &&
         ccEmails.isEmpty &&
@@ -162,8 +163,8 @@ class _ComposeScreenState extends State<ComposeScreen> {
         to: toEmails,
         cc: ccEmails,
         bcc: bccEmails,
-        subject: subjectController.text,
-        body: bodyController.text,
+        subject: subject,
+        body: body,
         id: widget.draft?.id,
       );
       if (mounted) {
