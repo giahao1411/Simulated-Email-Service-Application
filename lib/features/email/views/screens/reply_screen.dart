@@ -186,7 +186,6 @@ class _ReplyScreenState extends State<ReplyScreen> {
       appBar: ComposeAppBar(
         onSendEmail: handleSendReply,
         onBack: handleBackAction,
-        onToggleTextEditor: _toggleTextEditor,
         draftId: widget.draft?.id,
       ),
       body: Stack(
