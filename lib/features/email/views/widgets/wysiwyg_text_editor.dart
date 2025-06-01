@@ -40,13 +40,12 @@ class ImageEmbedBuilder extends quill.EmbedBuilder {
     final imageUrl = node.value.data as String;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       constraints: const BoxConstraints(
-        maxWidth: double.infinity,
         maxHeight: 300, // Giới hạn chiều cao tối đa
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8.0),
+        borderRadius: BorderRadius.circular(8),
         child: Image.network(
           imageUrl,
           fit: BoxFit.contain, // Giữ tỷ lệ ảnh và fit trong container
@@ -71,7 +70,7 @@ class ImageEmbedBuilder extends quill.EmbedBuilder {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey[400]!),
               ),
               child: const Column(
@@ -98,6 +97,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
   final FocusNode _focusNode = FocusNode();
 
   bool _showToolbar = true;
+  late String _currentHtml;
 
   @override
   void initState() {
@@ -128,7 +128,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         _quillController.addListener(_updateTextController);
         setState(() {});
       });
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error initializing QuillController: $e');
       _quillController = quill.QuillController.basic();
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -153,7 +153,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         return;
       }
 
-      int lastEnd = 0;
+      var lastEnd = 0;
 
       for (final match in matches) {
         if (match.start > lastEnd) {
@@ -187,7 +187,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
           _quillController.document.insert(currentOffset, afterText);
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error inserting HTML content: $e');
       final plainText = _stripHtmlTags(html);
       _quillController.document.insert(0, plainText);
@@ -196,7 +196,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
 
   String _stripHtmlTags(String html) {
     return html
-        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll(RegExp('<[^>]*>'), '')
         .replaceAll('&nbsp;', ' ')
         .replaceAll('&amp;', '&')
         .replaceAll('&lt;', '<')
@@ -249,7 +249,6 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
       debugPrint('Error inserting image: $e');
     }
   }
-
 
   String getFormattedHtml() {
     return _currentHtml;
