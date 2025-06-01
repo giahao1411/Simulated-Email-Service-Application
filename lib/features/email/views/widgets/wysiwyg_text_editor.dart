@@ -98,7 +98,6 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
   final FocusNode _focusNode = FocusNode();
 
   bool _showToolbar = true;
-  String _currentHtml = '';
 
   @override
   void initState() {
@@ -140,10 +139,10 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
 
   void _insertHtmlContent(String html) {
     try {
-      String workingHtml = html.replaceAll(RegExp(r'</?p[^>]*>'), '').trim();
+      final workingHtml = html.replaceAll(RegExp('</?p[^>]*>'), '').trim();
 
-      int currentOffset = 0;
-      final strongPattern = RegExp(r'<strong[^>]*>(.*?)</strong>');
+      var currentOffset = 0;
+      final strongPattern = RegExp('<strong[^>]*>(.*?)</strong>');
       final matches = strongPattern.allMatches(workingHtml);
 
       if (matches.isEmpty) {
@@ -213,17 +212,15 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         ConverterOptions.forEmail(),
       );
       final html = converter.convert();
-      _currentHtml = html;
 
       if (widget.controller.text != html) {
         widget.controller.text = html;
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error converting delta to HTML: $e');
       final plainText = _quillController.document.toPlainText();
       if (widget.controller.text != plainText) {
         widget.controller.text = plainText;
-        _currentHtml = plainText;
       }
     }
   }
@@ -248,10 +245,11 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
       );
 
       _updateTextController();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error inserting image: $e');
     }
   }
+
 
   String getFormattedHtml() {
     return _currentHtml;
@@ -276,17 +274,8 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         child: quill.QuillToolbar.simple(
           configurations: quill.QuillSimpleToolbarConfigurations(
             controller: _quillController,
-            showBoldButton: true,
-            showItalicButton: true,
-            showUnderLineButton: true,
-            showStrikeThrough: true,
-            showColorButton: true,
             showBackgroundColorButton: false,
-            showListBullets: true,
-            showListNumbers: true,
             showAlignmentButtons: true,
-            showFontSize: true,
-            showLink: true,
             showUndo: false,
             showRedo: false,
             showInlineCode: false,
@@ -319,15 +308,9 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         child: quill.QuillEditor.basic(
           configurations: quill.QuillEditorConfigurations(
             controller: _quillController,
-            scrollable: widget.isCompact ? false : true,
+            scrollable: widget.isCompact,
             autoFocus: true,
             expands: true,
-            padding: const EdgeInsets.only(
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
-            ),
             placeholder:
                 widget.isCompact
                     ? 'Nhập tiêu đề...'
@@ -373,8 +356,9 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
 
   @override
   void dispose() {
-    _quillController.removeListener(_updateTextController);
-    _quillController.dispose();
+    _quillController
+      ..removeListener(_updateTextController)
+      ..dispose();
     _focusNode.dispose();
     super.dispose();
   }

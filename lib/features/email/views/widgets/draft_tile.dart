@@ -96,10 +96,7 @@ class DraftTile extends StatelessWidget {
                             context,
                           ).textTheme.bodyLarge?.copyWith(
                             fontSize: 16,
-                            color:
-                                draft.to.isNotEmpty
-                                    ? Theme.of(context).colorScheme.onSurface
-                                    : Colors.red,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -129,22 +126,22 @@ class DraftTile extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      if (draft.body.isNotEmpty) ...[
-                        Expanded(
-                          child: Text(
-                            draft.body,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(
+                      Expanded(
+                        child: Text(
+                          draft.body.isEmpty
+                              ? '(không có nội dung)'
+                              : draft.body,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(
                               context,
-                            ).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withOpacity(0.6),
-                            ),
+                            ).colorScheme.onSurface.withOpacity(0.6),
                           ),
                         ),
-                      ],
+                      ),
                       const SizedBox(width: 2),
                       SizedBox(
                         width: 22,

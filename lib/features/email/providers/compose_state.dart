@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:email_application/core/constants/app_functions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -10,7 +11,7 @@ class ComposeState with ChangeNotifier {
   PlatformFile? get selectedFile => _selectedFile;
   Uint8List? get fileBytes => _fileBytes;
 
-  void setSelectedFile(PlatformFile? file) async {
+  Future<void> setSelectedFile(PlatformFile? file) async {
     _selectedFile = file;
 
     // Đọc bytes của file để hiển thị
@@ -24,8 +25,8 @@ class ComposeState with ChangeNotifier {
           final fileData = File(file.path!);
           _fileBytes = await fileData.readAsBytes();
         }
-      } catch (e) {
-        print('Error reading file: $e');
+      } on Exception catch (e) {
+        AppFunctions.debugPrint('Error reading file: $e');
         _fileBytes = null;
       }
     } else {
