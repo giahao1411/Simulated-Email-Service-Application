@@ -229,7 +229,6 @@ ${widget.email.body}
         onSendEmail: handleSendReplyAll,
         onBack: handleBackAction,
         draftId: widget.draft?.id,
-        onToggleTextEditor: () {},
       ),
       body: ComposeBody(
         toController: toCtrl,
