@@ -200,7 +200,6 @@ ${widget.email.body}
         onSendEmail: handleSendForward,
         onBack: handleBackAction,
         draftId: widget.draft?.id,
-        onToggleTextEditor: () {},
       ),
       body: ComposeBody(
         toController: toController,
