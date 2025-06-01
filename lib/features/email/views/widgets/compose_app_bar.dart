@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+// compose_app_bar.dart
 class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ComposeAppBar({
     required this.onSendEmail,
@@ -27,8 +28,9 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: IconButton(
         icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
         onPressed: () async {
-          if (await onBack() && context.mounted) {
-            Navigator.pop(context);
+          final shouldPop = await onBack();
+          if (shouldPop && context.mounted) {
+            Navigator.of(context).pop();
           }
         },
       ),

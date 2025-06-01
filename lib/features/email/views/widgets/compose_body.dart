@@ -247,7 +247,8 @@ class _ComposeBodyState extends State<ComposeBody> {
                           widget.editorKey!.currentState!.insertImage(
                             composeState.fileBytes!,
                           );
-                          composeState.clearSelectedFile();
+                          composeState
+                              .clearSelectedFile(); // Xóa file sau khi chèn
                         }
                       },
                       child: Container(

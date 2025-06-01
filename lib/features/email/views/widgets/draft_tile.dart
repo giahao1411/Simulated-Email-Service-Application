@@ -25,6 +25,17 @@ class DraftTile extends StatelessWidget {
   final VoidCallback? onStarToggled;
   final VoidCallback? onTap;
 
+  String _stripHtmlTags(String html) {
+    return html
+        .replaceAll('&nbsp;', ' ') // Thay thế &nbsp; thành khoảng trắng
+        .replaceAll(RegExp(r'<[^>]*>'), '') // Loại bỏ các thẻ HTML
+        .replaceAll('&', '&')
+        .replaceAll('<', '<')
+        .replaceAll('>', '>')
+        .replaceAll(RegExp(r'\s+'), ' ') // Giữ khoảng trắng liên tiếp thành một
+        .trim();
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -130,7 +141,7 @@ class DraftTile extends StatelessWidget {
                         child: Text(
                           draft.body.isEmpty
                               ? '(không có nội dung)'
-                              : draft.body,
+                              : _stripHtmlTags(draft.body),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(

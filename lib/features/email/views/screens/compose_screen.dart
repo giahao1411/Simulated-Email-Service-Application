@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/draft_service.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
@@ -40,6 +42,15 @@ class _ComposeScreenState extends State<ComposeScreen> {
       bccController.text = widget.draft!.bcc.join(', ');
       subjectController.text = widget.draft!.subject;
       bodyController.text = widget.draft!.body;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_editorKey.currentState != null && widget.draft!.body.isNotEmpty) {
+          _editorKey.currentState!.setHtml(widget.draft!.body);
+          AppFunctions.debugPrint(
+            'Loaded draft body into editor: ${widget.draft!.body}',
+          );
+        }
+      });
     }
   }
 
@@ -151,14 +162,8 @@ class _ComposeScreenState extends State<ComposeScreen> {
       return;
     }
 
-    if (!hasChanges && widget.draft != null) {
-      AppFunctions.debugPrint(
-        'Không có thay đổi, bỏ qua lưu nháp: ${widget.draft!.id}',
-      );
-      return;
-    }
-
     try {
+      final composeState = Provider.of<ComposeState>(context, listen: false);
       await draftService.saveDraft(
         to: toEmails,
         cc: ccEmails,
@@ -166,6 +171,15 @@ class _ComposeScreenState extends State<ComposeScreen> {
         subject: subject,
         body: body,
         id: widget.draft?.id,
+        attachments:
+            composeState.selectedFile != null
+                ? [
+                  {
+                    'name': composeState.selectedFile!.name,
+                    'bytes': composeState.fileBytes,
+                  },
+                ]
+                : [],
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -186,10 +200,11 @@ class _ComposeScreenState extends State<ComposeScreen> {
     return ChangeNotifierProvider(
       create: (_) => ComposeState(),
       child: PopScope(
-        canPop: false,
+        canPop: true,
         onPopInvokedWithResult: (didPop, result) async {
           if (didPop) return;
-          if (await handleBackAction() && context.mounted) {
+          final shouldPop = await handleBackAction();
+          if (shouldPop && context.mounted) {
             Navigator.pop(context);
           }
         },

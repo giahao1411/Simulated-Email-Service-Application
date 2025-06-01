@@ -142,7 +142,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                       const Padding(
                         padding: EdgeInsets.only(left: 16, right: 8, bottom: 8),
                         child: Text(
-                          'Phản hòi',
+                          'Phản hồi',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

@@ -13,6 +13,7 @@ class EmailTextField extends StatelessWidget {
     this.enable = true,
     this.useLabelAsFixed = false,
     this.focusedBorderColor,
+    this.stripHtml = false,
     super.key,
   });
 
@@ -24,16 +25,16 @@ class EmailTextField extends StatelessWidget {
   final bool enable;
   final bool useLabelAsFixed;
   final Color? focusedBorderColor;
+  final bool stripHtml;
 
-  // Hàm loại bỏ HTML tags (nếu có)
   String _stripHtmlTags(String html) {
     return html
         .replaceAll(RegExp(r'<[^>]*>'), '')
-        .replaceAll(' ', ' ')
-        .replaceAll('&', '&')
-        .replaceAll('<', '<')
-        .replaceAll('>', '>')
-        .trim();
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"');
   }
 
   @override
@@ -44,25 +45,26 @@ class EmailTextField extends StatelessWidget {
 
     final hintColor = isDarkMode ? Colors.white70 : Colors.grey[600];
 
-    // Tạo một TextEditingController mới để hiển thị văn bản thô
-    final displayController = TextEditingController(
-      text: _stripHtmlTags(controller.text),
-    );
+    TextEditingController? displayController;
+    if (stripHtml) {
+      displayController = TextEditingController(
+        text: _stripHtmlTags(controller.text),
+      );
 
-    // Đồng bộ nội dung khi controller gốc thay đổi
-    controller.addListener(() {
-      final plainText = _stripHtmlTags(controller.text);
-      if (displayController.text != plainText) {
-        displayController.text = plainText;
-      }
-    });
+      controller.addListener(() {
+        final plainText = _stripHtmlTags(controller.text);
+        if (displayController!.text != plainText) {
+          displayController.text = plainText;
+        }
+      });
+    }
 
     return TextField(
-      controller: displayController,
+      controller: displayController ?? controller,
       style: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black87),
       textAlign: TextAlign.left,
       textAlignVertical: TextAlignVertical.center,
-      maxLines: maxLines ?? 1, // Đặt mặc định maxLines là 1 cho các trường ngắn
+      maxLines: maxLines ?? 1,
       keyboardType: keyboardType,
       enabled: enable,
       decoration: InputDecoration(
@@ -74,10 +76,12 @@ class EmailTextField extends StatelessWidget {
         filled: true,
         fillColor: isDarkMode ? Colors.grey[900] : Colors.white,
       ),
-      onChanged: (value) {
-        // Đồng bộ ngược lại controller gốc nếu người dùng chỉnh sửa
-        controller.text = value;
-      },
+      onChanged:
+          stripHtml
+              ? (value) {
+                controller.text = value;
+              }
+              : null,
     );
   }
 }
