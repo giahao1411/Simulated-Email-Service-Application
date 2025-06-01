@@ -24,7 +24,6 @@ class WysiwygTextEditor extends StatefulWidget {
   State<WysiwygTextEditor> createState() => WysiwygTextEditorState();
 }
 
-// Custom embed builder for images
 class ImageEmbedBuilder extends quill.EmbedBuilder {
   @override
   String get key => 'image';
@@ -39,16 +38,57 @@ class ImageEmbedBuilder extends quill.EmbedBuilder {
     TextStyle textStyle,
   ) {
     final imageUrl = node.value.data as String;
-    return Image.network(
-      imageUrl,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          height: 100,
-          color: Colors.grey[300],
-          child: const Center(child: Text('Không thể hiển thị ảnh')),
-        );
-      },
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      constraints: const BoxConstraints(
+        maxWidth: double.infinity,
+        maxHeight: 300, // Giới hạn chiều cao tối đa
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.contain, // Giữ tỷ lệ ảnh và fit trong container
+          width: double.infinity,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              height: 200,
+              alignment: Alignment.center,
+              child: CircularProgressIndicator(
+                value:
+                    loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              height: 100,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(color: Colors.grey[400]!),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                  SizedBox(height: 8),
+                  Text(
+                    'Không thể hiển thị ảnh',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -156,11 +196,11 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
 
   String _stripHtmlTags(String html) {
     return html
-        .replaceAll(RegExp('<[^>]*>'), '')
-        .replaceAll(' ', ' ')
-        .replaceAll('&', '&')
-        .replaceAll('<', '<')
-        .replaceAll('>', '>')
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
         .trim();
   }
 
@@ -187,38 +227,32 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
 
   void insertImage(Uint8List imageBytes) {
     try {
-      // Chuyển đổi ảnh thành base64
       final base64String = base64Encode(imageBytes);
-      final imageUrl = 'data:image/png;base64,$base64String'; // Giả sử là PNG
+      final imageUrl = 'data:image/png;base64,$base64String';
 
-      // Lấy vị trí con trỏ hiện tại
       final position = _quillController.selection.start;
 
-      // Chèn ảnh vào vị trí con trỏ
-      _quillController.document.insert(
-        position,
-        '\n',
-      ); // Thêm dòng mới trước ảnh
+      _quillController.document.insert(position, '\n');
       _quillController.document.insert(
         position + 1,
-        quill.BlockEmbed.image(imageUrl), // Sử dụng BlockEmbed.image
+        quill.BlockEmbed.image(imageUrl),
       );
-      _quillController.document.insert(
-        position + 2,
-        '\n',
-      ); // Thêm dòng mới sau ảnh
+      _quillController.document.insert(position + 2, '\n');
 
-      // Cập nhật con trỏ
       _quillController.updateSelection(
         TextSelection.collapsed(offset: position + 3),
         quill.ChangeSource.local,
       );
 
-      // Cập nhật nội dung HTML
       _updateTextController();
     } on Exception catch (e) {
       debugPrint('Error inserting image: $e');
     }
+  }
+
+
+  String getFormattedHtml() {
+    return _currentHtml;
   }
 
   Widget _buildToolbar(bool isDarkMode) {
@@ -313,9 +347,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
                 null,
               ),
             ),
-            embedBuilders: [
-              ImageEmbedBuilder(),
-            ], // Fixed: Using custom EmbedBuilder class
+            embedBuilders: [ImageEmbedBuilder()],
           ),
         ),
       ),

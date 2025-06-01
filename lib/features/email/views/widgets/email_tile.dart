@@ -11,7 +11,7 @@ class EmailTile extends StatelessWidget {
     required this.index,
     required this.emailService,
     required this.currentCategory,
-    required this.senderFullName, // Thêm tham số senderFullName
+    required this.senderFullName,
     this.onStarToggled,
     this.onTap,
     super.key,
@@ -22,14 +22,25 @@ class EmailTile extends StatelessWidget {
   final int index;
   final EmailService emailService;
   final String currentCategory;
-  final String senderFullName; // Họ tên người gửi
+  final String senderFullName;
   final VoidCallback? onStarToggled;
   final VoidCallback? onTap;
+
+  // Hàm loại bỏ thẻ HTML
+  String stripHtmlTags(String htmlText) {
+    final RegExp htmlRegExp = RegExp(r'<[^>]+>', multiLine: true);
+    return htmlText.replaceAll(htmlRegExp, '').trim();
+  }
+
+  // Hàm lấy dòng đầu tiên
+  String getFirstLine(String text) {
+    return text.isEmpty ? '(No Content)' : text.split('\n').first.trim();
+  }
 
   @override
   Widget build(BuildContext context) {
     final senderNameWidget = Text(
-      senderFullName, // Chỉ hiển thị họ tên
+      senderFullName,
       overflow: TextOverflow.ellipsis,
       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
         fontSize: 16,
@@ -37,6 +48,12 @@ class EmailTile extends StatelessWidget {
         fontWeight: state.read ? FontWeight.normal : FontWeight.bold,
       ),
     );
+
+    // Làm sạch thẻ HTML trước, sau đó lấy dòng đầu tiên
+    final cleanBody = stripHtmlTags(
+      email.body.isEmpty ? '(No Content)' : email.body,
+    );
+    final firstLineBody = getFirstLine(cleanBody);
 
     return InkWell(
       onTap: onTap,
@@ -89,7 +106,7 @@ class EmailTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          email.body.isEmpty ? '(No Content)' : email.body,
+                          firstLineBody, // Hiển thị dòng đầu tiên đã làm sạch HTML
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(

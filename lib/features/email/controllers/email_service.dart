@@ -183,7 +183,9 @@ class EmailService {
         'userId',
         isEqualTo: FirebaseAuth.instance.currentUser!.uid,
       );
-    } else if (category == AppStrings.starred) {}
+    } else if (category == AppStrings.starred) {
+      // Xử lý cho starred nếu cần
+    }
 
     return query.snapshots().asyncMap((snapshot) async {
       try {
@@ -196,12 +198,12 @@ class EmailService {
           }
 
           try {
-            // initiate email object based on type
             final email =
                 isDraft
                     ? Draft.fromMap(doc.id, data)
                     : Email.fromMap(doc.id, data);
 
+            // Lấy EmailState từ users/{userId}/email_states
             var emailState = EmailState(emailId: doc.id);
             if (!isDraft) {
               final stateDoc =
@@ -215,15 +217,27 @@ class EmailService {
                   stateDoc.exists
                       ? EmailState.fromMap(stateDoc.data()!)
                       : EmailState(emailId: doc.id);
+            } else {
+              // Với bản nháp, lấy trạng thái từ email_states
+              final stateDoc =
+                  await _firestore
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .collection('email_states')
+                      .doc(doc.id)
+                      .get();
+              emailState =
+                  stateDoc.exists
+                      ? EmailState.fromMap(stateDoc.data()!)
+                      : EmailState(emailId: doc.id);
             }
 
-            // Lấy tên người gửi
             final senderFullName =
                 await EmailServiceUtils.getUserFullNameByEmail(
                   isDraft ? (email as Draft).userId : (email as Email).from,
                 );
 
-            // Kiểm tra xem email có thuộc danh mục không
+            // Kiểm tra xem email có thuộc danh mục hay không
             if (!EmailServiceUtils.emailMatchesCategory(
               email,
               emailState,
@@ -360,7 +374,7 @@ class EmailService {
     required List<String> bcc,
     required String subject,
     required String body,
-    Map<String, dynamic>? attachment, // Thêm tham số attachment
+    Map<String, dynamic>? attachment,
   }) async {
     try {
       if (userEmail == null) {
@@ -370,11 +384,7 @@ class EmailService {
       final attachments =
           attachment != null
               ? [
-                {
-                  'name': attachment['name'],
-                  'bytes':
-                      attachment['bytes'], // Lưu bytes dưới dạng base64 hoặc blob
-                },
+                {'name': attachment['name'], 'bytes': attachment['bytes']},
               ]
               : <Map<String, dynamic>>[];
 
@@ -388,7 +398,7 @@ class EmailService {
         'timestamp': FieldValue.serverTimestamp(),
         'isDraft': false,
         'hasAttachments': attachment != null,
-        'attachments': attachments, // Lưu danh sách attachments
+        'attachments': attachments,
       });
 
       await _firestore
@@ -415,7 +425,6 @@ class EmailService {
               .doc(emailRef.id)
               .set(EmailState(emailId: emailRef.id).toMap());
 
-          // Cập nhật danh bạ cho người nhận
           await EmailServiceUtils.updateUserContacts(
             userId: recipientUid,
             from: userEmail!,
@@ -426,7 +435,6 @@ class EmailService {
         }
       }
 
-      // Cập nhật danh bạ cho người gửi
       await EmailServiceUtils.updateUserContacts(
         userId: FirebaseAuth.instance.currentUser!.uid,
         from: userEmail!,
