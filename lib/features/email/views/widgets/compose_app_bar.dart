@@ -2,6 +2,7 @@ import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/draft_service.dart';
 import 'package:email_application/features/email/providers/compose_state.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
+import 'package:email_application/features/email/views/widgets/wysiwyg_text_editor.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,15 +11,15 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ComposeAppBar({
     required this.onSendEmail,
     required this.onBack,
-    required this.onToggleTextEditor,
     this.draftId,
+    this.editorKey,
     super.key,
   });
 
   final VoidCallback onSendEmail;
   final Future<bool> Function() onBack;
-  final VoidCallback onToggleTextEditor;
   final String? draftId;
+  final GlobalKey<WysiwygTextEditorState>? editorKey;
 
   @override
   Widget build(BuildContext context) {
@@ -33,15 +34,7 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       actions: [
-        IconButton(
-          icon: Icon(
-            Icons.text_format,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-          onPressed: onToggleTextEditor,
-          tooltip: 'Advanced text editing',
-        ),
-        // Cập nhật phần onPressed của IconButton attachment
+        // Attachment button
         IconButton(
           icon: Icon(
             Icons.attachment,
@@ -53,7 +46,7 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 allowMultiple: false,
                 type: FileType.any,
                 allowedExtensions: null,
-                withData: true, // Quan trọng để có thể đọc bytes
+                withData: true,
               );
 
               if (result != null && result.files.isNotEmpty) {
@@ -74,24 +67,46 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   return;
                 }
 
-                // Set file vào state
-                Provider.of<ComposeState>(
-                  context,
-                  listen: false,
-                ).setSelectedFile(file);
+                // Kiểm tra nếu là ảnh
+                final isImage =
+                    file.extension?.toLowerCase() == 'jpg' ||
+                    file.extension?.toLowerCase() == 'jpeg' ||
+                    file.extension?.toLowerCase() == 'png' ||
+                    file.extension?.toLowerCase() == 'gif';
+
+                if (isImage && file.bytes != null && editorKey != null) {
+                  // Nếu là ảnh, nhúng vào WysiwygTextEditor
+                  editorKey!.currentState?.insertImage(file.bytes!);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Đã nhúng ảnh: ${file.name} vào nội dung',
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } else {
+                  // Nếu không phải ảnh, lưu vào ComposeState
+                  Provider.of<ComposeState>(
+                    context,
+                    listen: false,
+                  ).setSelectedFile(file);
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Đã đính kèm: ${file.name}'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                }
 
                 AppFunctions.debugPrint(
                   'Selected file: ${file.name} (${file.size} bytes)',
                 );
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Đã đính kèm: ${file.name}'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
               } else {
                 AppFunctions.debugPrint('No file selected');
               }

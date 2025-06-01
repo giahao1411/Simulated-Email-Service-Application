@@ -1,455 +1,380 @@
+import 'dart:convert'; // Để mã hóa base64
+import 'dart:typed_data';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:provider/provider.dart';
+import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
 
 class WysiwygTextEditor extends StatefulWidget {
   const WysiwygTextEditor({
     required this.controller,
     required this.onClose,
+    this.onSave,
+    this.isCompact = false,
     super.key,
   });
 
   final TextEditingController controller;
   final VoidCallback onClose;
+  final VoidCallback? onSave;
+  final bool isCompact;
 
   @override
-  State<WysiwygTextEditor> createState() => _WysiwygTextEditorState();
+  State<WysiwygTextEditor> createState() => WysiwygTextEditorState();
 }
 
-class _WysiwygTextEditorState extends State<WysiwygTextEditor> {
-  bool isBold = false;
-  bool isItalic = false;
-  bool isUnderline = false;
-  String selectedFont = 'Arial';
-  double fontSize = 14.0;
-  Color textColor = Colors.black;
-  TextAlign textAlignment = TextAlign.left;
-  final TextEditingController fontSizeController = TextEditingController();
+class ImageEmbedBuilder extends quill.EmbedBuilder {
+  @override
+  String get key => 'image';
 
-  final List<String> fonts = [
-    'Arial',
-    'Times New Roman',
-    'Helvetica',
-    'Verdana',
-    'Georgia',
-    'Courier New',
-  ];
+  @override
+  Widget build(
+    BuildContext context,
+    quill.QuillController controller,
+    quill.Embed node,
+    bool readOnly,
+    bool inline,
+    TextStyle textStyle,
+  ) {
+    final imageUrl = node.value.data as String;
 
-  final List<Color> colors = [
-    Colors.black,
-    Colors.red,
-    Colors.blue,
-    Colors.green,
-    Colors.orange,
-    Colors.purple,
-    Colors.brown,
-    Colors.pink,
-  ];
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      constraints: const BoxConstraints(
+        maxHeight: 300, // Giới hạn chiều cao tối đa
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.contain, // Giữ tỷ lệ ảnh và fit trong container
+          width: double.infinity,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              height: 200,
+              alignment: Alignment.center,
+              child: CircularProgressIndicator(
+                value:
+                    loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              height: 100,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[400]!),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                  SizedBox(height: 8),
+                  Text(
+                    'Không thể hiển thị ảnh',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class WysiwygTextEditorState extends State<WysiwygTextEditor> {
+  late final quill.QuillController _quillController;
+  final FocusNode _focusNode = FocusNode();
+
+  bool _showToolbar = true;
+  late String _currentHtml;
 
   @override
   void initState() {
     super.initState();
-    fontSizeController.text = fontSize.toInt().toString();
+    _initializeQuillController();
+    if (widget.isCompact) {
+      _showToolbar = false;
+    }
+  }
+
+  void _initializeQuillController() {
+    try {
+      final text = widget.controller.text.trim();
+      debugPrint('Initializing with text: $text');
+
+      _quillController = quill.QuillController.basic();
+
+      if (text.isNotEmpty && text.contains('<') && text.contains('>')) {
+        debugPrint('Processing HTML content...');
+        _quillController.document.delete(0, _quillController.document.length);
+        _insertHtmlContent(text);
+      } else if (text.isNotEmpty) {
+        _quillController.document.delete(0, _quillController.document.length);
+        _quillController.document.insert(0, text);
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _quillController.addListener(_updateTextController);
+        setState(() {});
+      });
+    } on Exception catch (e) {
+      debugPrint('Error initializing QuillController: $e');
+      _quillController = quill.QuillController.basic();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _quillController.addListener(_updateTextController);
+      });
+    }
+  }
+
+  void _insertHtmlContent(String html) {
+    try {
+      final workingHtml = html.replaceAll(RegExp('</?p[^>]*>'), '').trim();
+
+      var currentOffset = 0;
+      final strongPattern = RegExp('<strong[^>]*>(.*?)</strong>');
+      final matches = strongPattern.allMatches(workingHtml);
+
+      if (matches.isEmpty) {
+        final plainText = _stripHtmlTags(workingHtml);
+        if (plainText.isNotEmpty) {
+          _quillController.document.insert(0, plainText);
+        }
+        return;
+      }
+
+      var lastEnd = 0;
+
+      for (final match in matches) {
+        if (match.start > lastEnd) {
+          final beforeText =
+              _stripHtmlTags(
+                workingHtml.substring(lastEnd, match.start),
+              ).trim();
+          if (beforeText.isNotEmpty) {
+            _quillController.document.insert(currentOffset, beforeText);
+            currentOffset += beforeText.length;
+          }
+        }
+
+        final strongText = _stripHtmlTags(match.group(1) ?? '').trim();
+        if (strongText.isNotEmpty) {
+          _quillController.document.insert(currentOffset, strongText);
+          _quillController.formatText(
+            currentOffset,
+            strongText.length,
+            quill.Attribute.bold,
+          );
+          currentOffset += strongText.length;
+        }
+
+        lastEnd = match.end;
+      }
+
+      if (lastEnd < workingHtml.length) {
+        final afterText = _stripHtmlTags(workingHtml.substring(lastEnd)).trim();
+        if (afterText.isNotEmpty) {
+          _quillController.document.insert(currentOffset, afterText);
+        }
+      }
+    } on Exception catch (e) {
+      debugPrint('Error inserting HTML content: $e');
+      final plainText = _stripHtmlTags(html);
+      _quillController.document.insert(0, plainText);
+    }
+  }
+
+  String _stripHtmlTags(String html) {
+    return html
+        .replaceAll(RegExp('<[^>]*>'), '')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .trim();
+  }
+
+  void _updateTextController() {
+    try {
+      final delta = _quillController.document.toDelta();
+      final converter = QuillDeltaToHtmlConverter(
+        delta.toJson(),
+        ConverterOptions.forEmail(),
+      );
+      final html = converter.convert();
+
+      if (widget.controller.text != html) {
+        widget.controller.text = html;
+      }
+    } on Exception catch (e) {
+      debugPrint('Error converting delta to HTML: $e');
+      final plainText = _quillController.document.toPlainText();
+      if (widget.controller.text != plainText) {
+        widget.controller.text = plainText;
+      }
+    }
+  }
+
+  void insertImage(Uint8List imageBytes) {
+    try {
+      final base64String = base64Encode(imageBytes);
+      final imageUrl = 'data:image/png;base64,$base64String';
+
+      final position = _quillController.selection.start;
+
+      _quillController.document.insert(position, '\n');
+      _quillController.document.insert(
+        position + 1,
+        quill.BlockEmbed.image(imageUrl),
+      );
+      _quillController.document.insert(position + 2, '\n');
+
+      _quillController.updateSelection(
+        TextSelection.collapsed(offset: position + 3),
+        quill.ChangeSource.local,
+      );
+
+      _updateTextController();
+    } on Exception catch (e) {
+      debugPrint('Error inserting image: $e');
+    }
+  }
+
+  String getFormattedHtml() {
+    return _currentHtml;
+  }
+
+  Widget _buildToolbar(bool isDarkMode) {
+    if (!_showToolbar) return const SizedBox.shrink();
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[800] : Colors.grey[50],
+        border: Border(
+          top: BorderSide(
+            color: isDarkMode ? Colors.white12 : Colors.grey[200]!,
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: quill.QuillToolbar.simple(
+          configurations: quill.QuillSimpleToolbarConfigurations(
+            controller: _quillController,
+            showBackgroundColorButton: false,
+            showAlignmentButtons: true,
+            showUndo: false,
+            showRedo: false,
+            showInlineCode: false,
+            showClearFormat: false,
+            showHeaderStyle: false,
+            showListCheck: false,
+            showCodeBlock: false,
+            showQuote: false,
+            showSearchButton: false,
+            showClipboardCut: false,
+            showClipboardCopy: false,
+            showClipboardPaste: false,
+            showSubscript: false,
+            showSuperscript: false,
+            showDividers: false,
+            showFontFamily: false,
+            showIndent: false,
+            toolbarIconAlignment: WrapAlignment.start,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEditor(bool isDarkMode) {
+    return Container(
+      color: isDarkMode ? Colors.grey[900] : Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
+        child: quill.QuillEditor.basic(
+          configurations: quill.QuillEditorConfigurations(
+            controller: _quillController,
+            scrollable: widget.isCompact,
+            autoFocus: true,
+            expands: true,
+            placeholder:
+                widget.isCompact
+                    ? 'Nhập tiêu đề...'
+                    : 'Bắt đầu nhập nội dung email...',
+            customStyles: quill.DefaultStyles(
+              paragraph: quill.DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: 16,
+                  height: 1.5,
+                  color: isDarkMode ? Colors.white : Colors.black87,
+                ),
+                const quill.VerticalSpacing(6, 0),
+                const quill.VerticalSpacing(0, 0),
+                null,
+              ),
+              h1: quill.DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.white : Colors.black87,
+                ),
+                const quill.VerticalSpacing(6, 0),
+                const quill.VerticalSpacing(0, 0),
+                null,
+              ),
+              h2: quill.DefaultTextBlockStyle(
+                TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: isDarkMode ? Colors.white : Colors.black87,
+                ),
+                const quill.VerticalSpacing(6, 0),
+                const quill.VerticalSpacing(0, 0),
+                null,
+              ),
+            ),
+            embedBuilders: [ImageEmbedBuilder()],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
-    fontSizeController.dispose();
+    _quillController
+      ..removeListener(_updateTextController)
+      ..dispose();
+    _focusNode.dispose();
     super.dispose();
-  }
-
-  void _updateFontSize(String value) {
-    double? newSize = double.tryParse(value);
-    if (newSize != null && newSize >= 8 && newSize <= 72) {
-      setState(() {
-        fontSize = newSize;
-      });
-    } else {
-      fontSizeController.text = fontSize.toInt().toString();
-    }
-  }
-
-  void _incrementFontSize() {
-    setState(() {
-      if (fontSize < 72) {
-        fontSize += 1;
-        fontSizeController.text = fontSize.toInt().toString();
-      }
-    });
-  }
-
-  void _decrementFontSize() {
-    setState(() {
-      if (fontSize > 8) {
-        fontSize -= 1;
-        fontSizeController.text = fontSize.toInt().toString();
-      }
-    });
-  }
-
-  void _showColorPicker() async {
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Chọn màu chữ'),
-          content: SingleChildScrollView(
-            child: Wrap(
-              spacing: 4,
-              runSpacing: 4,
-              children:
-                  colors.map((Color color) {
-                    final isSelected = textColor == color;
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() => textColor = color);
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        width: 30,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color:
-                                isSelected ? Colors.white : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                        child:
-                            isSelected
-                                ? Icon(
-                                  Icons.check,
-                                  size: 16,
-                                  color:
-                                      color == Colors.black ||
-                                              color == Colors.brown
-                                          ? Colors.white
-                                          : Colors.black,
-                                )
-                                : null,
-                      ),
-                    );
-                  }).toList(),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeManage>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.3,
-      decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[900] : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-      ),
+      color: isDarkMode ? Colors.grey[900] : Colors.white,
       child: Column(
         children: [
-          // Header with close button
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: isDarkMode ? Colors.white24 : Colors.grey[300]!,
-                  width: 0.5,
-                ),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Định dạng văn bản',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.close,
-                    size: 20,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                  ),
-                  onPressed: widget.onClose,
-                ),
-              ],
-            ),
-          ),
-
-          // Formatting toolbar
-          Expanded(
-            child: SingleChildScrollView(
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            _buildFormatButton(
-                              icon: Icons.format_bold,
-                              isSelected: isBold,
-                              onPressed: () => setState(() => isBold = !isBold),
-                              tooltip: 'In đậm',
-                            ),
-                            const SizedBox(width: 4),
-                            _buildFormatButton(
-                              icon: Icons.format_italic,
-                              isSelected: isItalic,
-                              onPressed:
-                                  () => setState(() => isItalic = !isItalic),
-                              tooltip: 'In nghiêng',
-                            ),
-                            const SizedBox(width: 4),
-                            _buildFormatButton(
-                              icon: Icons.format_underlined,
-                              isSelected: isUnderline,
-                              onPressed:
-                                  () => setState(
-                                    () => isUnderline = !isUnderline,
-                                  ),
-                              tooltip: 'Gạch chân',
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            _buildFormatButton(
-                              icon: Icons.format_align_left,
-                              isSelected: textAlignment == TextAlign.left,
-                              onPressed:
-                                  () => setState(
-                                    () => textAlignment = TextAlign.left,
-                                  ),
-                              tooltip: 'Căn trái',
-                            ),
-                            const SizedBox(width: 4),
-                            _buildFormatButton(
-                              icon: Icons.format_align_center,
-                              isSelected: textAlignment == TextAlign.center,
-                              onPressed:
-                                  () => setState(
-                                    () => textAlignment = TextAlign.center,
-                                  ),
-                              tooltip: 'Căn giữa',
-                            ),
-                            const SizedBox(width: 4),
-                            _buildFormatButton(
-                              icon: Icons.format_align_right,
-                              isSelected: textAlignment == TextAlign.right,
-                              onPressed:
-                                  () => setState(
-                                    () => textAlignment = TextAlign.right,
-                                  ),
-                              tooltip: 'Căn phải',
-                            ),
-                            const SizedBox(width: 4),
-                            _buildFormatButton(
-                              icon: Icons.format_align_justify,
-                              isSelected: textAlignment == TextAlign.justify,
-                              onPressed:
-                                  () => setState(
-                                    () => textAlignment = TextAlign.justify,
-                                  ),
-                              tooltip: 'Căn đều',
-                            ),
-                            const SizedBox(width: 4),
-                            _buildFormatButton(
-                              icon: Icons.color_lens,
-                              isSelected: false,
-                              onPressed: _showColorPicker,
-                              tooltip: 'Chọn màu chữ',
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Font and size row
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: _buildFontDropdown(isDarkMode),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(child: _buildFontSizeInput(isDarkMode)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Apply button
-          Container(
-            padding: const EdgeInsets.all(8),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: widget.onClose,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                child: const Text('Áp dụng', style: TextStyle(fontSize: 14)),
-              ),
-            ),
-          ),
+          Expanded(child: _buildEditor(isDarkMode)),
+          if (!widget.isCompact) _buildToolbar(isDarkMode),
         ],
       ),
-    );
-  }
-
-  Widget _buildFormatButton({
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onPressed,
-    required String tooltip,
-  }) {
-    final themeProvider = Provider.of<ThemeManage>(context);
-    final isDarkMode = themeProvider.isDarkMode;
-
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color:
-                isSelected
-                    ? (isDarkMode ? Colors.blue[800] : Colors.blue[100])
-                    : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isDarkMode ? Colors.white24 : Colors.grey[300]!,
-              width: 0.5,
-            ),
-          ),
-          child: Icon(
-            icon,
-            size: 20,
-            color:
-                isSelected
-                    ? (isDarkMode ? Colors.blue[300] : Colors.blue[800])
-                    : (isDarkMode ? Colors.white70 : Colors.grey[700]),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFontDropdown(bool isDarkMode) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: isDarkMode ? Colors.white24 : Colors.grey[300]!,
-          width: 0.5,
-        ),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: selectedFont,
-          isExpanded: true,
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 12,
-          ),
-          dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
-          items:
-              fonts.map((String font) {
-                return DropdownMenuItem<String>(
-                  value: font,
-                  child: Text(
-                    font,
-                    style: TextStyle(fontFamily: font, fontSize: 12),
-                  ),
-                );
-              }).toList(),
-          onChanged: (String? newValue) {
-            if (newValue != null) {
-              setState(() {
-                selectedFont = newValue;
-              });
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFontSizeInput(bool isDarkMode) {
-    return Row(
-      children: [
-        IconButton(
-          icon: Icon(
-            Icons.remove,
-            size: 12,
-            color: isDarkMode ? Colors.white70 : Colors.grey[700],
-          ),
-          onPressed: _decrementFontSize,
-          tooltip: 'Giảm cỡ chữ',
-          padding: EdgeInsets.zero,
-        ),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: isDarkMode ? Colors.white24 : Colors.grey[300]!,
-                width: 0.5,
-              ),
-            ),
-            child: TextField(
-              controller: fontSizeController,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
-                fontSize: 12,
-              ),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 0),
-              ),
-              onSubmitted: _updateFontSize,
-            ),
-          ),
-        ),
-        IconButton(
-          icon: Icon(
-            Icons.add,
-            size: 12,
-            color: isDarkMode ? Colors.white70 : Colors.grey[700],
-          ),
-          onPressed: _incrementFontSize,
-          tooltip: 'Tăng cỡ chữ',
-          padding: EdgeInsets.zero,
-        ),
-      ],
     );
   }
 }

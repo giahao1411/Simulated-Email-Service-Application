@@ -3,6 +3,7 @@ import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/providers/compose_state.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/views/widgets/email_text_field.dart';
+import 'package:email_application/features/email/views/widgets/wysiwyg_text_editor.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +16,7 @@ class ComposeBody extends StatefulWidget {
     required this.bccController,
     required this.subjectController,
     required this.bodyController,
+    this.editorKey,
     super.key,
   });
 
@@ -24,6 +26,7 @@ class ComposeBody extends StatefulWidget {
   final TextEditingController bccController;
   final TextEditingController subjectController;
   final TextEditingController bodyController;
+  final GlobalKey<WysiwygTextEditorState>? editorKey;
 
   @override
   State<ComposeBody> createState() => _ComposeBodyState();
@@ -50,70 +53,104 @@ class _ComposeBodyState extends State<ComposeBody> {
     final labelColor = isDarkMode ? Colors.white70 : colorScheme.onSurface;
     final iconColor = isDarkMode ? Colors.white70 : colorScheme.onSurface;
     final borderColor = isDarkMode ? Colors.white70 : Colors.grey;
+    final backgroundColor = isDarkMode ? Colors.grey[900]! : Colors.white;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            border:
-                showCcBcc
-                    ? null
-                    : Border(
-                      bottom: BorderSide(color: borderColor, width: 0.75),
-                    ),
-          ),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16, left: 16),
-                child: Text(
-                  AppStrings.to,
-                  style: TextStyle(color: labelColor, fontSize: 16),
+    return Container(
+      color: backgroundColor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // TO field
+          Container(
+            decoration: BoxDecoration(
+              border:
+                  showCcBcc
+                      ? null
+                      : Border(
+                        bottom: BorderSide(color: borderColor, width: 0.75),
+                      ),
+            ),
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 16, left: 16),
+                  child: Text(
+                    AppStrings.to,
+                    style: TextStyle(color: labelColor, fontSize: 16),
+                  ),
                 ),
-              ),
-              Expanded(
-                child: EmailTextField(
-                  controller: widget.toController,
-                  labelText: '',
-                  useLabelAsFixed: true,
-                  suffixIcon: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        showCcBcc = !showCcBcc;
-                      });
-                    },
-                    child: Icon(
-                      showCcBcc
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      color: iconColor,
+                Expanded(
+                  child: EmailTextField(
+                    controller: widget.toController,
+                    labelText: '',
+                    useLabelAsFixed: true,
+                    suffixIcon: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          showCcBcc = !showCcBcc;
+                        });
+                      },
+                      child: Icon(
+                        showCcBcc
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        color: iconColor,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        if (showCcBcc) ...[
-          Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16, left: 16),
-                child: Text(
-                  AppStrings.cc,
-                  style: TextStyle(color: labelColor, fontSize: 16),
+
+          // CC and BCC fields
+          if (showCcBcc) ...[
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 16, left: 16),
+                  child: Text(
+                    AppStrings.cc,
+                    style: TextStyle(color: labelColor, fontSize: 16),
+                  ),
+                ),
+                Expanded(
+                  child: EmailTextField(
+                    controller: widget.ccController,
+                    labelText: '',
+                    useLabelAsFixed: true,
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: borderColor, width: 0.75),
                 ),
               ),
-              Expanded(
-                child: EmailTextField(
-                  controller: widget.ccController,
-                  labelText: '',
-                  useLabelAsFixed: true,
-                ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16, left: 16),
+                    child: Text(
+                      AppStrings.bcc,
+                      style: TextStyle(color: labelColor, fontSize: 16),
+                    ),
+                  ),
+                  Expanded(
+                    child: EmailTextField(
+                      controller: widget.bccController,
+                      labelText: '',
+                      useLabelAsFixed: true,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
+
+          // FROM field
           Container(
             decoration: BoxDecoration(
               border: Border(
@@ -125,13 +162,13 @@ class _ComposeBodyState extends State<ComposeBody> {
                 Padding(
                   padding: const EdgeInsets.only(right: 16, left: 16),
                   child: Text(
-                    AppStrings.bcc,
+                    AppStrings.from,
                     style: TextStyle(color: labelColor, fontSize: 16),
                   ),
                 ),
                 Expanded(
                   child: EmailTextField(
-                    controller: widget.bccController,
+                    controller: widget.fromController,
                     labelText: '',
                     useLabelAsFixed: true,
                   ),
@@ -139,126 +176,119 @@ class _ComposeBodyState extends State<ComposeBody> {
               ],
             ),
           ),
-        ],
-        Container(
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: borderColor, width: 0.75)),
-          ),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16, left: 16),
-                child: Text(
-                  AppStrings.from,
-                  style: TextStyle(color: labelColor, fontSize: 16),
-                ),
-              ),
-              Expanded(
-                child: EmailTextField(
-                  controller: widget.fromController,
-                  labelText: '',
-                  useLabelAsFixed: true,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: borderColor, width: 0.75)),
-          ),
-          child: EmailTextField(
-            controller: widget.subjectController,
-            labelText: AppStrings.subject,
-          ),
-        ),
-        // Thêm vào phần hiển thị file attachment trong ComposeBody
-        if (composeState.selectedFile != null) ...[
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              border: Border.all(color: borderColor),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.attach_file, color: iconColor),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            composeState.selectedFile!.name,
-                            style: TextStyle(
-                              color: labelColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            composeState.getFileSize(),
-                            style: TextStyle(
-                              color: labelColor.withOpacity(0.7),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.clear, color: iconColor),
-                      onPressed: () {
-                        composeState.clearSelectedFile();
-                      },
-                    ),
-                  ],
-                ),
 
-                // Hiển thị preview ảnh nếu là file ảnh
-                if (composeState.isImageFile() &&
-                    composeState.fileBytes != null) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    constraints: const BoxConstraints(
-                      maxHeight: 200,
-                      maxWidth: double.infinity,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.memory(
-                        composeState.fileBytes!,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: 100,
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: Text('Không thể hiển thị ảnh'),
+          // Subject field
+          Container(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: borderColor, width: 0.75),
+              ),
+            ),
+            child: EmailTextField(
+              controller: widget.subjectController,
+              labelText: AppStrings.subject,
+            ),
+          ),
+
+          // ATTACHMENT preview
+          if (composeState.selectedFile != null) ...[
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                border: Border.all(color: borderColor),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.attach_file, color: iconColor),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              composeState.selectedFile!.name,
+                              style: TextStyle(
+                                color: labelColor,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          );
+                            Text(
+                              composeState.getFileSize(),
+                              style: TextStyle(
+                                color: labelColor.withOpacity(0.7),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.clear, color: iconColor),
+                        onPressed: () {
+                          composeState.clearSelectedFile();
                         },
                       ),
-                    ),
+                    ],
                   ),
+                  // Hiển thị ảnh nếu là file ảnh và cho phép chèn vào editor
+                  if (composeState.isImageFile() &&
+                      composeState.fileBytes != null) ...[
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () {
+                        if (widget.editorKey?.currentState != null) {
+                          widget.editorKey!.currentState!.insertImage(
+                            composeState.fileBytes!,
+                          );
+                          composeState.clearSelectedFile();
+                        }
+                      },
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          maxHeight: 200,
+                          maxWidth: double.infinity,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.memory(
+                            composeState.fileBytes!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 100,
+                                color: Colors.grey[300],
+                                child: const Center(
+                                  child: Text('Không thể hiển thị ảnh'),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
+            ),
+          ],
+
+          // BODY field - Always show WysiwygTextEditor
+          Expanded(
+            child: WysiwygTextEditor(
+              key: widget.editorKey,
+              controller: widget.bodyController,
+              onClose: () {},
             ),
           ),
         ],
-        Expanded(
-          child: EmailTextField(
-            controller: widget.bodyController,
-            labelText: AppStrings.composeEmail,
-            keyboardType: TextInputType.multiline,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

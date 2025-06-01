@@ -28,7 +28,8 @@ class _ComposeScreenState extends State<ComposeScreen> {
   final TextEditingController bodyController = TextEditingController();
   final EmailService emailService = EmailService();
   final DraftService draftService = DraftService();
-  bool _showTextEditor = false;
+  final GlobalKey<WysiwygTextEditorState> _editorKey =
+      GlobalKey<WysiwygTextEditorState>();
 
   @override
   void initState() {
@@ -47,7 +48,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
     final ccEmails = EmailValidator.parseEmails(ccController.text);
     final bccEmails = EmailValidator.parseEmails(bccController.text);
     final subject = subjectController.text.trim();
-    final body = bodyController.text.trim();
+    final body = _editorKey.currentState?.getFormattedHtml().trim() ?? '';
 
     if (widget.draft == null) {
       return toEmails.isNotEmpty ||
@@ -78,6 +79,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
     final toEmails = EmailValidator.parseEmails(toController.text);
     final ccEmails = EmailValidator.parseEmails(ccController.text);
     final bccEmails = EmailValidator.parseEmails(bccController.text);
+    final body = _editorKey.currentState?.getFormattedHtml().trim() ?? '';
 
     if (toEmails.isEmpty && ccEmails.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -101,7 +103,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
         cc: ccEmails,
         bcc: bccEmails,
         subject: subjectController.text,
-        body: bodyController.text,
+        body: body,
         attachment:
             composeState.selectedFile != null
                 ? {
@@ -115,7 +117,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
         await draftService.deleteDraft(widget.draft!.id);
       }
 
-      composeState.clearSelectedFile(); // Xóa file sau khi gửi
+      composeState.clearSelectedFile();
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -137,7 +139,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
     final ccEmails = EmailValidator.parseEmails(ccController.text);
     final bccEmails = EmailValidator.parseEmails(bccController.text);
     final subject = subjectController.text.trim();
-    final body = bodyController.text.trim();
+    final body = _editorKey.currentState?.getFormattedHtml().trim() ?? '';
 
     if (toEmails.isEmpty &&
         ccEmails.isEmpty &&
@@ -161,8 +163,8 @@ class _ComposeScreenState extends State<ComposeScreen> {
         to: toEmails,
         cc: ccEmails,
         bcc: bccEmails,
-        subject: subjectController.text,
-        body: bodyController.text,
+        subject: subject,
+        body: body,
         id: widget.draft?.id,
       );
       if (mounted) {
@@ -177,12 +179,6 @@ class _ComposeScreenState extends State<ComposeScreen> {
         ).showSnackBar(SnackBar(content: Text('Lưu thư nháp thất bại: $e')));
       }
     }
-  }
-
-  void _toggleTextEditor() {
-    setState(() {
-      _showTextEditor = !_showTextEditor;
-    });
   }
 
   @override
@@ -201,30 +197,17 @@ class _ComposeScreenState extends State<ComposeScreen> {
           appBar: ComposeAppBar(
             onSendEmail: handleSendEmail,
             onBack: handleBackAction,
-            onToggleTextEditor: _toggleTextEditor,
             draftId: widget.draft?.id,
+            editorKey: _editorKey,
           ),
-          body: Stack(
-            children: [
-              ComposeBody(
-                toController: toController,
-                fromController: fromController,
-                ccController: ccController,
-                bccController: bccController,
-                subjectController: subjectController,
-                bodyController: bodyController,
-              ),
-              if (_showTextEditor)
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: WysiwygTextEditor(
-                    controller: bodyController,
-                    onClose: _toggleTextEditor,
-                  ),
-                ),
-            ],
+          body: ComposeBody(
+            toController: toController,
+            fromController: fromController,
+            ccController: ccController,
+            bccController: bccController,
+            subjectController: subjectController,
+            bodyController: bodyController,
+            editorKey: _editorKey,
           ),
         ),
       ),

@@ -1,8 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/models/search_filters.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:email_application/features/email/utils/advance_search_utils.dart';
+import 'package:email_application/features/email/views/widgets/filter_chip_widget.dart';
+import 'package:email_application/features/email/views/widgets/picker_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -50,76 +51,11 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
   }
 
   Future<void> _fetchEmailContacts() async {
-    final userEmail = FirebaseAuth.instance.currentUser?.email;
-    if (userEmail == null) {
-      AppFunctions.debugPrint('Không thể lấy email người dùng');
-      return;
-    }
-
-    try {
-      final emailsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('emails')
-              .where(
-                Filter.or(
-                  Filter('from', isEqualTo: userEmail),
-                  Filter('to', arrayContains: userEmail),
-                  Filter('cc', arrayContains: userEmail),
-                  Filter('bcc', arrayContains: userEmail),
-                ),
-              )
-              .orderBy('timestamp', descending: true)
-              .limit(200)
-              .get();
-
-      final senders = <String>{};
-      final recipients = <String>{};
-
-      for (var doc in emailsSnapshot.docs) {
-        final data = doc.data();
-        final from = data['from'] as String?;
-        final toList =
-            data['to'] is Iterable
-                ? List<String>.from(data['to'] as Iterable)
-                : <String>[];
-        final ccList =
-            data['cc'] is Iterable
-                ? List<String>.from(data['cc'] as Iterable)
-                : <String>[];
-        final bccList =
-            data['bcc'] is Iterable
-                ? List<String>.from(data['bcc'] as Iterable)
-                : <String>[];
-
-        if (from == userEmail) {
-          recipients
-            ..addAll(toList.where((e) => e != userEmail))
-            ..addAll(ccList.where((e) => e != userEmail))
-            ..addAll(bccList.where((e) => e != userEmail));
-        } else {
-          if (from != null && from != userEmail) {
-            senders.add(from);
-          }
-          final userIsRecipient =
-              toList.contains(userEmail) ||
-              ccList.contains(userEmail) ||
-              bccList.contains(userEmail);
-          if (userIsRecipient && from != null && from != userEmail) {
-            senders.add(from);
-          }
-        }
-      }
-
-      setState(() {
-        commonSenders = senders.toList()..sort();
-        commonRecipients = recipients.toList()..sort();
-      });
-
-      AppFunctions.debugPrint('Fetched senders: $commonSenders');
-      AppFunctions.debugPrint('Fetched recipients: $commonRecipients');
-    } on Exception catch (e) {
-      AppFunctions.debugPrint('Lỗi khi lấy danh sách email: $e');
-    }
+    final contacts = await AdvanceSearchUtils.fetchEmailContacts();
+    setState(() {
+      commonSenders = contacts['senders'] ?? [];
+      commonRecipients = contacts['recipients'] ?? [];
+    });
   }
 
   void _updateFilters() {
@@ -131,8 +67,8 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
 
     final filters = SearchFilters(
       category: selectedCategory,
-      from: selectedFrom!.isNotEmpty == true ? selectedFrom : null,
-      to: selectedTo!.isNotEmpty == true ? selectedTo : null,
+      from: selectedFrom?.isNotEmpty == true ? selectedFrom : null,
+      to: selectedTo?.isNotEmpty == true ? selectedTo : null,
       hasAttachments: hasAttachments,
       dateRange: selectedDateRange,
     );
@@ -190,12 +126,10 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                       secondary: primaryColor,
                       onSecondary: Colors.white,
                     ),
-
             cardTheme: CardThemeData(
               color: isDarkMode ? Colors.grey[700] : Colors.grey[50],
               elevation: 0,
             ),
-
             textTheme: TextTheme(
               headlineSmall: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.black87,
@@ -212,12 +146,10 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-
             dividerTheme: DividerThemeData(
               color: isDarkMode ? Colors.grey[600] : Colors.grey[300],
               thickness: 1,
             ),
-
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
               fillColor: isDarkMode ? Colors.grey[700] : Colors.grey[50],
@@ -244,7 +176,6 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                 color: isDarkMode ? Colors.white38 : Colors.black38,
               ),
             ),
-
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
@@ -255,7 +186,6 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                 ),
               ),
             ),
-
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
                 foregroundColor: primaryColor,
@@ -264,7 +194,6 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                 ),
               ),
             ),
-
             appBarTheme: AppBarTheme(
               backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
               foregroundColor: isDarkMode ? Colors.white : Colors.black87,
@@ -294,325 +223,15 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
     }
   }
 
-  Widget _buildFilterChip({
-    required String label,
-    required VoidCallback onTap,
-    String? value,
-    VoidCallback? onDeleted,
-  }) {
-    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
-    final isDarkMode = themeProvider.isDarkMode;
-    final backgroundColor = isDarkMode ? Colors.grey[800] : Colors.white;
-    final textColor = isDarkMode ? Colors.white70 : Colors.black87;
-    final iconColor = isDarkMode ? Colors.white70 : Colors.black54;
-    final actionColor = Theme.of(context).colorScheme.primary;
-    final isSelected = value != null && value.isNotEmpty;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color:
-              isSelected
-                  ? (isDarkMode
-                      ? actionColor.withOpacity(0.2)
-                      : actionColor.withOpacity(0.1))
-                  : backgroundColor,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              isSelected ? value : label,
-              style: TextStyle(
-                color:
-                    isSelected
-                        ? (isDarkMode
-                            ? actionColor.withOpacity(0.7)
-                            : actionColor.withOpacity(0.9))
-                        : textColor,
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(
-              Icons.arrow_drop_down,
-              size: 20,
-              color:
-                  isSelected
-                      ? (isDarkMode
-                          ? actionColor.withOpacity(0.7)
-                          : actionColor.withOpacity(0.9))
-                      : iconColor,
-            ),
-            if (isSelected && onDeleted != null) ...[
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: onDeleted,
-                child: Icon(
-                  Icons.close,
-                  size: 16,
-                  color:
-                      isSelected
-                          ? (isDarkMode
-                              ? actionColor.withOpacity(0.7)
-                              : actionColor.withOpacity(0.9))
-                          : iconColor,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showPicker({
-    required String title,
-    required List<String> options,
-    required void Function(String?) onSelect,
-  }) {
-    if (options.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Không có dữ liệu cho $title')));
-      return;
-    }
-
-    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
-    final isDarkMode = themeProvider.isDarkMode;
-    final backgroundColor = isDarkMode ? Colors.grey[800] : Colors.white;
-    final textColor = isDarkMode ? Colors.white : Colors.black87;
-    final iconColor = isDarkMode ? Colors.white70 : Colors.black54;
-    final actionColor = Theme.of(context).colorScheme.primary;
-
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      backgroundColor: backgroundColor,
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: textColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: iconColor),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                Divider(
-                  color: isDarkMode ? Colors.grey[600] : Colors.grey[300],
-                ),
-                ...options.map(
-                  (item) => ListTile(
-                    title: Text(
-                      _getCategoryDisplayName(item),
-                      style: TextStyle(color: textColor),
-                    ),
-                    trailing:
-                        _isItemSelected(title, item)
-                            ? Icon(Icons.check, color: actionColor)
-                            : null,
-                    onTap: () {
-                      setState(() {
-                        if (title == 'Chọn nhãn') {
-                          selectedCategory =
-                              selectedCategory == item ? null : item;
-                        }
-                        if (title == 'Từ người gửi') {
-                          selectedFrom = selectedFrom == item ? null : item;
-                        }
-                        if (title == 'Đến người nhận') {
-                          selectedTo = selectedTo == item ? null : item;
-                        }
-                      });
-                      _updateFilters();
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  bool _isItemSelected(String title, String item) {
-    switch (title) {
-      case 'Chọn nhãn':
-        return selectedCategory == item;
-      case 'Từ người gửi':
-        return selectedFrom == item;
-      case 'Đến người nhận':
-        return selectedTo == item;
-      default:
-        return false;
-    }
-  }
-
-  String _getCategoryDisplayName(String category) {
-    const categoryNames = <String, String>{
-      'Inbox': 'Hộp thư đến',
-      'Sent': 'Đã gửi',
-      'Draft': 'Thư nháp',
-      'Important': 'Quan trọng',
-      'Spam': 'Thư rác',
-      'Trash': 'Thùng rác',
-      'Starred': 'Có gắn dấu sao',
-    };
-    return categoryNames[category] ?? category;
-  }
-
-  void _showAttachmentPicker() {
-    final themeProvider = Provider.of<ThemeManage>(context, listen: false);
-    final isDarkMode = themeProvider.isDarkMode;
-    final backgroundColor = isDarkMode ? Colors.grey[800] : Colors.white;
-    final textColor = isDarkMode ? Colors.white : Colors.black87;
-    final iconColor = isDarkMode ? Colors.white70 : Colors.black54;
-    final actionColor = Theme.of(context).colorScheme.primary;
-
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      backgroundColor: backgroundColor,
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Tệp đính kèm',
-                      style: TextStyle(
-                        color: textColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: iconColor),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                Divider(
-                  color: isDarkMode ? Colors.grey[600] : Colors.grey[300],
-                ),
-                ListTile(
-                  title: Text(
-                    'Có tệp đính kèm',
-                    style: TextStyle(color: textColor),
-                  ),
-                  trailing:
-                      hasAttachments == true
-                          ? Icon(Icons.check, color: actionColor)
-                          : null,
-                  onTap: () {
-                    setState(
-                      () =>
-                          hasAttachments = hasAttachments == true ? null : true,
-                    );
-                    _updateFilters();
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  title: Text(
-                    'Không có tệp đính kèm',
-                    style: TextStyle(color: textColor),
-                  ),
-                  trailing:
-                      hasAttachments == false
-                          ? Icon(Icons.check, color: actionColor)
-                          : null,
-                  onTap: () {
-                    setState(
-                      () =>
-                          hasAttachments =
-                              hasAttachments == false ? null : false,
-                    );
-                    _updateFilters();
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  String _formatDateRange(DateTimeRange dateRange) {
-    final vietnameseMonths = <String>[
-      'Tháng 1',
-      'Tháng 2',
-      'Tháng 3',
-      'Tháng 4',
-      'Tháng 5',
-      'Tháng 6',
-      'Tháng 7',
-      'Tháng 8',
-      'Tháng 9',
-      'Tháng 10',
-      'Tháng 11',
-      'Tháng 12',
-    ];
-    final start = dateRange.start;
-    final end = dateRange.end;
-    final startMonth = vietnameseMonths[start.month - 1];
-    final endMonth = vietnameseMonths[end.month - 1];
-    return '${start.day} $startMonth ${start.year} - ${end.day} $endMonth ${end.year}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final actionColor = Theme.of(context).colorScheme.primary;
-
     final hasActiveFilters =
         selectedCategory != null ||
         selectedFrom != null ||
         selectedTo != null ||
         hasAttachments != null ||
         selectedDateRange != null;
-
     final availableCategories = drawerCategories;
 
     return Column(
@@ -625,17 +244,26 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
             child: Row(
               children: [
                 if (availableCategories.isNotEmpty) ...[
-                  _buildFilterChip(
+                  FilterChipWidget(
                     label: 'Nhãn',
                     value:
                         selectedCategory != null
-                            ? _getCategoryDisplayName(selectedCategory!)
+                            ? AdvanceSearchUtils.getCategoryDisplayName(
+                              selectedCategory!,
+                            )
                             : null,
                     onTap:
-                        () => _showPicker(
+                        () => PickerBottomSheet.showPicker(
+                          context: context,
                           title: 'Chọn nhãn',
                           options: availableCategories,
-                          onSelect: (v) => selectedCategory = v,
+                          selectedValue: selectedCategory,
+                          onSelect: (value) {
+                            setState(() => selectedCategory = value);
+                            _updateFilters();
+                          },
+                          getDisplayName:
+                              AdvanceSearchUtils.getCategoryDisplayName,
                         ),
                     onDeleted:
                         selectedCategory != null
@@ -647,14 +275,20 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                   ),
                   const SizedBox(width: 8),
                 ],
-                _buildFilterChip(
+                FilterChipWidget(
                   label: 'Từ',
                   value: selectedFrom,
                   onTap:
-                      () => _showPicker(
+                      () => PickerBottomSheet.showPicker(
+                        context: context,
                         title: 'Từ người gửi',
                         options: commonSenders,
-                        onSelect: (v) => selectedFrom = v,
+                        selectedValue: selectedFrom,
+                        onSelect: (value) {
+                          setState(() => selectedFrom = value);
+                          _updateFilters();
+                        },
+                        getDisplayName: (value) => value,
                       ),
                   onDeleted:
                       selectedFrom != null
@@ -665,14 +299,20 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                           : null,
                 ),
                 const SizedBox(width: 8),
-                _buildFilterChip(
+                FilterChipWidget(
                   label: 'Đến',
                   value: selectedTo,
                   onTap:
-                      () => _showPicker(
+                      () => PickerBottomSheet.showPicker(
+                        context: context,
                         title: 'Đến người nhận',
                         options: commonRecipients,
-                        onSelect: (v) => selectedTo = v,
+                        selectedValue: selectedTo,
+                        onSelect: (value) {
+                          setState(() => selectedTo = value);
+                          _updateFilters();
+                        },
+                        getDisplayName: (value) => value,
                       ),
                   onDeleted:
                       selectedTo != null
@@ -683,7 +323,7 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                           : null,
                 ),
                 const SizedBox(width: 8),
-                _buildFilterChip(
+                FilterChipWidget(
                   label: 'Tệp đính kèm',
                   value:
                       hasAttachments == true
@@ -691,21 +331,31 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
                           : hasAttachments == false
                           ? 'Không'
                           : null,
-                  onTap: _showAttachmentPicker,
+                  onTap:
+                      () => PickerBottomSheet.showAttachmentPicker(
+                        context: context,
+                        hasAttachments: hasAttachments,
+                        onSelect: (value) {
+                          setState(() => hasAttachments = value);
+                          _updateFilters();
+                        },
+                      ),
                   onDeleted:
                       hasAttachments != null
                           ? () {
-                            setState(() => hasAttachments = null);
+                            setState(() => hasAttachments = false);
                             _updateFilters();
                           }
                           : null,
                 ),
                 const SizedBox(width: 8),
-                _buildFilterChip(
+                FilterChipWidget(
                   label: 'Ngày',
                   value:
                       selectedDateRange != null
-                          ? _formatDateRange(selectedDateRange!)
+                          ? AdvanceSearchUtils.formatDateRange(
+                            selectedDateRange!,
+                          )
                           : null,
                   onTap: _selectDateRange,
                   onDeleted:
