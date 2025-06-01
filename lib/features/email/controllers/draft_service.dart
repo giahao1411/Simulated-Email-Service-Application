@@ -15,6 +15,7 @@ class DraftService {
     required String subject,
     required String body,
     String? id,
+    List<Map<String, dynamic>>? attachments,
   }) async {
     try {
       if (FirebaseAuth.instance.currentUser == null) {
@@ -30,53 +31,38 @@ class DraftService {
         'subject': subject,
         'body': body,
         'timestamp': FieldValue.serverTimestamp(),
+        'attachments': attachments ?? [],
       };
 
-      // create new or update the existing draft
+      String draftId;
       if (id == null) {
-        // create new if id is null
-        final newDraft = await _firestore.collection('drafts').add({
-          'id':
-              _firestore
-                  .collection('users')
-                  .doc(userId)
-                  .collection('drafts')
-                  .doc()
-                  .id,
-          ...draftData,
-        });
-        draftData['id'] = newDraft.id;
+        final newDraft = await _firestore.collection('drafts').add(draftData);
+        draftId = newDraft.id;
       } else {
-        // update the existing draft
+        draftId = id;
         await _firestore
             .collection('drafts')
             .doc(id)
-            .set(
-              draftData,
-              SetOptions(
-                merge: true,
-              ), // merge: true for update the changes field
-            );
-        draftData['id'] = id;
+            .set(draftData, SetOptions(merge: true));
       }
 
-      // upadate email state
       await _firestore
           .collection('users')
           .doc(userId)
           .collection('email_states')
-          .doc(draftData['id'] as String?)
-          .set(
-            EmailState(emailId: draftData['id']! as String, read: true).toMap(),
-          );
+          .doc(draftId)
+          .set(EmailState(emailId: draftId, read: true).toMap());
 
-      // update contacts
       await EmailServiceUtils.updateUserContacts(
         userId: userId,
         from: userEmail ?? '',
         to: to,
         cc: cc,
         bcc: bcc,
+      );
+
+      AppFunctions.debugPrint(
+        'Draft saved successfully with id: $draftId, body: $body',
       );
     } on Exception catch (e) {
       AppFunctions.debugPrint('Lỗi khi lưu thư nháp: $e');
@@ -91,6 +77,12 @@ class DraftService {
       }
 
       await _firestore.collection('drafts').doc(draftId).delete();
+      await _firestore
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .collection('email_states')
+          .doc(draftId)
+          .delete();
 
       AppFunctions.debugPrint('Xóa nháp thành công: $draftId');
     } catch (e) {

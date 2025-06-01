@@ -1,8 +1,9 @@
-import 'dart:convert'; // Để mã hóa base64
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill/quill_delta.dart' as quill;
 import 'package:provider/provider.dart';
 import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
 
@@ -38,33 +39,20 @@ class ImageEmbedBuilder extends quill.EmbedBuilder {
     TextStyle textStyle,
   ) {
     final imageUrl = node.value.data as String;
+    final base64String = imageUrl.replaceFirst('data:image/png;base64,', '');
+    debugPrint('ImageEmbedBuilder - Decoding image: $base64String');
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      constraints: const BoxConstraints(
-        maxHeight: 300, // Giới hạn chiều cao tối đa
-      ),
+      constraints: const BoxConstraints(maxHeight: 300),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.network(
-          imageUrl,
-          fit: BoxFit.contain, // Giữ tỷ lệ ảnh và fit trong container
+        child: Image.memory(
+          base64Decode(base64String),
+          fit: BoxFit.contain,
           width: double.infinity,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              height: 200,
-              alignment: Alignment.center,
-              child: CircularProgressIndicator(
-                value:
-                    loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
-                        : null,
-              ),
-            );
-          },
           errorBuilder: (context, error, stackTrace) {
+            debugPrint('ImageEmbedBuilder - Error decoding image: $error');
             return Container(
               height: 100,
               width: double.infinity,
@@ -95,7 +83,6 @@ class ImageEmbedBuilder extends quill.EmbedBuilder {
 class WysiwygTextEditorState extends State<WysiwygTextEditor> {
   late final quill.QuillController _quillController;
   final FocusNode _focusNode = FocusNode();
-
   bool _showToolbar = true;
   late String _currentHtml;
 
@@ -106,6 +93,8 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
     if (widget.isCompact) {
       _showToolbar = false;
     }
+    _currentHtml = widget.controller.text;
+    debugPrint('WysiwygTextEditor - Initial HTML: $_currentHtml');
   }
 
   void _initializeQuillController() {
@@ -118,7 +107,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
       if (text.isNotEmpty && text.contains('<') && text.contains('>')) {
         debugPrint('Processing HTML content...');
         _quillController.document.delete(0, _quillController.document.length);
-        _insertHtmlContent(text);
+        setHtml(text);
       } else if (text.isNotEmpty) {
         _quillController.document.delete(0, _quillController.document.length);
         _quillController.document.insert(0, text);
@@ -128,7 +117,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         _quillController.addListener(_updateTextController);
         setState(() {});
       });
-    } on Exception catch (e) {
+    } catch (e) {
       debugPrint('Error initializing QuillController: $e');
       _quillController = quill.QuillController.basic();
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -137,99 +126,154 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
     }
   }
 
-  void _insertHtmlContent(String html) {
+  void setHtml(String html) {
     try {
-      final workingHtml = html.replaceAll(RegExp('</?p[^>]*>'), '').trim();
-
-      var currentOffset = 0;
-      final strongPattern = RegExp('<strong[^>]*>(.*?)</strong>');
-      final matches = strongPattern.allMatches(workingHtml);
-
-      if (matches.isEmpty) {
-        final plainText = _stripHtmlTags(workingHtml);
-        if (plainText.isNotEmpty) {
-          _quillController.document.insert(0, plainText);
-        }
-        return;
-      }
-
-      var lastEnd = 0;
-
-      for (final match in matches) {
-        if (match.start > lastEnd) {
-          final beforeText =
-              _stripHtmlTags(
-                workingHtml.substring(lastEnd, match.start),
-              ).trim();
-          if (beforeText.isNotEmpty) {
-            _quillController.document.insert(currentOffset, beforeText);
-            currentOffset += beforeText.length;
-          }
-        }
-
-        final strongText = _stripHtmlTags(match.group(1) ?? '').trim();
-        if (strongText.isNotEmpty) {
-          _quillController.document.insert(currentOffset, strongText);
-          _quillController.formatText(
-            currentOffset,
-            strongText.length,
-            quill.Attribute.bold,
-          );
-          currentOffset += strongText.length;
-        }
-
-        lastEnd = match.end;
-      }
-
-      if (lastEnd < workingHtml.length) {
-        final afterText = _stripHtmlTags(workingHtml.substring(lastEnd)).trim();
-        if (afterText.isNotEmpty) {
-          _quillController.document.insert(currentOffset, afterText);
-        }
-      }
-    } on Exception catch (e) {
-      debugPrint('Error inserting HTML content: $e');
+      debugPrint('Setting HTML: $html');
+      final delta = _htmlToDelta(html.trim());
+      _quillController.document = quill.Document.fromDelta(delta);
+      _updateTextController();
+    } catch (e) {
+      debugPrint('Error setting HTML content: $e');
       final plainText = _stripHtmlTags(html);
-      _quillController.document.insert(0, plainText);
+      _quillController.document.insert(0, plainText.isEmpty ? '\n' : plainText);
+      _updateTextController();
     }
   }
 
-  String _stripHtmlTags(String html) {
-    return html
-        .replaceAll(RegExp('<[^>]*>'), '')
-        .replaceAll('&nbsp;', ' ')
+  quill.Delta _htmlToDelta(String html) {
+    final delta = quill.Delta();
+    var workingHtml = html.trim();
+
+    final strongPattern = RegExp(r'<strong[^>]*>(.*?)</strong>');
+    final italicPattern = RegExp(r'<em[^>]*>(.*?)</em>');
+    final underlinePattern = RegExp(r'<u[^>]*>(.*?)</u>');
+    final brPattern = RegExp(r'<br\s*/?>');
+    final ulPattern = RegExp(r'<ul[^>]*>(.*?)</ul>', multiLine: true);
+    final liPattern = RegExp(r'<li[^>]*>(.*?)</li>');
+    final imgPattern = RegExp(r'<img[^>]*src="([^"]*)"[^>]*>');
+
+    final allMatches = <RegExpMatch>[];
+    allMatches.addAll(strongPattern.allMatches(workingHtml));
+    allMatches.addAll(italicPattern.allMatches(workingHtml));
+    allMatches.addAll(underlinePattern.allMatches(workingHtml));
+    allMatches.addAll(brPattern.allMatches(workingHtml));
+    allMatches.addAll(imgPattern.allMatches(workingHtml));
+    allMatches.sort((a, b) => a.start.compareTo(b.start));
+
+    var lastEnd = 0;
+    for (final match in allMatches) {
+      if (match.start > lastEnd) {
+        final beforeText = workingHtml.substring(lastEnd, match.start);
+        final cleanedText = _preserveSpaces(beforeText);
+        if (cleanedText.isNotEmpty) {
+          delta.insert(cleanedText);
+        }
+      }
+
+      if (match.pattern == brPattern) {
+        delta.insert('\n');
+      } else if (match.pattern == imgPattern) {
+        final imageUrl = match.group(1) ?? '';
+        if (imageUrl.startsWith('data:image/')) {
+          delta.insert('\n');
+          delta.insert(quill.BlockEmbed.image(imageUrl), {'image': true});
+          delta.insert('\n');
+        }
+      } else {
+        final isStrong = match.pattern == strongPattern;
+        final isItalic = match.pattern == italicPattern;
+        final isUnderline = match.pattern == underlinePattern;
+        final text = _preserveSpaces(match.group(1) ?? '');
+
+        if (text.isNotEmpty) {
+          final attributes = <String, dynamic>{};
+          if (isStrong) attributes['bold'] = true;
+          if (isItalic) attributes['italic'] = true;
+          if (isUnderline) attributes['underline'] = true;
+          delta.insert(text, attributes);
+        }
+      }
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < workingHtml.length) {
+      final afterText = workingHtml.substring(lastEnd);
+      final cleanedText = _preserveSpaces(afterText);
+      if (cleanedText.isNotEmpty) {
+        delta.insert(cleanedText);
+      }
+    }
+
+    if (delta.isEmpty) delta.insert('\n');
+    return delta;
+  }
+
+  String _preserveSpaces(String text) {
+    var result = text
+        .replaceAll(RegExp(r'<[^>]*>'), '')
         .replaceAll('&amp;', '&')
         .replaceAll('&lt;', '<')
         .replaceAll('&gt;', '>')
-        .trim();
+        .replaceAll('&quot;', '"')
+        .replaceAll('&nbsp;', ' ');
+
+    return result;
+  }
+
+  String _stripHtmlTags(String html) {
+    var result = html
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&nbsp;', ' ');
+
+    return result.trim();
   }
 
   void _updateTextController() {
     try {
       final delta = _quillController.document.toDelta();
+
       final converter = QuillDeltaToHtmlConverter(
         delta.toJson(),
-        ConverterOptions.forEmail(),
+        ConverterOptions(
+          converterOptions: ConverterOptions.forEmail().converterOptions,
+        ),
       );
-      final html = converter.convert();
+
+      var html = converter.convert();
+
+      html = _postProcessHtml(html);
+
+      debugPrint('Updated HTML: $html');
 
       if (widget.controller.text != html) {
         widget.controller.text = html;
+        _currentHtml = html;
       }
-    } on Exception catch (e) {
+    } catch (e) {
       debugPrint('Error converting delta to HTML: $e');
       final plainText = _quillController.document.toPlainText();
       if (widget.controller.text != plainText) {
         widget.controller.text = plainText;
+        _currentHtml = plainText;
       }
     }
+  }
+
+  String _postProcessHtml(String html) {
+    return html.replaceAllMapped(RegExp(r' {2,}'), (match) {
+      final spaceCount = match.group(0)!.length;
+      return ' ' + ('&nbsp;' * (spaceCount - 1));
+    });
   }
 
   void insertImage(Uint8List imageBytes) {
     try {
       final base64String = base64Encode(imageBytes);
       final imageUrl = 'data:image/png;base64,$base64String';
-
       final position = _quillController.selection.start;
 
       _quillController.document.insert(position, '\n');
@@ -238,20 +282,32 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         quill.BlockEmbed.image(imageUrl),
       );
       _quillController.document.insert(position + 2, '\n');
-
       _quillController.updateSelection(
         TextSelection.collapsed(offset: position + 3),
         quill.ChangeSource.local,
       );
-
       _updateTextController();
-    } on Exception catch (e) {
+    } catch (e) {
       debugPrint('Error inserting image: $e');
     }
   }
 
   String getFormattedHtml() {
-    return _currentHtml;
+    try {
+      final delta = _quillController.document.toDelta();
+      final converter = QuillDeltaToHtmlConverter(
+        delta.toJson(),
+        ConverterOptions.forEmail(),
+      );
+      var html = converter.convert();
+
+      html = _postProcessHtml(html);
+
+      return html;
+    } catch (e) {
+      debugPrint('Error getting formatted HTML: $e');
+      return _quillController.document.toPlainText();
+    }
   }
 
   Widget _buildToolbar(bool isDarkMode) {
@@ -310,16 +366,13 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
             scrollable: widget.isCompact,
             autoFocus: true,
             expands: true,
-            placeholder:
-                widget.isCompact
-                    ? 'Nhập tiêu đề...'
-                    : 'Bắt đầu nhập nội dung email...',
+            placeholder: widget.isCompact ? 'Nhập tiêu đề...' : 'Soạn thư',
             customStyles: quill.DefaultStyles(
               paragraph: quill.DefaultTextBlockStyle(
                 TextStyle(
                   fontSize: 16,
                   height: 1.5,
-                  color: isDarkMode ? Colors.white : Colors.black87,
+                  color: isDarkMode ? Colors.white70 : Colors.black87,
                 ),
                 const quill.VerticalSpacing(6, 0),
                 const quill.VerticalSpacing(0, 0),
@@ -329,7 +382,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
                 TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.black87,
+                  color: isDarkMode ? Colors.grey[200] : Colors.black87,
                 ),
                 const quill.VerticalSpacing(6, 0),
                 const quill.VerticalSpacing(0, 0),
@@ -339,7 +392,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
                 TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
-                  color: isDarkMode ? Colors.white : Colors.black87,
+                  color: isDarkMode ? Colors.grey[200] : Colors.black87,
                 ),
                 const quill.VerticalSpacing(6, 0),
                 const quill.VerticalSpacing(0, 0),

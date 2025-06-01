@@ -11,6 +11,7 @@ class ComposeState with ChangeNotifier {
   PlatformFile? get selectedFile => _selectedFile;
   Uint8List? get fileBytes => _fileBytes;
 
+  // Phương thức 1: Đặt file từ PlatformFile (khi người dùng chọn file mới)
   Future<void> setSelectedFile(PlatformFile? file) async {
     _selectedFile = file;
 
@@ -30,6 +31,27 @@ class ComposeState with ChangeNotifier {
         _fileBytes = null;
       }
     } else {
+      _fileBytes = null;
+    }
+
+    notifyListeners();
+  }
+
+  // Phương thức 2: Đặt file từ dữ liệu đã lưu (khi tải nháp từ Firestore)
+  void setSelectedFileFromDraft(Map<String, dynamic> fileData) {
+    final fileName = fileData['name'] as String?;
+    final fileBytes = fileData['bytes'] as Uint8List?;
+
+    if (fileName != null && fileBytes != null) {
+      // Tạo một PlatformFile giả để hiển thị
+      _selectedFile = PlatformFile(
+        name: fileName,
+        size: fileBytes.length,
+        bytes: fileBytes,
+      );
+      _fileBytes = fileBytes;
+    } else {
+      _selectedFile = null;
       _fileBytes = null;
     }
 
