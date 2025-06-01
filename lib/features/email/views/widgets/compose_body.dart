@@ -190,9 +190,8 @@ class _ComposeBodyState extends State<ComposeBody> {
             ),
           ),
 
-          // ATTACHMENT preview - Chỉ hiển thị nếu không phải ảnh
-          if (composeState.selectedFile != null &&
-              !composeState.isImageFile()) ...[
+          // ATTACHMENT preview
+          if (composeState.selectedFile != null) ...[
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               padding: const EdgeInsets.all(12),
@@ -238,6 +237,43 @@ class _ComposeBodyState extends State<ComposeBody> {
                       ),
                     ],
                   ),
+                  // Hiển thị ảnh nếu là file ảnh và cho phép chèn vào editor
+                  if (composeState.isImageFile() &&
+                      composeState.fileBytes != null) ...[
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () {
+                        if (widget.editorKey?.currentState != null) {
+                          widget.editorKey!.currentState!.insertImage(
+                            composeState.fileBytes!,
+                          );
+                          composeState.clearSelectedFile();
+                        }
+                      },
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          maxHeight: 200,
+                          maxWidth: double.infinity,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.memory(
+                            composeState.fileBytes!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 100,
+                                color: Colors.grey[300],
+                                child: const Center(
+                                  child: Text('Không thể hiển thị ảnh'),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
