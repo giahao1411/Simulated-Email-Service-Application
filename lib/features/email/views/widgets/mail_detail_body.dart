@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_application/core/constants/app_functions.dart';
-import 'package:email_application/core/constants/app_strings.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
-import 'package:email_application/features/email/utils/date_format.dart';
-import 'package:email_application/features/email/utils/email_recipients.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:email_application/features/email/views/widgets/email_content_dialog.dart';
+import 'package:email_application/features/email/views/widgets/reply_item.dart';
+import 'package:email_application/features/email/views/widgets/sender_info.dart';
+import 'package:email_application/features/email/views/widgets/sending_detail_container.dart';
+import 'package:email_application/features/email/views/widgets/subject_row.dart';
+import 'package:email_application/features/email/views/widgets/utils_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
@@ -63,7 +65,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
   }
 
   String getSummaryBody(String body) {
-    final plainText = body.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+    final plainText = body.replaceAll(RegExp('<[^>]*>'), '').trim();
     if (plainText.isEmpty) return '(No content)';
     final quoteIndex = plainText.indexOf('On ');
     return quoteIndex != -1
@@ -110,29 +112,62 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSubjectRow(onSurface, onSurface60),
-                        _buildSenderInfo(
-                          onSurface,
-                          onSurface70,
-                          onSurface60,
-                          context,
+                        SubjectRow(
+                          email: emailData,
+                          state: state,
+                          emailService: widget.emailService,
+                          onSurface: onSurface,
+                          onSurface60: onSurface60,
+                          onStarToggled: () {
+                            setState(() {
+                              state = state.copyWith(starred: !state.starred);
+                            });
+                          },
+                        ),
+                        SenderInfo(
+                          email: emailData,
+                          senderFullName: widget.senderFullName,
+                          index: widget.index,
+                          onSurface: onSurface,
+                          onSurface60: onSurface60,
+                          onSurface70: onSurface70,
+                          sendReply: widget.sendReply,
+                          onShowDetailsToggled: () {
+                            setState(() {
+                              isShowSendingDetail = !isShowSendingDetail;
+                            });
+                          },
+                          onShowFullBody: () {
+                            showDialog<void>(
+                              context: context,
+                              builder:
+                                  (context) => EmailContentDialog(
+                                    fullBody: emailData.body,
+                                    onSurface70: onSurface70,
+                                  ),
+                            );
+                          },
+                          isShowSendingDetail: isShowSendingDetail,
                         ),
                         if (isShowSendingDetail)
-                          _buildSendingDetailContainer(emailData, onSurface70),
+                          SendingDetailContainer(
+                            email: emailData,
+                            onSurface70: onSurface70,
+                          ),
                         Padding(
                           padding: const EdgeInsets.only(right: 8, bottom: 16),
                           child: Html(
                             data: emailData.body,
                             style: {
-                              "body": Style(
+                              'body': Style(
                                 fontSize: FontSize(16),
                                 color: onSurface70,
                               ),
-                              "img": Style(
+                              'img': Style(
                                 display: Display.block,
                                 margin: Margins.symmetric(vertical: 8),
                               ),
-                              "p": Style(margin: Margins.only(bottom: 8)),
+                              'p': Style(margin: Margins.only(bottom: 8)),
                             },
                           ),
                         ),
@@ -200,12 +235,16 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                                         replyEmail: replyEmail,
                                         onSurface60: onSurface60,
                                         onSurface70: onSurface70,
-                                        onShowOriginalEmail:
-                                            () => _showFullBodyDialog(
-                                              context,
-                                              replyEmail.body,
-                                              onSurface70,
-                                            ),
+                                        onShowOriginalEmail: () {
+                                          showDialog<void>(
+                                            context: context,
+                                            builder:
+                                                (context) => EmailContentDialog(
+                                                  fullBody: replyEmail.body,
+                                                  onSurface70: onSurface70,
+                                                ),
+                                          );
+                                        },
                                       ),
                                       if (index < replyDocs.length - 1)
                                         const Divider(
@@ -224,502 +263,16 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                   ],
                 ),
               ),
-              _buildUtilsBar(onSurface60),
+              UtilsBar(
+                email: emailData,
+                onSurface60: onSurface60,
+                sendReply: widget.sendReply,
+                sendReplyAll: widget.sendReplyAll,
+                sendForward: widget.sendForward,
+              ),
             ],
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildSubjectRow(Color onSurface, Color onSurface60) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            email.subject.isEmpty ? '(No subject)' : email.subject,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: onSurface,
-            ),
-          ),
-        ),
-        IconButton(
-          icon: Icon(
-            state.starred ? Icons.star : Icons.star_border,
-            color: state.starred ? Colors.amber : onSurface60,
-            size: 25,
-          ),
-          onPressed: () async {
-            await widget.emailService.toggleStar(email.id, state.starred);
-            setState(() {
-              state = state.copyWith(starred: !state.starred);
-            });
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSenderInfo(
-    Color onSurface,
-    Color onSurface70,
-    Color onSurface60,
-    BuildContext context,
-  ) {
-    return ListTile(
-      contentPadding: const EdgeInsets.only(right: -16),
-      leading: CircleAvatar(
-        backgroundImage: NetworkImage(
-          'https://picsum.photos/250?image=${widget.index}',
-        ),
-      ),
-      title: Row(
-        children: [
-          Text(
-            widget.senderFullName.isEmpty ? email.from : widget.senderFullName,
-            style: TextStyle(color: onSurface),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            DateFormat.formatTimestamp(email.timestamp),
-            style: TextStyle(color: onSurface70, fontSize: 12),
-          ),
-        ],
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [buildSendingDetail(email, onSurface70)],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: Icon(Icons.reply, color: onSurface60),
-            onPressed: widget.email.from.isEmpty ? null : widget.sendReply,
-          ),
-          IconButton(
-            icon: Icon(Icons.more_horiz, color: onSurface60),
-            onPressed: () {
-              _showFullBodyDialog(context, email.body, onSurface70);
-            },
-          ),
-        ],
-      ),
-      onTap: () {},
-    );
-  }
-
-  Widget _buildUtilsBar(Color onSurface60) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      color: Theme.of(context).colorScheme.surface,
-      child: Column(
-        children: [
-          OverflowBar(
-            alignment: MainAxisAlignment.center,
-            children: [
-              OutlinedButton(
-                onPressed: widget.email.from.isEmpty ? null : widget.sendReply,
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: onSurface60),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.reply, color: onSurface60),
-                    const SizedBox(width: 4),
-                    Text('Phản hồi', style: TextStyle(color: onSurface60)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (email.cc.isNotEmpty)
-                OutlinedButton(
-                  onPressed:
-                      widget.email.from.isEmpty ? null : widget.sendReplyAll,
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: onSurface60),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.reply_all, color: onSurface60),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Phản hồi tất cả',
-                        style: TextStyle(color: onSurface60),
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(width: 8),
-              OutlinedButton(
-                onPressed: widget.sendForward,
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: onSurface60),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.forward, color: onSurface60),
-                    const SizedBox(width: 4),
-                    Text('Chuyển tiếp', style: TextStyle(color: onSurface60)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [SizedBox.shrink()],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildSendingDetail(Email email, Color onSurface70) {
-    final currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
-    final recipientText = EmailRecipient.formatRecipient(
-      email.to,
-      email.bcc,
-      currentUserEmail,
-    );
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          isShowSendingDetail = !isShowSendingDetail;
-        });
-      },
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Expanded(
-            child: Text(
-              recipientText.isEmpty ? '(No recipients)' : recipientText,
-              style: TextStyle(color: onSurface70),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Icon(
-            isShowSendingDetail ? Icons.expand_less : Icons.expand_more,
-            color: onSurface70,
-            size: 20,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSendingDetailContainer(Email email, Color onSurface70) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      margin: const EdgeInsets.only(top: 4, bottom: 20, right: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: onSurface70.withOpacity(0.2)),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 60,
-                child: Text(
-                  AppStrings.from,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: onSurface70,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  email.from.isEmpty ? '(No sender)' : email.from,
-                  style: TextStyle(color: onSurface70),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (email.to.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 60,
-                      child: Text(
-                        AppStrings.to,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: onSurface70,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 2,
-                        children:
-                            email.to
-                                .map(
-                                  (emailAddress) => Text(
-                                    emailAddress,
-                                    style: TextStyle(color: onSurface70),
-                                  ),
-                                )
-                                .toList(),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          if (email.cc.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 60,
-                      child: Text(
-                        AppStrings.cc,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: onSurface70,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 2,
-                        children:
-                            email.cc
-                                .map(
-                                  (emailAddress) => Text(
-                                    emailAddress,
-                                    style: TextStyle(color: onSurface70),
-                                  ),
-                                )
-                                .toList(),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          if (email.bcc.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 60,
-                      child: Text(
-                        AppStrings.bcc,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: onSurface70,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 2,
-                        children:
-                            email.bcc
-                                .map(
-                                  (emailAddress) => Text(
-                                    emailAddress,
-                                    style: TextStyle(color: onSurface70),
-                                  ),
-                                )
-                                .toList(),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 60,
-                child: Text(
-                  AppStrings.date,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: onSurface70,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  DateFormat.formatDetailedTimestamp(email.timestamp),
-                  style: TextStyle(color: onSurface70),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showFullBodyDialog(
-    BuildContext context,
-    String fullBody,
-    Color onSurface70,
-  ) {
-    showDialog<void>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Chi tiết nội dung'),
-            content: SizedBox(
-              width: double.maxFinite,
-              height: MediaQuery.of(context).size.height * 0.6,
-              child: SingleChildScrollView(
-                child: Html(
-                  data: fullBody,
-                  style: {
-                    "body": Style(fontSize: FontSize(16), color: onSurface70),
-                    "img": Style(
-                      display: Display.block,
-                      margin: Margins.symmetric(vertical: 8),
-                    ),
-                    "p": Style(margin: Margins.only(bottom: 8)),
-                  },
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Đóng'),
-              ),
-            ],
-          ),
-    );
-  }
-}
-
-class ReplyItem extends StatelessWidget {
-  const ReplyItem({
-    required this.replyEmail,
-    required this.onSurface60,
-    required this.onSurface70,
-    required this.onShowOriginalEmail,
-    super.key,
-  });
-
-  final Email replyEmail;
-  final Color onSurface60;
-  final Color onSurface70;
-  final VoidCallback onShowOriginalEmail;
-
-  String getSummaryBody(String body) {
-    final plainText = body.replaceAll(RegExp(r'<[^>]*>'), '').trim();
-    if (plainText.isEmpty) return '(No content)';
-    final quoteIndex = plainText.indexOf('On ');
-    return quoteIndex != -1
-        ? plainText.substring(0, quoteIndex).trim()
-        : plainText.trim();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Reply từ ${replyEmail.from.isEmpty ? "(No sender)" : replyEmail.from} lúc ${DateFormat.formatTimestamp(replyEmail.timestamp)}:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: onSurface60,
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.reply, color: onSurface60, size: 20),
-                    onPressed: null,
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.more_horiz, color: onSurface60, size: 20),
-                    onPressed: onShowOriginalEmail,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Html(
-            data: replyEmail.body,
-            style: {
-              "body": Style(fontSize: FontSize(16), color: onSurface70),
-              "img": Style(
-                display: Display.block,
-                margin: Margins.symmetric(vertical: 8),
-              ),
-              "p": Style(margin: Margins.only(bottom: 8)),
-            },
-          ),
-          if (replyEmail.cc.isNotEmpty || replyEmail.bcc.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            if (replyEmail.cc.isNotEmpty)
-              Text(
-                'Cc: ${replyEmail.cc.join(', ')}',
-                style: TextStyle(color: onSurface70, fontSize: 14),
-              ),
-            if (replyEmail.bcc.isNotEmpty)
-              Text(
-                'Bcc: ${replyEmail.bcc.join(', ')}',
-                style: TextStyle(color: onSurface70, fontSize: 14),
-              ),
-          ],
-        ],
       ),
     );
   }
