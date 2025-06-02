@@ -45,9 +45,6 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: () async {
             try {
               final result = await FilePicker.platform.pickFiles(
-                allowMultiple: false,
-                type: FileType.any,
-                allowedExtensions: null,
                 withData: true,
               );
 
@@ -91,7 +88,7 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   }
                 } else {
                   // Nếu không phải ảnh, lưu vào ComposeState
-                  Provider.of<ComposeState>(
+                  await Provider.of<ComposeState>(
                     context,
                     listen: false,
                   ).setSelectedFile(file);
@@ -112,7 +109,7 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
               } else {
                 AppFunctions.debugPrint('No file selected');
               }
-            } catch (e) {
+            } on Exception catch (e) {
               AppFunctions.debugPrint('Error picking file: $e');
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(

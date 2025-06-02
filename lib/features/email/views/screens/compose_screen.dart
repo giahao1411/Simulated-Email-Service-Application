@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/draft_service.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
@@ -200,7 +198,6 @@ class _ComposeScreenState extends State<ComposeScreen> {
     return ChangeNotifierProvider(
       create: (_) => ComposeState(),
       child: PopScope(
-        canPop: true,
         onPopInvokedWithResult: (didPop, result) async {
           if (didPop) return;
           final shouldPop = await handleBackAction();

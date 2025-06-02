@@ -117,7 +117,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         _quillController.addListener(_updateTextController);
         setState(() {});
       });
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error initializing QuillController: $e');
       _quillController = quill.QuillController.basic();
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -132,7 +132,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
       final delta = _htmlToDelta(html.trim());
       _quillController.document = quill.Document.fromDelta(delta);
       _updateTextController();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error setting HTML content: $e');
       final plainText = _stripHtmlTags(html);
       _quillController.document.insert(0, plainText.isEmpty ? '\n' : plainText);
@@ -142,23 +142,25 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
 
   quill.Delta _htmlToDelta(String html) {
     final delta = quill.Delta();
-    var workingHtml = html.trim();
+    final workingHtml = html.trim();
 
-    final strongPattern = RegExp(r'<strong[^>]*>(.*?)</strong>');
-    final italicPattern = RegExp(r'<em[^>]*>(.*?)</em>');
-    final underlinePattern = RegExp(r'<u[^>]*>(.*?)</u>');
+    final strongPattern = RegExp('<strong[^>]*>(.*?)</strong>');
+    final italicPattern = RegExp('<em[^>]*>(.*?)</em>');
+    final underlinePattern = RegExp('<u[^>]*>(.*?)</u>');
     final brPattern = RegExp(r'<br\s*/?>');
-    final ulPattern = RegExp(r'<ul[^>]*>(.*?)</ul>', multiLine: true);
-    final liPattern = RegExp(r'<li[^>]*>(.*?)</li>');
-    final imgPattern = RegExp(r'<img[^>]*src="([^"]*)"[^>]*>');
+    final ulPattern = RegExp('<ul[^>]*>(.*?)</ul>', multiLine: true);
+    final liPattern = RegExp('<li[^>]*>(.*?)</li>');
+    final imgPattern = RegExp('<img[^>]*src="([^"]*)"[^>]*>');
 
-    final allMatches = <RegExpMatch>[];
-    allMatches.addAll(strongPattern.allMatches(workingHtml));
-    allMatches.addAll(italicPattern.allMatches(workingHtml));
-    allMatches.addAll(underlinePattern.allMatches(workingHtml));
-    allMatches.addAll(brPattern.allMatches(workingHtml));
-    allMatches.addAll(imgPattern.allMatches(workingHtml));
-    allMatches.sort((a, b) => a.start.compareTo(b.start));
+    final allMatches = <RegExpMatch>[
+      ...strongPattern.allMatches(workingHtml),
+      ...italicPattern.allMatches(workingHtml),
+      ...underlinePattern.allMatches(workingHtml),
+      ...brPattern.allMatches(workingHtml),
+      ...ulPattern.allMatches(workingHtml),
+      ...liPattern.allMatches(workingHtml),
+      ...imgPattern.allMatches(workingHtml),
+    ]..sort((a, b) => a.start.compareTo(b.start));
 
     var lastEnd = 0;
     for (final match in allMatches) {
@@ -175,9 +177,10 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
       } else if (match.pattern == imgPattern) {
         final imageUrl = match.group(1) ?? '';
         if (imageUrl.startsWith('data:image/')) {
-          delta.insert('\n');
-          delta.insert(quill.BlockEmbed.image(imageUrl), {'image': true});
-          delta.insert('\n');
+          delta
+            ..insert('\n')
+            ..insert(quill.BlockEmbed.image(imageUrl), {'image': true})
+            ..insert('\n');
         }
       } else {
         final isStrong = match.pattern == strongPattern;
@@ -209,8 +212,8 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
   }
 
   String _preserveSpaces(String text) {
-    var result = text
-        .replaceAll(RegExp(r'<[^>]*>'), '')
+    final result = text
+        .replaceAll(RegExp('<[^>]*>'), '')
         .replaceAll('&amp;', '&')
         .replaceAll('&lt;', '<')
         .replaceAll('&gt;', '>')
@@ -221,8 +224,8 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
   }
 
   String _stripHtmlTags(String html) {
-    var result = html
-        .replaceAll(RegExp(r'<[^>]*>'), '')
+    final result = html
+        .replaceAll(RegExp('<[^>]*>'), '')
         .replaceAll('&amp;', '&')
         .replaceAll('&lt;', '<')
         .replaceAll('&gt;', '>')
@@ -253,7 +256,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         widget.controller.text = html;
         _currentHtml = html;
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error converting delta to HTML: $e');
       final plainText = _quillController.document.toPlainText();
       if (widget.controller.text != plainText) {
@@ -264,9 +267,9 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
   }
 
   String _postProcessHtml(String html) {
-    return html.replaceAllMapped(RegExp(r' {2,}'), (match) {
+    return html.replaceAllMapped(RegExp(' {2,}'), (match) {
       final spaceCount = match.group(0)!.length;
-      return ' ' + ('&nbsp;' * (spaceCount - 1));
+      return ' ${'&nbsp;' * (spaceCount - 1)}';
     });
   }
 
@@ -287,7 +290,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         quill.ChangeSource.local,
       );
       _updateTextController();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error inserting image: $e');
     }
   }
@@ -299,12 +302,10 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         delta.toJson(),
         ConverterOptions.forEmail(),
       );
-      var html = converter.convert();
+      final html = converter.convert();
 
-      html = _postProcessHtml(html);
-
-      return html;
-    } catch (e) {
+      return _postProcessHtml(html);
+    } on Exception catch (e) {
       debugPrint('Error getting formatted HTML: $e');
       return _quillController.document.toPlainText();
     }
