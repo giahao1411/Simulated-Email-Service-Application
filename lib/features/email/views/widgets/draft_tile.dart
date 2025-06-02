@@ -1,11 +1,12 @@
+import 'dart:io';
+
+import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/draft.dart';
 import 'package:email_application/features/email/models/email_state.dart';
-import 'package:email_application/features/email/utils/date_format.dart';
-import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/models/user_profile.dart';
+import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
 
 class DraftTile extends StatelessWidget {
   const DraftTile({
@@ -28,7 +29,7 @@ class DraftTile extends StatelessWidget {
   String _stripHtmlTags(String html) {
     return html
         .replaceAll('&nbsp;', ' ') // Thay thế &nbsp; thành khoảng trắng
-        .replaceAll(RegExp(r'<[^>]*>'), '') // Loại bỏ các thẻ HTML
+        .replaceAll(RegExp('<[^>]*>'), '') // Loại bỏ các thẻ HTML
         .replaceAll('&', '&')
         .replaceAll('<', '<')
         .replaceAll('>', '>')

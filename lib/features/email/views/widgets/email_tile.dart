@@ -28,7 +28,7 @@ class EmailTile extends StatelessWidget {
 
   // Hàm loại bỏ thẻ HTML
   String stripHtmlTags(String htmlText) {
-    final RegExp htmlRegExp = RegExp(r'<[^>]+>', multiLine: true);
+    final htmlRegExp = RegExp('<[^>]+>', multiLine: true);
     return htmlText.replaceAll(htmlRegExp, '').trim();
   }
 

@@ -130,7 +130,7 @@ ${widget.email.body}
           const SnackBar(content: Text('Gửi email chuyển tiếp thành công')),
         );
         if (widget.onRefresh != null) {
-          widget.onRefresh!();
+          widget.onRefresh!.call();
         }
         Navigator.pop(context);
       }

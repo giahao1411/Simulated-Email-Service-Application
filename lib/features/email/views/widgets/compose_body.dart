@@ -55,7 +55,7 @@ class _ComposeBodyState extends State<ComposeBody> {
     final borderColor = isDarkMode ? Colors.white70 : Colors.grey;
     final backgroundColor = isDarkMode ? Colors.grey[900]! : Colors.white;
 
-    return Container(
+    return ColoredBox(
       color: backgroundColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,9 +231,7 @@ class _ComposeBodyState extends State<ComposeBody> {
                       ),
                       IconButton(
                         icon: Icon(Icons.clear, color: iconColor),
-                        onPressed: () {
-                          composeState.clearSelectedFile();
-                        },
+                        onPressed: composeState.clearSelectedFile,
                       ),
                     ],
                   ),
@@ -252,10 +250,7 @@ class _ComposeBodyState extends State<ComposeBody> {
                         }
                       },
                       child: Container(
-                        constraints: const BoxConstraints(
-                          maxHeight: 200,
-                          maxWidth: double.infinity,
-                        ),
+                        constraints: const BoxConstraints(maxHeight: 200),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.memory(

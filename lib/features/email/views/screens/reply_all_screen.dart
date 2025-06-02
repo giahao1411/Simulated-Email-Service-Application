@@ -83,9 +83,9 @@ class _ReplyAllScreenState extends State<ReplyAllScreen> {
     if (widget.draft == null) {
       final dateFormat = DateFormat("dd/MM/yyyy 'lúc' HH:mm");
       bodyCtrl.text = '''
-Vào ${dateFormat.format(widget.email.timestamp)}, ${widget.email.from} đã viết:
-${widget.email.body}
-''';
+        Vào ${dateFormat.format(widget.email.timestamp)}, ${widget.email.from} đã viết:
+        ${widget.email.body}
+      ''';
     }
     if (widget.draft != null) {
       toCtrl.text = widget.draft!.to.join(', ');
@@ -159,7 +159,7 @@ ${widget.email.body}
           const SnackBar(content: Text('Gửi email trả lời tất cả thành công')),
         );
         if (widget.onRefresh != null) {
-          widget.onRefresh!();
+          widget.onRefresh!.call();
         }
         Navigator.pop(context);
       }
