@@ -159,6 +159,10 @@ to get the issuses and resolve them.
 
 Wish you the best wishes and luck. Happy experiencing our Email Application.
 
+## 📜 License
+
+This project is licensed under the [MIT License](./LICENSE).
+
 ## ✍️ Authors 
 
 - [nhathao512](https://github.com/nhathao512)
