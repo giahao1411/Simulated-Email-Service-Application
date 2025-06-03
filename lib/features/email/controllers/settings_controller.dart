@@ -3,6 +3,7 @@ import 'package:email_application/features/email/controllers/profile_service.dar
 import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:email_application/features/email/utils/image_picker_handler.dart';
 import 'package:email_application/features/email/views/screens/login_screen.dart';
+import 'package:email_application/features/email/views/screens/change_password_screen.dart';
 import 'package:flutter/material.dart';
 
 class SettingsController {
@@ -11,7 +12,6 @@ class SettingsController {
     required this.profileService,
     required this.firstNameController,
     required this.lastNameController,
-    required this.passwordController,
     required this.dateOfBirthController,
   }) {
     _imagePickerHandler = getImagePickerHandler();
@@ -21,7 +21,6 @@ class SettingsController {
   final ProfileService profileService;
   final TextEditingController firstNameController;
   final TextEditingController lastNameController;
-  final TextEditingController passwordController;
   final TextEditingController dateOfBirthController;
 
   bool isAutoReply = false;
@@ -99,20 +98,35 @@ class SettingsController {
     }
   }
 
+  // Phương thức changePassword mới - mở màn hình ChangePasswordScreen
   Future<void> changePassword(BuildContext context) async {
-    isLoading = true;
     try {
-      if (passwordController.text.isEmpty) {
-        _showSnackBar('Vui lòng nhập mật khẩu mới', false, context);
+      if (userProfile?.phoneNumber == null ||
+          userProfile!.phoneNumber.isEmpty) {
+        _showSnackBar(
+          'Không tìm thấy số điện thoại để gửi OTP',
+          false,
+          context,
+        );
         return;
       }
-      await authService.changePassword(passwordController.text);
-      _showSnackBar('Đổi mật khẩu thành công', true, context);
-      passwordController.clear();
+
+      // Mở màn hình đổi mật khẩu mới
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) =>
+                  ChangePasswordScreen(phoneNumber: userProfile!.phoneNumber),
+        ),
+      );
+
+      // Nếu đổi mật khẩu thành công
+      if (result == true && context.mounted) {
+        _showSnackBar('Mật khẩu đã được thay đổi thành công', true, context);
+      }
     } on Exception catch (e) {
-      _showSnackBar('Lỗi khi đổi mật khẩu: $e', false, context);
-    } finally {
-      isLoading = false;
+      _showSnackBar('Lỗi khi mở màn hình đổi mật khẩu: $e', false, context);
     }
   }
 
