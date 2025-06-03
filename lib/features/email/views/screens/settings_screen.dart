@@ -28,7 +28,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       profileService: ProfileService(),
       firstNameController: TextEditingController(),
       lastNameController: TextEditingController(),
-      passwordController: TextEditingController(),
       dateOfBirthController: TextEditingController(),
     );
     _controller.loadProfile().then((_) {
@@ -45,7 +44,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _controller.firstNameController.dispose();
     _controller.lastNameController.dispose();
-    _controller.passwordController.dispose();
     _controller.dateOfBirthController.dispose();
     super.dispose();
   }
@@ -168,33 +166,75 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: TextField(
-                  controller: _controller.passwordController,
-                  decoration: const InputDecoration(labelText: 'Mật khẩu mới'),
-                  obscureText: true,
+
+              // Phân cách giữa phần profile và phần bảo mật
+              const Divider(height: 32),
+
+              // Phần bảo mật
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Bảo mật',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
+
+              // Nút đổi mật khẩu (không còn TextField nhập mật khẩu)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: ElevatedButton(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: OutlinedButton.icon(
                   onPressed:
                       _controller.isLoading
                           ? null
                           : () => _controller.changePassword(context),
-                  child:
-                      _controller.isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                            'Đổi mật khẩu',
-                            style: TextStyle(fontSize: 16),
-                          ),
+                  icon: const Icon(Icons.lock_outline),
+                  label: const Text(
+                    'Đổi mật khẩu',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
+
+              // Xác minh hai bước
+              Consumer<TwoStepManage>(
+                builder: (context, twoStepProvider, child) {
+                  return ListTile(
+                    leading: const Icon(Icons.security),
+                    title: const Text('Xác minh hai bước'),
+                    trailing: Switch(
+                      value: twoStepProvider.isTwoStepEnabled,
+                      onChanged:
+                          (value) => _handleTwoStepToggle(context, value),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Phần cài đặt khác
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Cài đặt ứng dụng',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+
               Consumer<ThemeManage>(
                 builder: (context, themeProvider, child) {
                   return ListTile(
+                    leading: const Icon(Icons.dark_mode),
                     title: const Text('Chế độ tối'),
                     trailing: Switch(
                       value: themeProvider.isDarkMode,
@@ -205,7 +245,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   );
                 },
               ),
+
               ListTile(
+                leading: const Icon(Icons.auto_awesome),
                 title: const Text('Trả lời tự động'),
                 trailing: Switch(
                   value: _controller.isAutoReply,
@@ -216,18 +258,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
               ),
-              Consumer<TwoStepManage>(
-                builder: (context, twoStepProvider, child) {
-                  return ListTile(
-                    title: const Text('Xác minh hai bước'),
-                    trailing: Switch(
-                      value: twoStepProvider.isTwoStepEnabled,
-                      onChanged:
-                          (value) => _handleTwoStepToggle(context, value),
-                    ),
-                  );
-                },
-              ),
+
+              const SizedBox(height: 24),
+
+              // Nút đăng xuất
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: ElevatedButton(
@@ -246,7 +280,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
                             'Đăng xuất',
-                            style: TextStyle(fontSize: 16),
+                            style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                 ),
               ),
