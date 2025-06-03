@@ -4,7 +4,9 @@ import 'package:email_application/features/email/controllers/email_service.dart'
 import 'package:email_application/features/email/controllers/label_controller.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MailDetailAppBar({
@@ -25,6 +27,8 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeManage>(context);
+    final isDarkMode = themeProvider.isDarkMode;
     final labelController = LabelController();
 
     return AppBar(
@@ -102,9 +106,15 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
             }
           },
         ),
+        // more options
         const SizedBox(width: 8),
         PopupMenuButton<String>(
+          offset: const Offset(0, 50),
           icon: Icon(Icons.more_horiz, color: theme.colorScheme.onSurface),
+          color:
+              isDarkMode
+                  ? theme.colorScheme.surface
+                  : theme.colorScheme.primaryContainer,
           onSelected: (String value) async {
             try {
               switch (value) {
@@ -130,7 +140,7 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                     );
                   }
                 case 'labels':
-                  await _showLabelsDialog(context, labelController);
+                  await _showLabelsDialog(context, labelController, isDarkMode);
                 case 'important':
                   await emailService.markAsImportant(email.id, state.important);
                   AppFunctions.debugPrint(
@@ -167,6 +177,27 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                           state.spam
                               ? 'Đã bỏ đánh dấu thư rác'
                               : 'Đã báo cáo thư rác',
+                        ),
+                      ),
+                    );
+                  }
+                case 'trashed':
+                  await emailService.moveToTrash(email.id);
+                  AppFunctions.debugPrint(
+                    'Trạng thái trashed: ${!state.trashed}',
+                  );
+                  onRefresh?.call();
+                  if (!state.trashed) {
+                    onCategoryChanged?.call(AppStrings.trash);
+                  }
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          state.trashed
+                              ? 'Đã khôi phục khỏi thùng rác'
+                              : 'Đã chuyển vào thùng rác',
                         ),
                       ),
                     );
@@ -209,6 +240,14 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
                     state.spam ? 'Bỏ đánh dấu thư rác' : 'Báo cáo thư rác',
                   ),
                 ),
+                PopupMenuItem<String>(
+                  value: 'trashed',
+                  child: Text(
+                    state.trashed
+                        ? 'Bỏ chuyển đến thùng rác'
+                        : 'Chuyển đến thùng rác',
+                  ),
+                ),
                 const PopupMenuItem<String>(
                   value: 'cancel',
                   child: Text('Hủy'),
@@ -222,6 +261,7 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
   Future<void> _showLabelsDialog(
     BuildContext context,
     LabelController labelController,
+    bool isDarkMode,
   ) async {
     final labels = await labelController.loadLabels();
     final selectedLabels = List<String>.from(state.labels);
@@ -234,6 +274,10 @@ class MailDetailAppBar extends StatelessWidget implements PreferredSizeWidget {
           (dialogContext) => StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
               return AlertDialog(
+                backgroundColor:
+                    isDarkMode
+                        ? Theme.of(context).colorScheme.surface
+                        : Theme.of(context).colorScheme.primaryContainer,
                 title: const Text('Quản lý nhãn'),
                 content: SingleChildScrollView(
                   child: Column(

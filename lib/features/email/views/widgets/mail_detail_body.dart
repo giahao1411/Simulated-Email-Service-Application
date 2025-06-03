@@ -3,6 +3,7 @@ import 'package:email_application/core/constants/app_functions.dart';
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
+import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:email_application/features/email/views/widgets/email_content_dialog.dart';
 import 'package:email_application/features/email/views/widgets/reply_item.dart';
 import 'package:email_application/features/email/views/widgets/sender_info.dart';
@@ -11,6 +12,7 @@ import 'package:email_application/features/email/views/widgets/subject_row.dart'
 import 'package:email_application/features/email/views/widgets/utils_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:provider/provider.dart';
 
 class MailDetailBody extends StatefulWidget {
   MailDetailBody({
@@ -76,6 +78,8 @@ class _MailDetailBodyState extends State<MailDetailBody> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeManage>(context);
+    final isDarkMode = themeProvider.isDarkMode;
     final onSurface = theme.colorScheme.onSurface;
     final onSurface60 = onSurface.withOpacity(0.6);
     final onSurface70 = onSurface.withOpacity(0.7);
@@ -143,7 +147,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                               builder:
                                   (context) => EmailContentDialog(
                                     fullBody: emailData.body,
-                                    onSurface70: onSurface70,
+                                    isDarkMode: isDarkMode,
                                   ),
                             );
                           },
@@ -241,7 +245,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                                             builder:
                                                 (context) => EmailContentDialog(
                                                   fullBody: replyEmail.body,
-                                                  onSurface70: onSurface70,
+                                                  isDarkMode: isDarkMode,
                                                 ),
                                           );
                                         },
