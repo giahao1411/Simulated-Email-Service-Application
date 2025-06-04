@@ -3,7 +3,6 @@ try {
   const { processAutoReply } = require("./autoReply/processAutoReply");
   const { notifyNewEmail } = require("./notifications/notifyNewEmail");
 
-  // Export functions
   exports.scheduleAutoReplyV2 = scheduleAutoReply;
   exports.processAutoReplyV2 = processAutoReply;
   exports.notifyNewEmailV2 = notifyNewEmail;

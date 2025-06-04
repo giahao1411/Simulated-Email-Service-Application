@@ -5,11 +5,11 @@ exports.notifyNewEmail = onDocumentCreated(
   {
     document: "emails/{emailId}",
     region: "us-central1",
-    memory: "512MiB", // Tăng memory để khởi động ổn định
-    timeoutSeconds: 120, // Tăng timeout
-    maxInstances: 1, // Chỉ 1 instance để miễn phí
-    concurrency: 1, // 1 request/instance
-    minInstances: 0, // Không giữ instance chạy liên tục
+    memory: "512MiB",
+    timeoutSeconds: 120,
+    maxInstances: 1,
+    concurrency: 1,
+    minInstances: 0,
   },
   async (event) => {
     try {

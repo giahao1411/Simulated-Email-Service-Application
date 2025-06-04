@@ -205,8 +205,8 @@ class _ReplyScreenState extends State<ReplyScreen> {
     final initialContent =
         widget.draft == null
             ? '''
-Vào ${DateFormat("dd/MM/yyyy 'lúc' HH:mm").format(widget.email.timestamp)}, ${widget.email.from ?? ''} đã viết:
-${widget.email.body ?? ''}\n
+Vào ${DateFormat("dd/MM/yyyy 'lúc' HH:mm").format(widget.email.timestamp)}, ${widget.email.from} đã viết:
+${widget.email.body}\n
 '''
             : widget.draft!.body;
 

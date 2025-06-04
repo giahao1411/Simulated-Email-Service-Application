@@ -206,7 +206,7 @@ class _ForwardScreenState extends State<ForwardScreen> {
         widget.draft == null
             ? '''
 ---------- Tin nhắn chuyển tiếp ---------
-Từ: ${widget.email.from ?? ''}
+Từ: ${widget.email.from}
 Ngày: ${DateFormat.formatDetailedTimestamp(widget.email.timestamp)}
 Tiêu đề: ${widget.email.subject}
 Đến: ${widget.email.to.join(', ')}
