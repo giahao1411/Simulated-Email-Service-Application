@@ -1,5 +1,12 @@
-// eslint-disable-next-line object-curly-spacing
 const { PubSub } = require("@google-cloud/pubsub");
-const pubsub = new PubSub();
+
+let pubsub;
+try {
+  pubsub = new PubSub();
+  console.log("PubSub client initialized successfully");
+} catch (error) {
+  console.error("Error initializing PubSub:", error);
+  throw error;
+}
 
 module.exports = pubsub;
