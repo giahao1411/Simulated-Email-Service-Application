@@ -1,6 +1,5 @@
 const admin = require("firebase-admin");
 
-// Khởi tạo Firebase Admin SDK
 try {
   if (!admin.apps.length) {
     admin.initializeApp();
