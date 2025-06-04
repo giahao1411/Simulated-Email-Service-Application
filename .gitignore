@@ -3,7 +3,9 @@
 
 ### Dart ###
 # See https://www.dartlang.org/guides/libraries/private-files
-
+node_modules/
+firestore-debug.log
+pubsub-debug.log
 # IDE settings
 .idea/
 .vscode/

@@ -2,37 +2,74 @@ const { onMessagePublished } = require("firebase-functions/v2/pubsub");
 const { db, admin } = require("../firebase");
 
 exports.processAutoReply = onMessagePublished(
-    {
-        topic: "send-auto-reply", // khai báo topic
-        region: "us-central1", // bắt buộc với Gen 2
-        memory: "256MiB", // tùy chọn
-        timeoutSeconds: 60, // tùy chọn
-    },
-    async (event) => {
-        const message = event.data?.message;
-        if (!message) return;
+  {
+    topic: "send-auto-reply",
+    region: "us-central1",
+    memory: "512MiB", // Tăng memory để khởi động ổn định
+    timeoutSeconds: 120, // Tăng timeout
+    maxInstances: 1, // Chỉ 1 instance để miễn phí
+    concurrency: 1, // 1 message/instance
+    minInstances: 0, // Không giữ instance chạy liên tục
+  },
+  async (event) => {
+    try {
+      const message = event.data?.message;
+      if (!message) {
+        console.log("No message data");
+        return;
+      }
 
-        const json = message.json || {};
-        const { emailId, from, to, subject, autoReplyMessage } = json;
+      const messageData = message.json || {};
+      const { emailId, from, to, subject, autoReplyMessage } = messageData;
 
-        if (!emailId || !from || !to) return;
+      console.log(`Processing auto reply for email ${emailId}`);
 
-        const emailDoc = await db.collection("emails").doc(emailId).get();
-        if (!emailDoc.exists || emailDoc.data().isReplied) return;
+      if (!emailId || !from || !to) {
+        console.log("Missing required fields");
+        return;
+      }
 
-        await db.collection("emails").add({
-            from,
-            to: [to],
-            subject: `Tự động trả lời: ${subject}`,
-            body: autoReplyMessage,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
-            isReplied: false,
-            read: false,
-            starred: false,
-            labels: [],
-            isAutoReply: true,
-        });
+      // Kiểm tra email gốc còn tồn tại và chưa được reply
+      const emailDoc = await db.collection("emails").doc(emailId).get();
 
-        await db.collection("emails").doc(emailId).update({ isReplied: true });
+      if (!emailDoc.exists) {
+        console.log(`Original email ${emailId} not found`);
+        return;
+      }
+
+      const emailData = emailDoc.data();
+      if (emailData.isReplied) {
+        console.log(`Email ${emailId} already replied`);
+        return;
+      }
+
+      // Tạo email auto reply
+      const autoReplyData = {
+        from,
+        to: [to],
+        subject: `Tự động trả lời: ${subject}`,
+        body: autoReplyMessage,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        isReplied: false,
+        read: false,
+        starred: false,
+        labels: [],
+        isAutoReply: true,
+      };
+
+      // Thêm email reply vào collection
+      await db.collection("emails").add(autoReplyData);
+
+      // Cập nhật email gốc là đã reply
+      await db.collection("emails").doc(emailId).update({
+        isReplied: true,
+        repliedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      console.log(`Auto reply sent successfully for email ${emailId}`);
+    } catch (error) {
+      console.error("Error in processAutoReply:", error);
+      // Không throw để tránh retry liên tục
     }
+  }
 );
