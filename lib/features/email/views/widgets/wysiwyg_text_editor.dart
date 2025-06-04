@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:email_application/features/email/providers/theme_manage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
@@ -9,14 +10,14 @@ import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
 
 class WysiwygTextEditor extends StatefulWidget {
   const WysiwygTextEditor({
-    required this.controller,
     required this.onClose,
+    this.initialContent = '',
     this.onSave,
     this.isCompact = false,
     super.key,
   });
 
-  final TextEditingController controller;
+  final String initialContent;
   final VoidCallback onClose;
   final VoidCallback? onSave;
   final bool isCompact;
@@ -84,44 +85,37 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
   late final quill.QuillController _quillController;
   final FocusNode _focusNode = FocusNode();
   bool _showToolbar = true;
-  late String _currentHtml;
 
   @override
   void initState() {
     super.initState();
-    _initializeQuillController();
+    _initializeQuillController(widget.initialContent);
     if (widget.isCompact) {
       _showToolbar = false;
     }
-    _currentHtml = widget.controller.text;
-    debugPrint('WysiwygTextEditor - Initial HTML: $_currentHtml');
+    debugPrint('WysiwygTextEditor - Initial content: ${widget.initialContent}');
   }
 
-  void _initializeQuillController() {
+  void _initializeQuillController(String initialContent) {
     try {
-      final text = widget.controller.text.trim();
-      debugPrint('Initializing with text: $text');
-
-      _quillController = quill.QuillController.basic();
-
-      if (text.isNotEmpty && text.contains('<') && text.contains('>')) {
-        debugPrint('Processing HTML content...');
-        _quillController.document.delete(0, _quillController.document.length);
-        setHtml(text);
-      } else if (text.isNotEmpty) {
-        _quillController.document.delete(0, _quillController.document.length);
-        _quillController.document.insert(0, text);
-      }
+      final processedContent = initialContent.trim();
+      final delta = _htmlToDelta(
+        processedContent.isEmpty ? '\n' : processedContent,
+      );
+      _quillController = quill.QuillController(
+        document: quill.Document.fromDelta(delta),
+        selection: const TextSelection.collapsed(offset: 0),
+      );
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _quillController.addListener(_updateTextController);
         setState(() {});
       });
     } on Exception catch (e) {
       debugPrint('Error initializing QuillController: $e');
       _quillController = quill.QuillController.basic();
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _quillController.addListener(_updateTextController);
+        _quillController.document.insert(0, '\n');
+        setState(() {});
       });
     }
   }
@@ -129,20 +123,27 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
   void setHtml(String html) {
     try {
       debugPrint('Setting HTML: $html');
-      final delta = _htmlToDelta(html.trim());
+      var processedHtml = html.trim();
+      if (!processedHtml.endsWith('\n')) {
+        processedHtml += '\n';
+      }
+      final delta = _htmlToDelta(processedHtml);
       _quillController.document = quill.Document.fromDelta(delta);
-      _updateTextController();
     } on Exception catch (e) {
       debugPrint('Error setting HTML content: $e');
       final plainText = _stripHtmlTags(html);
       _quillController.document.insert(0, plainText.isEmpty ? '\n' : plainText);
-      _updateTextController();
     }
   }
 
   quill.Delta _htmlToDelta(String html) {
     final delta = quill.Delta();
     final workingHtml = html.trim();
+
+    if (workingHtml.isEmpty) {
+      delta.insert('\n');
+      return delta;
+    }
 
     final strongPattern = RegExp('<strong[^>]*>(.*?)</strong>');
     final italicPattern = RegExp('<em[^>]*>(.*?)</em>');
@@ -151,6 +152,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
     final ulPattern = RegExp('<ul[^>]*>(.*?)</ul>', multiLine: true);
     final liPattern = RegExp('<li[^>]*>(.*?)</li>');
     final imgPattern = RegExp('<img[^>]*src="([^"]*)"[^>]*>');
+    final pPattern = RegExp('<p[^>]*>(.*?)</p>');
 
     final allMatches = <RegExpMatch>[
       ...strongPattern.allMatches(workingHtml),
@@ -160,6 +162,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
       ...ulPattern.allMatches(workingHtml),
       ...liPattern.allMatches(workingHtml),
       ...imgPattern.allMatches(workingHtml),
+      ...pPattern.allMatches(workingHtml),
     ]..sort((a, b) => a.start.compareTo(b.start));
 
     var lastEnd = 0;
@@ -169,10 +172,11 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         final cleanedText = _preserveSpaces(beforeText);
         if (cleanedText.isNotEmpty) {
           delta.insert(cleanedText);
+          delta.insert('\n');
         }
       }
 
-      if (match.pattern == brPattern) {
+      if (match.pattern == brPattern || match.pattern == pPattern) {
         delta.insert('\n');
       } else if (match.pattern == imgPattern) {
         final imageUrl = match.group(1) ?? '';
@@ -181,6 +185,12 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
             ..insert('\n')
             ..insert(quill.BlockEmbed.image(imageUrl), {'image': true})
             ..insert('\n');
+        }
+      } else if (match.pattern == liPattern) {
+        final text = _preserveSpaces(match.group(1) ?? '');
+        if (text.isNotEmpty) {
+          delta.insert(text, {'list': 'bullet'});
+          delta.insert('\n');
         }
       } else {
         final isStrong = match.pattern == strongPattern;
@@ -194,6 +204,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
           if (isItalic) attributes['italic'] = true;
           if (isUnderline) attributes['underline'] = true;
           delta.insert(text, attributes);
+          delta.insert('\n');
         }
       }
       lastEnd = match.end;
@@ -204,6 +215,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
       final cleanedText = _preserveSpaces(afterText);
       if (cleanedText.isNotEmpty) {
         delta.insert(cleanedText);
+        delta.insert('\n');
       }
     }
 
@@ -212,65 +224,37 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
   }
 
   String _preserveSpaces(String text) {
-    final result = text
+    return text
         .replaceAll(RegExp('<[^>]*>'), '')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&nbsp;', ' ');
-
-    return result;
+        .replaceAll(' ', ' ')
+        .replaceAll('<', '<')
+        .replaceAll('>', '>')
+        .replaceAll('&', '&')
+        .replaceAll('"', '"')
+        .trim();
   }
 
   String _stripHtmlTags(String html) {
-    final result = html
-        .replaceAll(RegExp('<[^>]*>'), '')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&nbsp;', ' ');
-
-    return result.trim();
+    return _preserveSpaces(html);
   }
 
-  void _updateTextController() {
+  String getFormattedHtml() {
     try {
       final delta = _quillController.document.toDelta();
-
       final converter = QuillDeltaToHtmlConverter(
         delta.toJson(),
-        ConverterOptions(
-          converterOptions: ConverterOptions.forEmail().converterOptions,
-        ),
+        ConverterOptions.forEmail(),
       );
-
       var html = converter.convert();
 
-      html = _postProcessHtml(html);
-
-      debugPrint('Updated HTML: $html');
-
-      if (widget.controller.text != html) {
-        widget.controller.text = html;
-        _currentHtml = html;
+      if (!html.endsWith('\n')) {
+        html += '\n';
       }
+      return html;
     } on Exception catch (e) {
-      debugPrint('Error converting delta to HTML: $e');
-      final plainText = _quillController.document.toPlainText();
-      if (widget.controller.text != plainText) {
-        widget.controller.text = plainText;
-        _currentHtml = plainText;
-      }
+      debugPrint('Error getting formatted HTML: $e');
+      return '${_quillController.document.toPlainText()}\n';
     }
-  }
-
-  String _postProcessHtml(String html) {
-    return html.replaceAllMapped(RegExp(' {2,}'), (match) {
-      final spaceCount = match.group(0)!.length;
-      return ' ${'&nbsp;' * (spaceCount - 1)}';
-    });
   }
 
   void insertImage(Uint8List imageBytes) {
@@ -278,6 +262,10 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
       final base64String = base64Encode(imageBytes);
       final imageUrl = 'data:image/png;base64,$base64String';
       final position = _quillController.selection.start;
+
+      if (_quillController.document.isEmpty()) {
+        _quillController.document.insert(0, '\n');
+      }
 
       _quillController.document.insert(position, '\n');
       _quillController.document.insert(
@@ -289,25 +277,8 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         TextSelection.collapsed(offset: position + 3),
         quill.ChangeSource.local,
       );
-      _updateTextController();
     } on Exception catch (e) {
       debugPrint('Error inserting image: $e');
-    }
-  }
-
-  String getFormattedHtml() {
-    try {
-      final delta = _quillController.document.toDelta();
-      final converter = QuillDeltaToHtmlConverter(
-        delta.toJson(),
-        ConverterOptions.forEmail(),
-      );
-      final html = converter.convert();
-
-      return _postProcessHtml(html);
-    } on Exception catch (e) {
-      debugPrint('Error getting formatted HTML: $e');
-      return _quillController.document.toPlainText();
     }
   }
 
@@ -409,9 +380,7 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
 
   @override
   void dispose() {
-    _quillController
-      ..removeListener(_updateTextController)
-      ..dispose();
+    _quillController.dispose();
     _focusNode.dispose();
     super.dispose();
   }

@@ -11,7 +11,6 @@ class EmailServiceUtils {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final Map<String, String> _fullNameCache = {};
 
-  // Cập nhật danh bạ người dùng
   static Future<void> updateUserContacts({
     required String userId,
     required String from,

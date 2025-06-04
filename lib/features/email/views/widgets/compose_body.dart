@@ -15,7 +15,7 @@ class ComposeBody extends StatefulWidget {
     required this.ccController,
     required this.bccController,
     required this.subjectController,
-    required this.bodyController,
+    required this.initialContent,
     this.editorKey,
     super.key,
   });
@@ -25,7 +25,7 @@ class ComposeBody extends StatefulWidget {
   final TextEditingController ccController;
   final TextEditingController bccController;
   final TextEditingController subjectController;
-  final TextEditingController bodyController;
+  final String initialContent;
   final GlobalKey<WysiwygTextEditorState>? editorKey;
 
   @override
@@ -235,18 +235,36 @@ class _ComposeBodyState extends State<ComposeBody> {
                       ),
                     ],
                   ),
-                  // Hiển thị ảnh nếu là file ảnh và cho phép chèn vào editor
                   if (composeState.isImageFile() &&
                       composeState.fileBytes != null) ...[
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () {
-                        if (widget.editorKey?.currentState != null) {
-                          widget.editorKey!.currentState!.insertImage(
-                            composeState.fileBytes!,
+                        if (widget.editorKey?.currentState != null && mounted) {
+                          try {
+                            widget.editorKey!.currentState!.insertImage(
+                              composeState.fileBytes!,
+                            );
+                            composeState.clearSelectedFile();
+                          } catch (e) {
+                            AppFunctions.debugPrint(
+                              'Lỗi khi chèn hình ảnh: $e',
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Không thể chèn hình ảnh: $e'),
+                              ),
+                            );
+                          }
+                        } else {
+                          AppFunctions.debugPrint(
+                            'Editor chưa sẵn sàng để chèn hình ảnh',
                           );
-                          composeState
-                              .clearSelectedFile(); // Xóa file sau khi chèn
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Editor chưa sẵn sàng'),
+                            ),
+                          );
                         }
                       },
                       child: Container(
@@ -279,7 +297,7 @@ class _ComposeBodyState extends State<ComposeBody> {
           Expanded(
             child: WysiwygTextEditor(
               key: widget.editorKey,
-              controller: widget.bodyController,
+              initialContent: widget.initialContent, // Truyền initialContent
               onClose: () {},
             ),
           ),

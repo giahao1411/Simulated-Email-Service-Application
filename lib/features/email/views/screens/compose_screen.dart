@@ -7,6 +7,7 @@ import 'package:email_application/features/email/utils/email_validator.dart';
 import 'package:email_application/features/email/views/widgets/compose_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/compose_body.dart';
 import 'package:email_application/features/email/views/widgets/wysiwyg_text_editor.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -25,7 +26,6 @@ class _ComposeScreenState extends State<ComposeScreen> {
   final TextEditingController ccController = TextEditingController();
   final TextEditingController bccController = TextEditingController();
   final TextEditingController subjectController = TextEditingController();
-  final TextEditingController bodyController = TextEditingController();
   final EmailService emailService = EmailService();
   final DraftService draftService = DraftService();
   final GlobalKey<WysiwygTextEditorState> _editorKey =
@@ -34,21 +34,16 @@ class _ComposeScreenState extends State<ComposeScreen> {
   @override
   void initState() {
     super.initState();
+    final userEmail = FirebaseAuth.instance.currentUser?.email;
+    fromController.text = userEmail ?? '';
+
     if (widget.draft != null) {
       toController.text = widget.draft!.to.join(', ');
       ccController.text = widget.draft!.cc.join(', ');
       bccController.text = widget.draft!.bcc.join(', ');
       subjectController.text = widget.draft!.subject;
-      bodyController.text = widget.draft!.body;
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_editorKey.currentState != null && widget.draft!.body.isNotEmpty) {
-          _editorKey.currentState!.setHtml(widget.draft!.body);
-          AppFunctions.debugPrint(
-            'Loaded draft body into editor: ${widget.draft!.body}',
-          );
-        }
-      });
+      // Không cần setHtml trực tiếp nữa, initialContent sẽ xử lý
+      AppFunctions.debugPrint('Loaded draft body: ${widget.draft!.body}');
     }
   }
 
@@ -195,6 +190,9 @@ class _ComposeScreenState extends State<ComposeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final initialContent =
+        widget.draft?.body ?? ''; // Nội dung ban đầu từ nháp, rỗng nếu không có
+
     return ChangeNotifierProvider(
       create: (_) => ComposeState(),
       child: PopScope(
@@ -218,7 +216,8 @@ class _ComposeScreenState extends State<ComposeScreen> {
             ccController: ccController,
             bccController: bccController,
             subjectController: subjectController,
-            bodyController: bodyController,
+            initialContent:
+                initialContent, // Truyền initialContent thay vì bodyController
             editorKey: _editorKey,
           ),
         ),
@@ -233,7 +232,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
     ccController.dispose();
     bccController.dispose();
     subjectController.dispose();
-    bodyController.dispose();
+    // Xóa bodyController.dispose() vì không cần nữa
     super.dispose();
   }
 }

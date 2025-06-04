@@ -55,10 +55,10 @@ class Email {
   final bool isDraft;
   final bool hasAttachments;
   final String? inReplyTo;
-  final String? userId; // Có thể null cho email không phải nháp
+  final String? userId;
   final bool isReplied;
   final List<String> replyEmailIds;
-  final List<Map<String, dynamic>> attachments; // Danh sách file đính kèm
+  final List<Map<String, dynamic>> attachments;
 
   Map<String, dynamic> toMap() {
     return {
@@ -72,10 +72,10 @@ class Email {
       'isDraft': isDraft,
       'hasAttachments': hasAttachments,
       'inReplyTo': inReplyTo,
-      'userId': userId, // Lưu userId vào Firestore
+      'userId': userId,
       'isReplied': isReplied,
       'replyEmailIds': replyEmailIds,
-      'attachments': attachments, // Lưu danh sách attachments
+      'attachments': attachments,
     };
   }
 
