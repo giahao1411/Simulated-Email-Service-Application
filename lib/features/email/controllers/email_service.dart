@@ -749,6 +749,7 @@ class EmailService {
     String replyBody, {
     List<String> ccEmails = const [],
     List<String> bccEmails = const [],
+    Map<String, dynamic>? attachment,
     VoidCallback? onRefresh,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -766,6 +767,7 @@ class EmailService {
       replyBody,
       ccEmails: ccEmails,
       bccEmails: bccEmails,
+      attachment: attachment != null ? [attachment] : [],
     );
 
     final replyDocRef = await _firestore
@@ -834,6 +836,7 @@ class EmailService {
     List<String> toEmails, {
     List<String> ccEmails = const [],
     List<String> bccEmails = const [],
+    Map<String, dynamic>? attachment,
     VoidCallback? onRefresh,
   }) async {
     final user = FirebaseAuth.instance.currentUser;

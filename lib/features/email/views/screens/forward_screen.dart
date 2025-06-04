@@ -4,11 +4,14 @@ import 'package:email_application/features/email/controllers/email_service.dart'
 import 'package:email_application/features/email/models/draft.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
+import 'package:email_application/features/email/providers/compose_state.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:email_application/features/email/utils/email_validator.dart';
 import 'package:email_application/features/email/views/widgets/compose_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/compose_body.dart';
+import 'package:email_application/features/email/views/widgets/wysiwyg_text_editor.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ForwardScreen extends StatefulWidget {
   const ForwardScreen({
@@ -34,9 +37,11 @@ class _ForwardScreenState extends State<ForwardScreen> {
   final TextEditingController ccController = TextEditingController();
   final TextEditingController bccController = TextEditingController();
   final TextEditingController subjectController = TextEditingController();
-  final TextEditingController bodyController = TextEditingController();
+  // Xóa bodyController vì không cần thiết nữa
   final EmailService emailService = EmailService();
   final DraftService draftService = DraftService();
+  final GlobalKey<WysiwygTextEditorState> _editorKey =
+      GlobalKey<WysiwygTextEditorState>();
 
   @override
   void initState() {
@@ -46,23 +51,12 @@ class _ForwardScreenState extends State<ForwardScreen> {
             ? widget.email.subject
             : 'Fwd: ${widget.email.subject}';
 
-    bodyController.text = '''
----------- Tin nhắn chuyển tiếp ---------
-Từ: ${widget.email.from}
-Ngày: ${DateFormat.formatDetailedTimestamp(widget.email.timestamp)}
-Tiêu đề: ${widget.email.subject}
-Đến: ${widget.email.to.join(', ')}
-${widget.email.cc.isNotEmpty ? 'Cc: ${widget.email.cc.join(', ')}\n' : ''}
-${widget.email.bcc.isNotEmpty ? 'Bcc: ${widget.email.bcc.join(', ')}\n' : ''}
-
-${widget.email.body}
-''';
     if (widget.draft != null) {
       toController.text = widget.draft!.to.join(', ');
       ccController.text = widget.draft!.cc.join(', ');
       bccController.text = widget.draft!.bcc.join(', ');
       subjectController.text = widget.draft!.subject;
-      bodyController.text = widget.draft!.body;
+      AppFunctions.debugPrint('Loaded draft body: ${widget.draft!.body}');
     }
   }
 
@@ -71,7 +65,7 @@ ${widget.email.body}
     final ccEmails = EmailValidator.parseEmails(ccController.text);
     final bccEmails = EmailValidator.parseEmails(bccController.text);
     final subject = subjectController.text.trim();
-    final body = bodyController.text.trim();
+    final body = _editorKey.currentState?.getFormattedHtml().trim() ?? '';
 
     if (widget.draft == null) {
       return toEmails.isNotEmpty ||
@@ -95,7 +89,6 @@ ${widget.email.body}
     }
 
     await handleSaveDraft();
-
     return true;
   }
 
@@ -103,6 +96,7 @@ ${widget.email.body}
     final toEmails = EmailValidator.parseEmails(toController.text);
     final ccEmails = EmailValidator.parseEmails(ccController.text);
     final bccEmails = EmailValidator.parseEmails(bccController.text);
+    final body = _editorKey.currentState?.getFormattedHtml().trim() ?? '';
 
     if (toEmails.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -112,18 +106,28 @@ ${widget.email.body}
     }
 
     try {
+      final composeState = Provider.of<ComposeState>(context, listen: false);
       await emailService.sendForward(
         widget.email.id,
-        bodyController.text,
+        body,
         toEmails,
         ccEmails: ccEmails,
         bccEmails: bccEmails,
+        attachment:
+            composeState.selectedFile != null
+                ? {
+                  'name': composeState.selectedFile!.name,
+                  'bytes': composeState.fileBytes,
+                }
+                : null,
         onRefresh: widget.onRefresh,
       );
 
       if (widget.draft != null) {
         await draftService.deleteDraft(widget.draft!.id);
       }
+
+      composeState.clearSelectedFile();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -149,7 +153,7 @@ ${widget.email.body}
     final ccEmails = EmailValidator.parseEmails(ccController.text);
     final bccEmails = EmailValidator.parseEmails(bccController.text);
     final subject = subjectController.text.trim();
-    final body = bodyController.text.trim();
+    final body = _editorKey.currentState?.getFormattedHtml().trim() ?? '';
 
     if (toEmails.isEmpty &&
         ccEmails.isEmpty &&
@@ -161,21 +165,24 @@ ${widget.email.body}
       return;
     }
 
-    if (!hasChanges && widget.draft != null) {
-      AppFunctions.debugPrint(
-        'Không có thay đổi, bỏ qua lưu nháp: ${widget.draft!.id}',
-      );
-      return;
-    }
-
     try {
+      final composeState = Provider.of<ComposeState>(context, listen: false);
       await draftService.saveDraft(
         to: toEmails,
         cc: ccEmails,
         bcc: bccEmails,
-        subject: subjectController.text,
+        subject: subject,
         body: body,
         id: widget.draft?.id,
+        attachments:
+            composeState.selectedFile != null
+                ? [
+                  {
+                    'name': composeState.selectedFile!.name,
+                    'bytes': composeState.fileBytes,
+                  },
+                ]
+                : [],
       );
 
       if (mounted) {
@@ -195,19 +202,49 @@ ${widget.email.body}
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: ComposeAppBar(
-        onSendEmail: handleSendForward,
-        onBack: handleBackAction,
-        draftId: widget.draft?.id,
-      ),
-      body: ComposeBody(
-        toController: toController,
-        fromController: fromController,
-        ccController: ccController,
-        bccController: bccController,
-        subjectController: subjectController,
-        bodyController: bodyController,
+    final initialContent =
+        widget.draft == null
+            ? '''
+---------- Tin nhắn chuyển tiếp ---------
+Từ: ${widget.email.from ?? ''}
+Ngày: ${DateFormat.formatDetailedTimestamp(widget.email.timestamp)}
+Tiêu đề: ${widget.email.subject}
+Đến: ${widget.email.to.join(', ')}
+${widget.email.cc.isNotEmpty ? 'Cc: ${widget.email.cc.join(', ')}\n' : ''}
+${widget.email.bcc.isNotEmpty ? 'Bcc: ${widget.email.bcc.join(', ')}\n' : ''}
+
+${widget.email.body}\n
+'''
+            : widget.draft!.body;
+
+    return ChangeNotifierProvider(
+      create: (_) => ComposeState(),
+      child: PopScope(
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          final shouldPop = await handleBackAction();
+          if (shouldPop && context.mounted) {
+            Navigator.pop(context);
+          }
+        },
+        child: Scaffold(
+          appBar: ComposeAppBar(
+            onSendEmail: handleSendForward,
+            onBack: handleBackAction,
+            draftId: widget.draft?.id,
+            editorKey: _editorKey,
+          ),
+          body: ComposeBody(
+            toController: toController,
+            fromController: fromController,
+            ccController: ccController,
+            bccController: bccController,
+            subjectController: subjectController,
+            initialContent:
+                initialContent, // Truyền initialContent thay vì bodyController
+            editorKey: _editorKey,
+          ),
+        ),
       ),
     );
   }
@@ -219,7 +256,7 @@ ${widget.email.body}
     ccController.dispose();
     bccController.dispose();
     subjectController.dispose();
-    bodyController.dispose();
+    // Xóa bodyController.dispose() vì không cần nữa
     super.dispose();
   }
 }

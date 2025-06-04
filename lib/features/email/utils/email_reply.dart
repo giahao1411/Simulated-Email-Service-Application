@@ -7,6 +7,7 @@ class EmailReply {
     String replyBody, {
     List<String> ccEmails = const [],
     List<String> bccEmails = const [],
+    List<Map<String, dynamic>> attachment = const [],
   }) {
     return Email(
       id: '',
@@ -18,7 +19,8 @@ class EmailReply {
       body:
           '$replyBody\n\nOn ${originalEmail.timestamp}, ${originalEmail.from} wrote:\n${originalEmail.body}',
       timestamp: DateTime.now(),
-      replyEmailIds: [],
+      hasAttachments: attachment.isNotEmpty,
+      attachments: attachment.cast<Map<String, dynamic>>(),
       inReplyTo: originalEmail.id,
     );
   }
