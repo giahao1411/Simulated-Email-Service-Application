@@ -28,7 +28,7 @@ class SubjectRow extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            email.subject.isEmpty ? '(No subject)' : email.subject,
+            email.subject.isEmpty ? '(Không chủ đề )' : email.subject,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,

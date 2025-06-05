@@ -92,7 +92,7 @@ class EmailTile extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    email.subject.isEmpty ? '(No Subject)' : email.subject,
+                    email.subject.isEmpty ? '(Không chủ đề)' : email.subject,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(

@@ -19,13 +19,18 @@ class UtilsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showReplyAll = email.cc.isNotEmpty;
+    final useColumnLayout = showReplyAll;
+
     return Container(
       padding: const EdgeInsets.all(8),
       color: Theme.of(context).colorScheme.surface,
       child: Column(
         children: [
-          OverflowBar(
-            alignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               OutlinedButton(
                 onPressed: email.from.isEmpty ? null : sendReply,
@@ -34,18 +39,39 @@ class UtilsBar extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  minimumSize: const Size(80, 60),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.reply, color: onSurface60),
-                    const SizedBox(width: 4),
-                    Text('Phản hồi', style: TextStyle(color: onSurface60)),
-                  ],
-                ),
+                child:
+                    useColumnLayout
+                        ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.reply, color: onSurface60, size: 24),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Phản hồi',
+                              style: TextStyle(color: onSurface60),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        )
+                        : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.reply, color: onSurface60, size: 24),
+                            const SizedBox(width: 2),
+                            Text(
+                              'Phản hồi',
+                              style: TextStyle(color: onSurface60),
+                            ),
+                          ],
+                        ),
               ),
-              const SizedBox(width: 8),
-              if (email.cc.isNotEmpty)
+              if (showReplyAll)
                 OutlinedButton(
                   onPressed: email.from.isEmpty ? null : sendReplyAll,
                   style: OutlinedButton.styleFrom(
@@ -53,20 +79,25 @@ class UtilsBar extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
                     ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    minimumSize: const Size(80, 60),
                   ),
-                  child: Row(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.reply_all, color: onSurface60),
-                      const SizedBox(width: 4),
+                      Icon(Icons.reply_all, color: onSurface60, size: 24),
+                      const SizedBox(height: 4),
                       Text(
                         'Phản hồi tất cả',
                         style: TextStyle(color: onSurface60),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
                 ),
-              const SizedBox(width: 8),
               OutlinedButton(
                 onPressed: sendForward,
                 style: OutlinedButton.styleFrom(
@@ -74,15 +105,37 @@ class UtilsBar extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  minimumSize: const Size(80, 60),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.forward, color: onSurface60),
-                    const SizedBox(width: 4),
-                    Text('Chuyển tiếp', style: TextStyle(color: onSurface60)),
-                  ],
-                ),
+                child:
+                    useColumnLayout
+                        ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.forward, color: onSurface60, size: 24),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Chuyển tiếp',
+                              style: TextStyle(color: onSurface60),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        )
+                        : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.forward, color: onSurface60, size: 24),
+                            const SizedBox(width: 2),
+                            Text(
+                              'Chuyển tiếp',
+                              style: TextStyle(color: onSurface60),
+                            ),
+                          ],
+                        ),
               ),
             ],
           ),

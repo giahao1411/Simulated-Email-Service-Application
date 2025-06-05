@@ -178,21 +178,12 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                       ],
                     ),
                     if (emailData.isReplied && replyEmailIds.isNotEmpty) ...[
-                      const Padding(
-                        padding: EdgeInsets.only(left: 16, right: 8, bottom: 8),
-                        child: Text(
-                          'Phản hồi',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      const SizedBox(height: 8),
                       const Divider(
                         thickness: 1,
                         height: 20,
-                        indent: 16,
-                        endIndent: 8,
+                        indent: 0,
+                        endIndent: 0,
                       ),
                       StreamBuilder<QuerySnapshot>(
                         stream:
@@ -254,8 +245,8 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                                         const Divider(
                                           thickness: 1,
                                           height: 20,
-                                          indent: 16,
-                                          endIndent: 8,
+                                          indent: 0,
+                                          endIndent: 0,
                                         ),
                                     ],
                                   );
