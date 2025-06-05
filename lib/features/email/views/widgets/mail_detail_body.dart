@@ -4,6 +4,7 @@ import 'package:email_application/features/email/controllers/email_service.dart'
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
+import 'package:email_application/features/email/utils/photo_util.dart';
 import 'package:email_application/features/email/views/widgets/email_content_dialog.dart';
 import 'package:email_application/features/email/views/widgets/reply_item.dart';
 import 'package:email_application/features/email/views/widgets/sender_info.dart';
@@ -128,30 +129,39 @@ class _MailDetailBodyState extends State<MailDetailBody> {
                             });
                           },
                         ),
-                        SenderInfo(
-                          email: emailData,
-                          senderFullName: widget.senderFullName,
-                          index: widget.index,
-                          onSurface: onSurface,
-                          onSurface60: onSurface60,
-                          onSurface70: onSurface70,
-                          sendReply: widget.sendReply,
-                          onShowDetailsToggled: () {
-                            setState(() {
-                              isShowSendingDetail = !isShowSendingDetail;
-                            });
-                          },
-                          onShowFullBody: () {
-                            showDialog<void>(
-                              context: context,
-                              builder:
-                                  (context) => EmailContentDialog(
-                                    fullBody: emailData.body,
-                                    isDarkMode: isDarkMode,
-                                  ),
+                        FutureBuilder<String>(
+                          future: PhotoUtil.getPhotoUrlByEmail(emailData.from),
+                          builder: (context, photoSnapshot) {
+                            return SenderInfo(
+                              email: emailData,
+                              senderFullName: widget.senderFullName,
+                              senderPhotoUrl:
+                                  photoSnapshot.hasData
+                                      ? photoSnapshot.data!
+                                      : '',
+                              index: widget.index,
+                              onSurface: onSurface,
+                              onSurface60: onSurface60,
+                              onSurface70: onSurface70,
+                              sendReply: widget.sendReply,
+                              onShowDetailsToggled: () {
+                                setState(() {
+                                  isShowSendingDetail = !isShowSendingDetail;
+                                });
+                              },
+                              onShowFullBody: () {
+                                showDialog<void>(
+                                  context: context,
+                                  builder:
+                                      (context) => EmailContentDialog(
+                                        fullBody: emailData.body,
+                                        isDarkMode: isDarkMode,
+                                      ),
+                                );
+                              },
+                              isShowSendingDetail: isShowSendingDetail,
                             );
                           },
-                          isShowSendingDetail: isShowSendingDetail,
                         ),
                         if (isShowSendingDetail)
                           SendingDetailContainer(

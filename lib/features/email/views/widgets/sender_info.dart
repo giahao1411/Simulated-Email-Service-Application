@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:math';
+
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:email_application/features/email/utils/email_recipients.dart';
@@ -8,6 +11,7 @@ class SenderInfo extends StatelessWidget {
   const SenderInfo({
     required this.email,
     required this.senderFullName,
+    required this.senderPhotoUrl, // Thêm senderPhotoUrl
     required this.index,
     required this.onSurface,
     required this.onSurface60,
@@ -21,6 +25,7 @@ class SenderInfo extends StatelessWidget {
 
   final Email email;
   final String senderFullName;
+  final String senderPhotoUrl;
   final int index;
   final Color onSurface;
   final Color onSurface60;
@@ -62,13 +67,72 @@ class SenderInfo extends StatelessWidget {
     );
   }
 
+  String _getInitial(String senderName) {
+    final parts = senderName.trim().split(' ');
+    if (parts.isNotEmpty && parts[0].isNotEmpty) {
+      return parts[0][0].toUpperCase();
+    }
+    return '?';
+  }
+
+  Color _getRandomColor() {
+    return Color(0xFF000000 + (Random().nextInt(0xFFFFFF))).withOpacity(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListTile(
       contentPadding: const EdgeInsets.only(right: -16),
-      leading: CircleAvatar(
-        backgroundImage: NetworkImage('https://picsum.photos/250?image=$index'),
-      ),
+      leading:
+          senderPhotoUrl.isNotEmpty
+              ? CircleAvatar(
+                radius: 20,
+                backgroundColor: _getRandomColor(),
+                child: ClipOval(
+                  child:
+                      senderPhotoUrl.startsWith('http')
+                          ? Image.network(
+                            senderPhotoUrl,
+                            fit: BoxFit.cover,
+                            width: 40,
+                            height: 40,
+                            errorBuilder: (context, error, stackTrace) {
+                              // Fallback nếu lỗi tải ảnh
+                              return Text(
+                                _getInitial(senderFullName),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                          )
+                          : Image.file(
+                            File(senderPhotoUrl),
+                            fit: BoxFit.cover,
+                            width: 40,
+                            height: 40,
+                            errorBuilder: (context, error, stackTrace) {
+                              // Fallback nếu lỗi tải ảnh
+                              return Text(
+                                _getInitial(senderFullName),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                          ),
+                ),
+              )
+              : CircleAvatar(
+                radius: 20,
+                backgroundColor: _getRandomColor(),
+                child: Text(
+                  _getInitial(senderFullName),
+                  style: const TextStyle(fontSize: 20, color: Colors.white),
+                ),
+              ),
       title: Row(
         children: [
           Text(

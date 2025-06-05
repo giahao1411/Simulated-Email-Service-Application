@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'dart:math';
+
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
+import 'package:email_application/features/email/utils/photo_util.dart';
 import 'package:flutter/material.dart';
 
 class EmailTile extends StatelessWidget {
@@ -37,6 +41,20 @@ class EmailTile extends StatelessWidget {
     return text.isEmpty ? '(No Content)' : text.split('\n').first.trim();
   }
 
+  // Hàm lấy chữ cái đầu của firstName
+  String _getInitial(String senderName) {
+    final parts = senderName.trim().split(' ');
+    if (parts.isNotEmpty && parts[0].isNotEmpty) {
+      return parts[0][0].toUpperCase();
+    }
+    return '?';
+  }
+
+  // Hàm tạo màu ngẫu nhiên
+  Color _getRandomColor() {
+    return Color(0xFF000000 + (Random().nextInt(0xFFFFFF))).withOpacity(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final senderNameWidget = Text(
@@ -49,118 +67,149 @@ class EmailTile extends StatelessWidget {
       ),
     );
 
-    // Làm sạch thẻ HTML trước, sau đó lấy dòng đầu tiên
     final cleanBody = stripHtmlTags(
       email.body.isEmpty ? '(No Content)' : email.body,
     );
     final firstLineBody = getFirstLine(cleanBody);
 
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: CircleAvatar(
-                radius: 20,
-                backgroundImage: NetworkImage(
-                  'https://picsum.photos/250?image=$index',
+    return FutureBuilder<String>(
+      future: PhotoUtil.getPhotoUrlByEmail(email.from),
+      builder: (context, snapshot) {
+        ImageProvider? avatarImage;
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData &&
+            snapshot.data!.isNotEmpty) {
+          avatarImage =
+              snapshot.data!.startsWith('http')
+                  ? NetworkImage(snapshot.data!)
+                  : FileImage(File(snapshot.data!)) as ImageProvider;
+        }
+
+        return InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundImage: avatarImage,
+                    backgroundColor:
+                        avatarImage == null ? _getRandomColor() : null,
+                    child:
+                        avatarImage == null
+                            ? Text(
+                              _getInitial(senderFullName),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                            )
+                            : null,
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: senderNameWidget),
-                      Text(
-                        DateFormat.formatTimestamp(email.timestamp),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.6),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    email.subject.isEmpty ? '(Không chủ đề)' : email.subject,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight:
-                          state.read ? FontWeight.normal : FontWeight.bold,
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          firstLineBody, // Hiển thị dòng đầu tiên đã làm sạch HTML
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: senderNameWidget),
+                          Text(
+                            DateFormat.formatTimestamp(email.timestamp),
+                            style: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.6),
+                            ).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.6),
+                              fontSize: 12,
+                            ),
                           ),
+                        ],
+                      ),
+                      Text(
+                        email.subject.isEmpty
+                            ? '(Không chủ đề)'
+                            : email.subject,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight:
+                              state.read ? FontWeight.normal : FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(width: 2),
-                      SizedBox(
-                        width: 22,
-                        height: 26,
-                        child: Align(
-                          alignment: Alignment.topCenter,
-                          child: IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: Icon(
-                              state.starred ? Icons.star : Icons.star_outline,
-                              color:
-                                  state.starred
-                                      ? Colors.amber
-                                      : Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface.withOpacity(0.6),
-                              size: 25,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              firstLineBody,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
+                              ),
                             ),
-                            onPressed: () async {
-                              try {
-                                await emailService.toggleStar(
-                                  email.id,
-                                  state.starred,
-                                );
-                                onStarToggled?.call();
-                              } on Exception catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Lỗi: $e')),
-                                );
-                              }
-                            },
                           ),
-                        ),
+                          const SizedBox(width: 2),
+                          SizedBox(
+                            width: 22,
+                            height: 26,
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                icon: Icon(
+                                  state.starred
+                                      ? Icons.star
+                                      : Icons.star_outline,
+                                  color:
+                                      state.starred
+                                          ? Colors.amber
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.6),
+                                  size: 25,
+                                ),
+                                onPressed: () async {
+                                  try {
+                                    await emailService.toggleStar(
+                                      email.id,
+                                      state.starred,
+                                    );
+                                    onStarToggled?.call();
+                                  } on Exception catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Lỗi: $e')),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
