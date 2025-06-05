@@ -68,8 +68,7 @@ class EmailList extends StatelessWidget {
                 final email = emailsWithState[index]['email'] as Email;
                 final state = emailsWithState[index]['state'] as EmailState;
                 final senderFullName =
-                    emailsWithState[index]['senderFullName']
-                        as String; // Lấy senderFullName
+                    emailsWithState[index]['senderFullName'] as String;
                 return EmailTile(
                   email: email,
                   state: state,

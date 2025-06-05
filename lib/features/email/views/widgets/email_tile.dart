@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
-
+import 'package:html/parser.dart' show parse;
+import 'package:html/dom.dart' show Document;
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
@@ -32,13 +33,32 @@ class EmailTile extends StatelessWidget {
 
   // Hàm loại bỏ thẻ HTML
   String stripHtmlTags(String htmlText) {
-    final htmlRegExp = RegExp('<[^>]+>', multiLine: true);
-    return htmlText.replaceAll(htmlRegExp, '').trim();
+    Document document = parse(htmlText);
+    String parsedString = document.body?.text.trim() ?? htmlText;
+    return parsedString;
+  }
+
+  // Hàm định dạng tiêu đề email
+  String formatSubject(String subject) {
+    return DateFormat.formatTextWithTimestamp(subject);
   }
 
   // Hàm lấy dòng đầu tiên
   String getFirstLine(String text) {
-    return text.isEmpty ? '(No Content)' : text.split('\n').first.trim();
+    if (text.isEmpty) return '(Không có nội dung)';
+    String cleanText = stripHtmlTags(text);
+    String formattedText = DateFormat.formatTextWithTimestamp(cleanText);
+    final lines = formattedText.split('\n');
+    String firstLine = lines.first.trim();
+    final dateRegExp = RegExp(r'^\d{2}/\d{2}/\d{4}\s+lúc\s+\d{2}:\d{2}');
+    if (dateRegExp.hasMatch(firstLine) && !firstLine.startsWith('Vào')) {
+      firstLine = 'Vào $firstLine';
+    }
+    final wroteIndex = firstLine.indexOf('đã viết:');
+    if (wroteIndex != -1) {
+      firstLine = firstLine.substring(0, wroteIndex + 'đã viết:'.length);
+    }
+    return firstLine.isEmpty ? '(Không có nội dung)' : firstLine;
   }
 
   // Hàm lấy chữ cái đầu của firstName
@@ -68,7 +88,7 @@ class EmailTile extends StatelessWidget {
     );
 
     final cleanBody = stripHtmlTags(
-      email.body.isEmpty ? '(No Content)' : email.body,
+      email.body.isEmpty ? '(Không có nội dung)' : email.body,
     );
     final firstLineBody = getFirstLine(cleanBody);
 
@@ -135,8 +155,8 @@ class EmailTile extends StatelessWidget {
                       ),
                       Text(
                         email.subject.isEmpty
-                            ? '(Không chủ đề)'
-                            : email.subject,
+                            ? '(Không có chủ đề)'
+                            : formatSubject(email.subject),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
