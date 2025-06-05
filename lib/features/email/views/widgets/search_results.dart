@@ -179,8 +179,8 @@ class _SearchResultsState extends State<SearchResults> {
           );
           return EmailSearchResult(
             senderName: senderName,
-            subject: email.subject.isEmpty ? '(No Subject)' : email.subject,
-            preview: email.body.isEmpty ? '(No Content)' : email.body,
+            subject: email.subject.isEmpty ? '(Không chủ đề)' : email.subject,
+            preview: email.body.isEmpty ? '(Không có nội dung)' : email.body,
             time: DateFormat.formatTimestamp(email.timestamp),
             avatarUrl: '',
             isStarred: state.starred,
@@ -291,7 +291,6 @@ class _SearchResultsState extends State<SearchResults> {
                                 isDarkMode
                                     ? primaryColor.withOpacity(0.5)
                                     : primaryColor.withOpacity(0.3),
-                            width: 1,
                           ),
                         ),
                         child: Text(
