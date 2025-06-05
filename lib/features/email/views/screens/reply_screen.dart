@@ -6,11 +6,11 @@ import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/providers/compose_state.dart';
 import 'package:email_application/features/email/utils/email_validator.dart';
+import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:email_application/features/email/views/widgets/compose_app_bar.dart';
 import 'package:email_application/features/email/views/widgets/compose_body.dart';
 import 'package:email_application/features/email/views/widgets/wysiwyg_text_editor.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class ReplyScreen extends StatefulWidget {
@@ -205,7 +205,7 @@ class _ReplyScreenState extends State<ReplyScreen> {
     final initialContent =
         widget.draft == null
             ? '''
-Vào ${DateFormat("dd/MM/yyyy 'lúc' HH:mm").format(widget.email.timestamp)}, ${widget.email.from} đã viết:
+Vào ${DateFormat.formatDetailedTimestamp(widget.email.timestamp)}, ${widget.email.from} đã viết:
 ${widget.email.body}\n
 '''
             : widget.draft!.body;
@@ -233,7 +233,7 @@ ${widget.email.body}\n
             ccController: ccController,
             bccController: bccController,
             subjectController: subjectController,
-            initialContent: initialContent, // Truyền initialContent
+            initialContent: initialContent,
             editorKey: _editorKey,
           ),
         ),

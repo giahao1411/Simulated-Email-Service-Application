@@ -41,7 +41,7 @@ class SendingDetailContainer extends StatelessWidget {
               ),
               Expanded(
                 child: Text(
-                  email.from.isEmpty ? '(No sender)' : email.from,
+                  email.from.isEmpty ? '(Không có người gửi)' : email.from,
                   style: TextStyle(color: onSurface70),
                   overflow: TextOverflow.ellipsis,
                 ),

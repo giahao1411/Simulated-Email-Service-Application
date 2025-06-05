@@ -19,7 +19,7 @@ class ReplyItem extends StatelessWidget {
 
   String getSummaryBody(String body) {
     final plainText = body.replaceAll(RegExp('<[^>]*>'), '').trim();
-    if (plainText.isEmpty) return '(No content)';
+    if (plainText.isEmpty) return '(Không có nội dung)';
     final quoteIndex = plainText.indexOf('On ');
     return quoteIndex != -1
         ? plainText.substring(0, quoteIndex).trim()

@@ -50,7 +50,7 @@ class SenderInfo extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              recipientText.isEmpty ? '(No recipients)' : recipientText,
+              recipientText.isEmpty ? '(Không có người nhận)' : recipientText,
               style: TextStyle(color: onSurface70),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
