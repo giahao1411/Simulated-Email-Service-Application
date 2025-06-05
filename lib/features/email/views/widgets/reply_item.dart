@@ -1,5 +1,5 @@
 import 'package:email_application/features/email/models/email.dart';
-import 'package:email_application/features/email/utils/date_format.dart';
+import 'package:email_application/features/email/views/widgets/reply_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
@@ -33,31 +33,11 @@ class ReplyItem extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Reply từ ${replyEmail.from.isEmpty ? "(No sender)" : replyEmail.from} lúc ${DateFormat.formatTimestamp(replyEmail.timestamp)}:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: onSurface60,
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.reply, color: onSurface60, size: 20),
-                    onPressed: null,
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.more_horiz, color: onSurface60, size: 20),
-                    onPressed: onShowOriginalEmail,
-                  ),
-                ],
-              ),
-            ],
+          ReplyHeader(
+            replyEmail: replyEmail,
+            onSurface60: onSurface60,
+            onSurface70: onSurface70,
+            onShowOriginalEmail: onShowOriginalEmail,
           ),
           const SizedBox(height: 4),
           Html(
