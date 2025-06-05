@@ -131,7 +131,7 @@ class _ReplyScreenState extends State<ReplyScreen> {
           const SnackBar(content: Text('Gửi email trả lời thành công')),
         );
         if (widget.onRefresh != null) {
-          widget.onRefresh!();
+          widget.onRefresh!.call();
         }
         Navigator.pop(context);
       }
