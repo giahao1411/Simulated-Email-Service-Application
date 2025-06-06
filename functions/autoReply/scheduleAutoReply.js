@@ -1,8 +1,14 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { db } = require("../firebase");
-const pubsub = require("../utils/pubsub");
+const tasks = require('@google-cloud/tasks');
 
-exports.scheduleAutoReply = onDocumentCreated(
+const client = new tasks.v2.CloudTasksClient();
+const project = 'cross-platform-57b89';
+const queue = 'auto-reply-queue';
+const location = 'us-central1';
+const url = 'https://us-central1-cross-platform-57b89.cloudfunctions.net/processAutoReplyV2';
+
+const scheduleAutoReply = onDocumentCreated(
   {
     document: "emails/{emailId}",
     region: "us-central1",
@@ -25,7 +31,6 @@ exports.scheduleAutoReply = onDocumentCreated(
 
       console.log(`Processing email ${emailId}`);
 
-      // Lấy dữ liệu từ document
       const from = emailData?.from;
       const to = emailData?.to || [];
 
@@ -36,7 +41,6 @@ exports.scheduleAutoReply = onDocumentCreated(
 
       const { isAutoReply, isReplied, read } = emailData;
 
-      // Bỏ qua nếu là auto reply, đã reply, hoặc đã đọc
       if (isAutoReply || isReplied || read) {
         console.log("Email is auto reply, already replied, or read");
         return;
@@ -45,7 +49,6 @@ exports.scheduleAutoReply = onDocumentCreated(
       const senderEmail = from;
       const recipientEmail = to[0];
 
-      // Kiểm tra đã có auto reply chưa để tránh spam
       const replySnapshot = await db
         .collection("emails")
         .where("from", "==", recipientEmail)
@@ -59,23 +62,25 @@ exports.scheduleAutoReply = onDocumentCreated(
         return;
       }
 
-      // Lấy thời gian delay từ user settings (mặc định 5 phút)
-      let delaySeconds = 5 * 60; // 5 phút mặc định
+      const userSnapshot = await db
+        .collection("users")
+        .where("email", "==", recipientEmail)
+        .limit(1)
+        .get();
 
-      try {
-        const userSnapshot = await db
-          .collection("users")
-          .where("email", "==", recipientEmail)
-          .limit(1)
-          .get();
-
-        if (!userSnapshot.empty) {
-          const userData = userSnapshot.docs[0].data();
-          delaySeconds = (userData.autoReplyTime || 5) * 60;
-        }
-      } catch (error) {
-        console.log("Error getting user settings, using default:", error);
+      if (userSnapshot.empty) {
+        console.log("User not found for email", { recipientEmail });
+        return;
       }
+
+      const userData = userSnapshot.docs[0].data();
+      const autoReplyEnabled = userData.autoReplyEnabled || false;
+      if (!autoReplyEnabled) {
+        console.log("Auto reply is disabled for user", { recipientEmail });
+        return;
+      }
+
+      const delaySeconds = 5 * 60; // 5 phút
 
       const messageData = {
         emailId,
@@ -86,12 +91,23 @@ exports.scheduleAutoReply = onDocumentCreated(
           "Cảm ơn bạn đã gửi email. Tôi sẽ trả lời bạn sớm nhất có thể.",
       };
 
-      // Gửi message đến PubSub topic
-      await pubsub.topic("send-auto-reply").publishMessage({
-        json: messageData,
-        attributes: {
-          delaySeconds: delaySeconds.toString(),
+      const task = {
+        httpRequest: {
+          httpMethod: 'POST',
+          url,
+          body: Buffer.from(JSON.stringify(messageData)).toString('base64'),
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
+        scheduleTime: {
+          seconds: Math.floor(Date.now() / 1000) + delaySeconds,
+        },
+      };
+
+      await client.createTask({
+        parent: client.queuePath(project, location, queue),
+        task,
       });
 
       console.log(
@@ -99,7 +115,8 @@ exports.scheduleAutoReply = onDocumentCreated(
       );
     } catch (error) {
       console.error("Error in scheduleAutoReply:", error);
-      // Không throw error để tránh retry không cần thiết
     }
   }
 );
+
+module.exports = { scheduleAutoReply };
