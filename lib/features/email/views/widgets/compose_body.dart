@@ -246,7 +246,7 @@ class _ComposeBodyState extends State<ComposeBody> {
                               composeState.fileBytes!,
                             );
                             composeState.clearSelectedFile();
-                          } catch (e) {
+                          } on Exception catch (e) {
                             AppFunctions.debugPrint(
                               'Lỗi khi chèn hình ảnh: $e',
                             );

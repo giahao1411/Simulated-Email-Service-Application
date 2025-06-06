@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'dart:math';
-import 'package:html/parser.dart' show parse;
-import 'package:html/dom.dart' show Document;
+
 import 'package:email_application/features/email/controllers/email_service.dart';
 import 'package:email_application/features/email/models/email.dart';
 import 'package:email_application/features/email/models/email_state.dart';
 import 'package:email_application/features/email/utils/date_format.dart';
 import 'package:email_application/features/email/utils/photo_util.dart';
 import 'package:flutter/material.dart';
+import 'package:html/parser.dart' show parse;
 
 class EmailTile extends StatelessWidget {
   const EmailTile({
@@ -33,8 +33,8 @@ class EmailTile extends StatelessWidget {
 
   // Hàm loại bỏ thẻ HTML
   String stripHtmlTags(String htmlText) {
-    Document document = parse(htmlText);
-    String parsedString = document.body?.text.trim() ?? htmlText;
+    final document = parse(htmlText);
+    final parsedString = document.body?.text.trim() ?? htmlText;
     return parsedString;
   }
 
@@ -46,10 +46,10 @@ class EmailTile extends StatelessWidget {
   // Hàm lấy dòng đầu tiên
   String getFirstLine(String text) {
     if (text.isEmpty) return '(Không có nội dung)';
-    String cleanText = stripHtmlTags(text);
-    String formattedText = DateFormat.formatTextWithTimestamp(cleanText);
+    final cleanText = stripHtmlTags(text);
+    final formattedText = DateFormat.formatTextWithTimestamp(cleanText);
     final lines = formattedText.split('\n');
-    String firstLine = lines.first.trim();
+    var firstLine = lines.first.trim();
     final dateRegExp = RegExp(r'^\d{2}/\d{2}/\d{4}\s+lúc\s+\d{2}:\d{2}');
     if (dateRegExp.hasMatch(firstLine) && !firstLine.startsWith('Vào')) {
       firstLine = 'Vào $firstLine';
@@ -212,9 +212,13 @@ class EmailTile extends StatelessWidget {
                                     );
                                     onStarToggled?.call();
                                   } on Exception catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Lỗi: $e')),
-                                    );
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text('Lỗi: $e')),
+                                      );
+                                    }
                                   }
                                 },
                               ),

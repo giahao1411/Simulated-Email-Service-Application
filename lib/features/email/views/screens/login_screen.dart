@@ -65,6 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
         'Đăng nhập bước 1 thành công với UID: ${userProfile!.uid}',
       );
 
+      if (!mounted) return;
       final twoStepProvider = Provider.of<TwoStepManage>(
         context,
         listen: false,

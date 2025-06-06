@@ -171,8 +171,9 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
         final beforeText = workingHtml.substring(lastEnd, match.start);
         final cleanedText = _preserveSpaces(beforeText);
         if (cleanedText.isNotEmpty) {
-          delta.insert(cleanedText);
-          delta.insert('\n');
+          delta
+            ..insert(cleanedText)
+            ..insert('\n');
         }
       }
 
@@ -189,8 +190,9 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
       } else if (match.pattern == liPattern) {
         final text = _preserveSpaces(match.group(1) ?? '');
         if (text.isNotEmpty) {
-          delta.insert(text, {'list': 'bullet'});
-          delta.insert('\n');
+          delta
+            ..insert(text, {'list': 'bullet'})
+            ..insert('\n');
         }
       } else {
         final isStrong = match.pattern == strongPattern;
@@ -203,8 +205,9 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
           if (isStrong) attributes['bold'] = true;
           if (isItalic) attributes['italic'] = true;
           if (isUnderline) attributes['underline'] = true;
-          delta.insert(text, attributes);
-          delta.insert('\n');
+          delta
+            ..insert(text, attributes)
+            ..insert('\n');
         }
       }
       lastEnd = match.end;
@@ -214,8 +217,9 @@ class WysiwygTextEditorState extends State<WysiwygTextEditor> {
       final afterText = workingHtml.substring(lastEnd);
       final cleanedText = _preserveSpaces(afterText);
       if (cleanedText.isNotEmpty) {
-        delta.insert(cleanedText);
-        delta.insert('\n');
+        delta
+          ..insert(cleanedText)
+          ..insert('\n');
       }
     }
 

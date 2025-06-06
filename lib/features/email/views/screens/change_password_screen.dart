@@ -1,6 +1,6 @@
 import 'package:email_application/features/email/controllers/auth_service.dart';
-import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:email_application/features/email/providers/theme_manage.dart';
+import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -76,7 +76,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           _showSnackBar(error, false);
         },
       );
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         _errorMessage = 'Lỗi khi gửi OTP: $e';
         _isLoadingSendOtp = false;
@@ -119,11 +119,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         await _authService.signOut();
 
         // Chuyển hướng đến màn hình đăng nhập
-        await Navigator.of(context).pushReplacement(
-          MaterialPageRoute<dynamic>(builder: (context) => const LoginScreen()),
-        );
+        if (mounted) {
+          await Navigator.of(context).pushReplacement(
+            MaterialPageRoute<dynamic>(
+              builder: (context) => const LoginScreen(),
+            ),
+          );
+        }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         _errorMessage = 'Lỗi khi đổi mật khẩu: $e';
         _isLoadingChangePassword = false;
@@ -204,7 +208,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Để bảo mật tài khoản, chúng tôi sẽ gửi mã OTP đến số điện thoại ${widget.phoneNumber} để xác minh danh tính.',
+                '''Để bảo mật tài khoản, chúng tôi sẽ gửi mã OTP đến số điện thoại ${widget.phoneNumber} để xác minh danh tính.''',
                 style: TextStyle(fontSize: 16, color: descriptionTextColor),
               ),
               const SizedBox(height: 32),

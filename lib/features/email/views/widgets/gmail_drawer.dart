@@ -58,7 +58,7 @@ class _GmailDrawerState extends State<GmailDrawer> {
   Future<void> _initializeControllerAndLoadLabels() async {
     final userProfile = await _authService.currentUser;
     AppFunctions.debugPrint(
-      'Initialized LabelController with UID: ${userProfile?.uid ?? "No UID"}, Email: ${userProfile?.email ?? "No email"}',
+      '''Initialized LabelController with UID: ${userProfile?.uid ?? "No UID"}, Email: ${userProfile?.email ?? "No email"}''',
     );
     await _loadLabels();
   }
@@ -72,9 +72,11 @@ class _GmailDrawerState extends State<GmailDrawer> {
       });
     } on Exception catch (e) {
       AppFunctions.debugPrint('Error loading labels: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Lỗi khi tải nhãn: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi khi tải nhãn: $e')));
+      }
     }
   }
 

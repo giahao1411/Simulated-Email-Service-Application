@@ -97,7 +97,7 @@ class AdvanceSearchUtils {
     final end = dateRange.end;
     final startMonth = vietnameseMonths[start.month - 1];
     final endMonth = vietnameseMonths[end.month - 1];
-    return '${start.day} $startMonth ${start.year} - ${end.day} $endMonth ${end.year}';
+    return '''${start.day} $startMonth ${start.year} - ${end.day} $endMonth ${end.year}''';
   }
 
   static String getCategoryDisplayName(String category) {

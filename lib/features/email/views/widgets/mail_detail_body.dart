@@ -56,7 +56,7 @@ class _MailDetailBodyState extends State<MailDetailBody> {
     email = widget.email;
     state = widget.state;
     AppFunctions.debugPrint(
-      'Email data: id=${email.id}, subject=${email.subject}, body=${email.body}, isReplied=${email.isReplied}, replyEmailIds=${email.replyEmailIds}',
+      '''Email data: id=${email.id}, subject=${email.subject}, body=${email.body}, isReplied=${email.isReplied}, replyEmailIds=${email.replyEmailIds}''',
     );
     if (!state.read) {
       widget.markMailAsRead?.call();
