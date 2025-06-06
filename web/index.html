@@ -12,11 +12,13 @@
     <link rel="icon" type="image/png" href="favicon.png" />
     <title>email_application</title>
     <link rel="manifest" href="manifest.json" />
-
+  </head>
+  <body>
     <!-- Firebase scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <!-- Firebase config -->
     <script>
@@ -24,7 +26,7 @@
         apiKey: "AIzaSyBSiAPVlTvytlFKd7ao-eDNCuy_Cx8TbOw",
         authDomain: "cross-platform-57b89.firebaseapp.com",
         projectId: "cross-platform-57b89",
-        storageBucket: "cross-platform-57b89.appspot.com",
+        storageBucket: "cross-platform-57b89.firebasestorage.app",
         messagingSenderId: "860882029296",
         appId: "1:860882029296:web:cbf7ff897675d7f998d035",
         measurementId: "G-KT7GH5JBZ0",
@@ -32,25 +34,7 @@
       firebase.initializeApp(firebaseConfig);
     </script>
 
-    <script>
-      var serviceWorkerVersion = null;
-    </script>
-    <script src="flutter.js" defer></script>
-  </head>
-  <body>
-    <script>
-      window.addEventListener("load", function (ev) {
-        _flutter.loader.loadEntrypoint({
-          serviceWorker: {
-            serviceWorkerVersion: serviceWorkerVersion,
-          },
-          onEntrypointLoaded: function (engineInitializer) {
-            engineInitializer.initializeEngine().then(function (appRunner) {
-              appRunner.runApp();
-            });
-          },
-        });
-      });
-    </script>
+    <!-- Load main.dart.js directly -->
+    <script src="main.dart.js" type="application/javascript"></script>
   </body>
 </html>
