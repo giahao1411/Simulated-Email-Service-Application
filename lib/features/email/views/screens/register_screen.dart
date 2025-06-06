@@ -85,7 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           verificationId: verificationId,
                           otp: otp,
                         );
-                        if (mounted) {
+                        if (context.mounted) {
                           _showSnackBar(
                             'Đăng ký thành công! Vui lòng đăng nhập',
                             true,

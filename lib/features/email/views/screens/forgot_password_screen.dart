@@ -38,7 +38,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!phonePattern.hasMatch(phone)) {
         setState(() {
           errorMessage =
-              'Số điện thoại không hợp lệ. Vui lòng nhập định dạng +84 hoặc 0xxxxxxxxx';
+              '''Số điện thoại không hợp lệ. Vui lòng nhập định dạng +84 hoặc 0xxxxxxxxx''';
           isLoading = false;
         });
         _showSnackBar(errorMessage!, false);
@@ -146,7 +146,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Chúng tôi sẽ gửi một mã OTP để xác minh và cho phép bạn đặt lại mật khẩu.',
+                '''Chúng tôi sẽ gửi một mã OTP để xác minh và cho phép bạn đặt lại mật khẩu.''',
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 32),

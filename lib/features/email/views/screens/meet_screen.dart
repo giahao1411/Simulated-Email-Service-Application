@@ -223,7 +223,7 @@ class _MeetScreenState extends State<MeetScreen> {
                       imagePath: 'assets/images/meet_private.png',
                       title: 'Cuộc họp luôn an toàn',
                       description:
-                          'Không ai có thể tham gia cuộc họp trừ phi được người tổ chức mời hoặc cho phép',
+                          '''Không ai có thể tham gia cuộc họp trừ phi được người tổ chức mời hoặc cho phép''',
                     ),
                   ),
                 ),

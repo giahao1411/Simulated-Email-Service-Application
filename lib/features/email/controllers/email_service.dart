@@ -29,7 +29,7 @@ class EmailService {
     }
 
     AppFunctions.debugPrint(
-      'Tìm kiếm email với: keyword=$searchKeyword, category=$category, from=$fromEmail, to=$toEmail, hasText=$hasText, dateRange=$dateRange',
+      '''Tìm kiếm email với: keyword=$searchKeyword, category=$category, from=$fromEmail, to=$toEmail, hasText=$hasText, dateRange=$dateRange''',
     );
 
     final emailStream =
@@ -266,7 +266,7 @@ class EmailService {
           );
         } else {
           AppFunctions.debugPrint(
-            'Tìm thấy ${emailsWithState.length} email trong danh mục "$category"',
+            '''Tìm thấy ${emailsWithState.length} email trong danh mục "$category"''',
           );
         }
         return emailsWithState;
@@ -554,7 +554,7 @@ class EmailService {
               ? EmailState.fromMap(updatedStateDoc.data()!)
               : EmailState(emailId: emailId);
       AppFunctions.debugPrint(
-        'Xác nhận trạng thái trashed sau khi cập nhật: ${updatedEmailState.trashed}',
+        '''Xác nhận trạng thái trashed sau khi cập nhật: ${updatedEmailState.trashed}''',
       );
     } catch (e) {
       AppFunctions.debugPrint('Lỗi khi chuyển vào thùng rác: $e');

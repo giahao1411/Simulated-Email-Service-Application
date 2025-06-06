@@ -155,7 +155,7 @@ class _SearchResultsState extends State<SearchResults> {
               matchesDateRange =
                   emailDate.isAfter(startDate) && emailDate.isBefore(endDate);
               AppFunctions.debugPrint(
-                'Bộ lọc ngày: $emailDate với $startDate - $endDate, khớp: $matchesDateRange',
+                '''Bộ lọc ngày: $emailDate với $startDate - $endDate, khớp: $matchesDateRange''',
               );
             }
 

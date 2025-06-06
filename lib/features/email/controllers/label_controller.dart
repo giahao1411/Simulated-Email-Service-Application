@@ -30,7 +30,7 @@ class LabelController {
       final labels = snapshot.docs.map((doc) => doc['name'] as String).toList();
       AppFunctions.debugPrint('Loaded labels for UID $uid: $labels');
       return labels;
-    } catch (e) {
+    } on Exception catch (e) {
       AppFunctions.debugPrint('Error loading labels: $e');
       return [];
     }

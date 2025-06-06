@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+@immutable
 class SearchFilters {
   const SearchFilters({
     this.category, // Danh mục từ drawer (Inbox, Sent, Draft, etc.)
@@ -40,7 +41,7 @@ class SearchFilters {
 
   @override
   String toString() {
-    return 'SearchFilters(category: $category, from: $from, to: $to, hasAttachments: $hasAttachments, dateRange: $dateRange)';
+    return '''SearchFilters(category: $category, from: $from, to: $to, hasAttachments: $hasAttachments, dateRange: $dateRange)''';
   }
 
   @override

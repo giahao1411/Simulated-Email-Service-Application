@@ -2,8 +2,8 @@ import 'package:email_application/features/email/controllers/auth_service.dart';
 import 'package:email_application/features/email/controllers/profile_service.dart';
 import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:email_application/features/email/utils/image_picker_handler.dart';
-import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:email_application/features/email/views/screens/change_password_screen.dart';
+import 'package:email_application/features/email/views/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 
 class SettingsController {
@@ -57,10 +57,14 @@ class SettingsController {
       final imagePath = await _imagePickerHandler.pickImage();
       if (imagePath != null) {
         _avatarImagePath = imagePath;
-        await updateAvatar(context, imagePath);
+        if (context.mounted) {
+          await updateAvatar(context, imagePath);
+        }
       }
     } on Exception catch (e) {
-      _showSnackBar('Lỗi khi chọn ảnh: $e', false, context);
+      if (context.mounted) {
+        _showSnackBar('Lỗi khi chọn ảnh: $e', false, context);
+      }
     }
   }
 
@@ -70,9 +74,13 @@ class SettingsController {
       final downloadUrl = await profileService.uploadImage(imagePath);
       await profileService.updateProfile(photoUrl: downloadUrl);
       _avatarImagePath = downloadUrl;
-      _showSnackBar('Cập nhật avatar thành công', true, context);
+      if (context.mounted) {
+        _showSnackBar('Cập nhật avatar thành công', true, context);
+      }
     } on Exception catch (e) {
-      _showSnackBar('Lỗi khi cập nhật avatar: $e', false, context);
+      if (context.mounted) {
+        _showSnackBar('Lỗi khi cập nhật avatar: $e', false, context);
+      }
     } finally {
       isLoading = false;
     }
@@ -90,9 +98,13 @@ class SettingsController {
         lastName: lastNameController.text,
         dateOfBirth: dateOfBirth,
       );
-      _showSnackBar('Cập nhật hồ sơ thành công', true, context);
+      if (context.mounted) {
+        _showSnackBar('Cập nhật hồ sơ thành công', true, context);
+      }
     } on Exception catch (e) {
-      _showSnackBar('Lỗi khi cập nhật hồ sơ: $e', false, context);
+      if (context.mounted) {
+        _showSnackBar('Lỗi khi cập nhật hồ sơ: $e', false, context);
+      }
     } finally {
       isLoading = false;
     }
@@ -122,11 +134,13 @@ class SettingsController {
       );
 
       // Nếu đổi mật khẩu thành công
-      if (result == true && context.mounted) {
+      if (result! && context.mounted) {
         _showSnackBar('Mật khẩu đã được thay đổi thành công', true, context);
       }
     } on Exception catch (e) {
-      _showSnackBar('Lỗi khi mở màn hình đổi mật khẩu: $e', false, context);
+      if (context.mounted) {
+        _showSnackBar('Lỗi khi mở màn hình đổi mật khẩu: $e', false, context);
+      }
     }
   }
 
@@ -136,9 +150,13 @@ class SettingsController {
       await authService.enableTwoStepVerification(value);
       await profileService.updateProfile(twoStepEnabled: value);
       isTwoStepEnabled = value;
-      _showSnackBar('Cập nhật xác minh hai bước thành công', true, context);
+      if (context.mounted) {
+        _showSnackBar('Cập nhật xác minh hai bước thành công', true, context);
+      }
     } on Exception catch (e) {
-      _showSnackBar('Lỗi khi cập nhật xác minh hai bước: $e', false, context);
+      if (context.mounted) {
+        _showSnackBar('Lỗi khi cập nhật xác minh hai bước: $e', false, context);
+      }
     } finally {
       isLoading = false;
     }
@@ -149,7 +167,7 @@ class SettingsController {
     try {
       await authService.signOut();
 
-      if (Navigator.of(context).mounted) {
+      if (context.mounted) {
         _showSnackBar('Đăng xuất thành công', true, context);
         await Navigator.pushReplacement(
           context,
@@ -157,7 +175,9 @@ class SettingsController {
         );
       }
     } on Exception catch (e) {
-      _showSnackBar('Lỗi khi đăng xuất: $e', false, context);
+      if (context.mounted) {
+        _showSnackBar('Lỗi khi đăng xuất: $e', false, context);
+      }
     } finally {
       isLoading = false;
     }

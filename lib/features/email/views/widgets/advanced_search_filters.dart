@@ -62,7 +62,7 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
     if (!mounted) return;
 
     AppFunctions.debugPrint(
-      'Updated filters: category=$selectedCategory, from=$selectedFrom, to=$selectedTo, hasAttachments=$hasAttachments, dateRange=$selectedDateRange',
+      '''Updated filters: category=$selectedCategory, from=$selectedFrom, to=$selectedTo, hasAttachments=$hasAttachments, dateRange=$selectedDateRange''',
     );
 
     final filters = SearchFilters(
@@ -209,7 +209,7 @@ class _AdvancedSearchFiltersState extends State<AdvancedSearchFilters> {
           child: Localizations.override(
             context: context,
             locale: const Locale('vi', 'VN'),
-            child: child!,
+            child: child,
           ),
         );
       },

@@ -1,3 +1,5 @@
+import 'package:email_application/core/constants/app_functions.dart';
+
 class DateFormat {
   static const List<String> months = [
     'Tháng 1',
@@ -21,7 +23,7 @@ class DateFormat {
     if (difference.inMinutes < 5) {
       return 'Vừa xong';
     } else if (difference.inHours < 24 && now.day == timestamp.day) {
-      return '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
+      return '''${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}''';
     } else if (fullFormat) {
       return '${timestamp.day.toString().padLeft(2, '0')}/${timestamp.month.toString().padLeft(2, '0')}/${timestamp.year} lúc ${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
     } else if (timestamp.year == now.year) {
@@ -72,7 +74,8 @@ class DateFormat {
 
       // Định dạng 3: Standard ISO format
       return DateTime.parse(dateString);
-    } catch (e) {
+    } on Exception catch (e) {
+      AppFunctions.debugPrint('Error parsing date string "$dateString": $e');
       return null;
     }
   }
@@ -80,7 +83,7 @@ class DateFormat {
   // Hàm để format lại text có chứa thời gian
   static String formatTextWithTimestamp(String text) {
     // Định dạng 1: "Vào DD/MM/YYYY lúc HH:mm"
-    text = text.replaceAllMapped(
+    final result1 = text.replaceAllMapped(
       RegExp(r'Vào\s+(\d{2}/\d{2}/\d{4}\s+lúc\s+\d{2}:\d{2})'),
       (match) {
         final dateStr = match.group(1)!;
@@ -95,7 +98,7 @@ class DateFormat {
     );
 
     // Định dạng 2: "On YYYY-MM-DD HH:mm:ss.SSS"
-    text = text.replaceAllMapped(
+    final result2 = result1.replaceAllMapped(
       RegExp(r'On\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d{3})'),
       (match) {
         final dateStr = match.group(1)!;
@@ -108,7 +111,7 @@ class DateFormat {
     );
 
     // Định dạng 3: Subject line "DD/MM/YYYY lúc HH:mm"
-    text = text.replaceAllMapped(
+    final result3 = result2.replaceAllMapped(
       RegExp(r'(\d{2}/\d{2}/\d{4}\s+lúc\s+\d{2}:\d{2})'),
       (match) {
         final dateStr = match.group(1)!;
@@ -120,6 +123,6 @@ class DateFormat {
       },
     );
 
-    return text;
+    return result3;
   }
 }

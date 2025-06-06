@@ -95,9 +95,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await _controller.toggleTwoStep(context, value);
       twoStepProvider.toggleTwoStep(value);
     } on Exception catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
