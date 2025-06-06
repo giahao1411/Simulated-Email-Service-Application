@@ -29,7 +29,7 @@ class EmailTextField extends StatelessWidget {
 
   String _stripHtmlTags(String html) {
     return html
-        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll(RegExp('<[^>]*>'), '')
         .replaceAll('&nbsp;', ' ')
         .replaceAll('&amp;', '&')
         .replaceAll('&lt;', '<')

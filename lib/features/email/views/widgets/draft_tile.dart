@@ -181,9 +181,11 @@ class DraftTile extends StatelessWidget {
                                 );
                                 onStarToggled?.call();
                               } on Exception catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Lỗi: $e')),
-                                );
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Lỗi: $e')),
+                                  );
+                                }
                               }
                             },
                           ),

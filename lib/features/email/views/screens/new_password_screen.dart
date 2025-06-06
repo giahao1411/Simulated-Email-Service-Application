@@ -75,10 +75,12 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         'Mật khẩu đã được cập nhật thành công. Vui lòng đăng nhập lại.',
         true,
       );
-      await Navigator.pushReplacement(
-        context,
-        MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
-      );
+      if (mounted) {
+        await Navigator.pushReplacement(
+          context,
+          MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
+        );
+      }
     } on Exception catch (e) {
       setState(() {
         errorMessage = e.toString().replaceFirst('Exception: ', '');

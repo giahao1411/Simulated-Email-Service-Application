@@ -40,7 +40,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       }
 
       AppFunctions.debugPrint(
-        'Gọi onOtpVerified với OTP: $otp, verificationId: ${widget.verificationId}',
+        '''Gọi onOtpVerified với OTP: $otp, verificationId: ${widget.verificationId}''',
       );
       widget.onOtpVerified(otp, widget.verificationId);
       setState(() {
@@ -114,7 +114,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Chúng tôi đã gửi một mã OTP đến số điện thoại ${widget.phoneNumber}. Vui lòng nhập mã để xác minh.',
+                '''Chúng tôi đã gửi một mã OTP đến số điện thoại ${widget.phoneNumber}. Vui lòng nhập mã để xác minh.''',
                 style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 32),

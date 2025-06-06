@@ -351,7 +351,7 @@ class AuthService {
 
       if (userQuery.docs.length > 1) {
         throw Exception(
-          'Có nhiều tài khoản liên kết với số điện thoại này, vui lòng liên hệ hỗ trợ',
+          '''Có nhiều tài khoản liên kết với số điện thoại này, vui lòng liên hệ hỗ trợ''',
         );
       }
 

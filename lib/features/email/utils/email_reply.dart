@@ -17,7 +17,7 @@ class EmailReply {
       bcc: bccEmails,
       subject: 'Re: ${originalEmail.subject}',
       body:
-          '$replyBody\n\nOn ${originalEmail.timestamp}, ${originalEmail.from} wrote:\n${originalEmail.body}',
+          '''$replyBody\n\nOn ${originalEmail.timestamp}, ${originalEmail.from} wrote:\n${originalEmail.body}''',
       timestamp: DateTime.now(),
       hasAttachments: attachment.isNotEmpty,
       attachments: attachment.cast<Map<String, dynamic>>(),

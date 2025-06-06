@@ -88,10 +88,12 @@ class ComposeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   }
                 } else {
                   // Nếu không phải ảnh, lưu vào ComposeState
-                  await Provider.of<ComposeState>(
-                    context,
-                    listen: false,
-                  ).setSelectedFile(file);
+                  if (context.mounted) {
+                    await Provider.of<ComposeState>(
+                      context,
+                      listen: false,
+                    ).setSelectedFile(file);
+                  }
 
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(

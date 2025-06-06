@@ -67,7 +67,9 @@ class LabelDialogs {
                       if (success) {
                         onLoadLabels();
                       } else {
-                        showSnackBar(context, 'Không thể xóa nhãn');
+                        if (context.mounted) {
+                          showSnackBar(context, 'Không thể xóa nhãn');
+                        }
                       }
                     },
                   ),
@@ -173,12 +175,16 @@ class LabelDialogs {
                           );
                           if (success) {
                             onLoadLabels();
-                            Navigator.pop(context);
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                            }
                           } else {
-                            showSnackBar(
-                              context,
-                              'Nhãn đã tồn tại hoặc không thể đổi tên',
-                            );
+                            if (context.mounted) {
+                              showSnackBar(
+                                context,
+                                'Nhãn đã tồn tại hoặc không thể đổi tên',
+                              );
+                            }
                           }
                         }
                       },
@@ -267,9 +273,13 @@ class LabelDialogs {
                           final success = await onCreate(controller.text);
                           if (success) {
                             onLoadLabels();
-                            Navigator.pop(context);
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                            }
                           } else {
-                            showSnackBar(context, 'Nhãn đã tồn tại');
+                            if (context.mounted) {
+                              showSnackBar(context, 'Nhãn đã tồn tại');
+                            }
                           }
                         }
                       },
