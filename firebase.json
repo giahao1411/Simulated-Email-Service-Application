@@ -1,56 +1,59 @@
 {
-  "flutter": {
-    "platforms": {
-      "android": {
-        "default": {
-          "projectId": "cross-platform-57b89",
-          "appId": "1:860882029296:android:b4c484bb6cb100df98d035",
-          "fileOutput": "android/app/google-services.json"
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "cross-platform-57b89",
+                    "appId": "1:860882029296:android:b4c484bb6cb100df98d035",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "cross-platform-57b89",
+                    "configurations": {
+                        "android": "1:860882029296:android:b4c484bb6cb100df98d035",
+                        "ios": "1:860882029296:ios:1272161ba459ef5c98d035",
+                        "macos": "1:860882029296:ios:1272161ba459ef5c98d035",
+                        "web": "1:860882029296:web:cbf7ff897675d7f998d035",
+                        "windows": "1:860882029296:web:da7fca833a21300798d035"
+                    }
+                }
+            }
         }
-      },
-      "dart": {
-        "lib/firebase_options.dart": {
-          "projectId": "cross-platform-57b89",
-          "configurations": {
-            "android": "1:860882029296:android:b4c484bb6cb100df98d035",
-            "ios": "1:860882029296:ios:1272161ba459ef5c98d035",
-            "macos": "1:860882029296:ios:1272161ba459ef5c98d035",
-            "web": "1:860882029296:web:cbf7ff897675d7f998d035",
-            "windows": "1:860882029296:web:da7fca833a21300798d035"
-          }
+    },
+    "functions": [
+        {
+            "source": "functions",
+            "codebase": "default",
+            "ignore": [
+                "node_modules",
+                ".git",
+                "firebase-debug.log",
+                "firebase-debug.*.log",
+                "*.local"
+            ],
+            "runtime": "nodejs22",
+            "predeploy": [
+                "npm --prefix \"$RESOURCE_DIR\" run lint"
+            ],
+            "region": "us-central1"
         }
-      }
+    ],
+    "emulators": {
+        "functions": {
+            "port": 5001
+        },
+        "firestore": {
+            "port": 8080
+        },
+        "pubsub": {
+            "port": 8085
+        },
+        "ui": {
+            "enabled": true,
+            "port": 3000
+        },
+        "singleProjectMode": true
     }
-  },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ],
-      "runtime": "nodejs22",
-      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run lint"]
-    }
-  ],
-  "emulators": {
-    "functions": {
-      "port": 5001
-    },
-    "firestore": {
-      "port": 8080
-    },
-    "pubsub": {
-      "port": 8085
-    },
-    "ui": {
-      "enabled": true,
-      "port": 3000
-    },
-    "singleProjectMode": true
-  }
 }
