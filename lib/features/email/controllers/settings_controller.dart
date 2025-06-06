@@ -4,6 +4,7 @@ import 'package:email_application/features/email/models/user_profile.dart';
 import 'package:email_application/features/email/utils/image_picker_handler.dart';
 import 'package:email_application/features/email/views/screens/change_password_screen.dart';
 import 'package:email_application/features/email/views/screens/login_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SettingsController {
@@ -41,6 +42,7 @@ class SettingsController {
         dateOfBirthController.text =
             profile.dateOfBirth?.toIso8601String().split('T')[0] ?? '';
         isTwoStepEnabled = profile.twoStepEnabled ?? false;
+        isAutoReply = profile.autoReplyEnabled;
         userProfile = profile;
         _avatarImagePath = profile.photoUrl;
       } else {
@@ -68,10 +70,15 @@ class SettingsController {
     }
   }
 
-  Future<void> updateAvatar(BuildContext context, String imagePath) async {
+  Future<void> updateAvatar(BuildContext context, String imageData) async {
     isLoading = true;
     try {
-      final downloadUrl = await profileService.uploadImage(imagePath);
+      String downloadUrl;
+      if (kIsWeb) {
+        downloadUrl = await profileService.uploadImageWeb(imageData);
+      } else {
+        downloadUrl = await profileService.uploadImage(imageData);
+      }
       await profileService.updateProfile(photoUrl: downloadUrl);
       _avatarImagePath = downloadUrl;
       if (context.mounted) {
@@ -159,6 +166,19 @@ class SettingsController {
       }
     } finally {
       isLoading = false;
+    }
+  }
+
+  Future<void> toggleAutoReply(BuildContext context, bool value) async {
+    try {
+      isAutoReply = value;
+      await profileService.updateProfile(
+        autoReplyEnabled: value,
+        autoReplyTime: 5,
+      );
+    } on Exception catch (e) {
+      isAutoReply = !value;
+      throw Exception('Lỗi khi cập nhật trả lời tự động: $e');
     }
   }
 

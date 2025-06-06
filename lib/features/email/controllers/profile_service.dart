@@ -33,6 +33,8 @@ class ProfileService {
     DateTime? dateOfBirth,
     String? photoUrl,
     bool? twoStepEnabled,
+    bool? autoReplyEnabled,
+    int? autoReplyTime,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Người dùng chưa đăng nhập');
@@ -51,6 +53,8 @@ class ProfileService {
       photoUrl: photoUrl ?? currentProfile.photoUrl,
       email: currentProfile.email,
       twoStepEnabled: twoStepEnabled ?? currentProfile.twoStepEnabled,
+      autoReplyEnabled: autoReplyEnabled ?? currentProfile.autoReplyEnabled,
+      autoReplyTime: autoReplyTime ?? currentProfile.autoReplyTime,
     );
 
     await _firestore

@@ -257,6 +257,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setState(() {
                       _controller.isAutoReply = value;
                     });
+                    _controller
+                        .toggleAutoReply(context, value)
+                        .then((_) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Cập nhật trả lời tự động thành công',
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        })
+                        .catchError((Object e) {
+                          if (mounted) {
+                            setState(() {
+                              _controller.isAutoReply = !value;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Lỗi khi bật trả lời tự động: $e',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        });
                   },
                 ),
               ),

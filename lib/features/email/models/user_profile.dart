@@ -10,6 +10,7 @@ class UserProfile {
     this.photoUrl,
     this.email,
     this.twoStepEnabled,
+    this.autoReplyEnabled = false,
     this.autoReplyTime = 5,
   });
 
@@ -26,6 +27,7 @@ class UserProfile {
       photoUrl: data['photoUrl'] as String?,
       email: data['email'] as String?,
       twoStepEnabled: data['twoStepEnabled'] as bool? ?? false,
+      autoReplyEnabled: data['autoReplyEnabled'] as bool? ?? false,
       autoReplyTime: data['autoReplyTime'] as int? ?? 5,
     );
   }
@@ -38,6 +40,7 @@ class UserProfile {
   final String? photoUrl;
   final String? email;
   final bool? twoStepEnabled;
+  final bool autoReplyEnabled;
   final int autoReplyTime;
 
   Map<String, dynamic> toMap() {
@@ -51,8 +54,8 @@ class UserProfile {
       'photoUrl': photoUrl,
       'email': email,
       'twoStepEnabled': twoStepEnabled,
-      'autoReplyEnabled': false,
-      'autoReplyTime': 5,
+      'autoReplyEnabled': autoReplyEnabled,
+      'autoReplyTime': autoReplyTime,
     };
   }
 }
