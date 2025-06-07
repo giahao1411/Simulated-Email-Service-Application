@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
         builder: (context, themeProvider, child) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            title: 'Simulated Email App',
+            title: 'HMAIL',
             locale: const Locale(
               'vi',
               'VN',
